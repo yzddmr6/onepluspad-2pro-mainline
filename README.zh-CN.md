@@ -117,7 +117,7 @@
 | 功能 | 器件 / 实现 | 状态 | 范围与限制 |
 |---|---|---|---|
 | 电源键 | Linux input / GNOME | 🟡 | 锁屏并熄屏；把 `/etc/erhai/power-key-action` 设为 `suspend` 时，按下还会进入系统休眠，且同一按键可唤醒。锁屏后再次输入密码的流程待验。 |
-| 音量键 | GPIO / PMIC PON input | 🟡 | 音量上键上报 `KEY_VOLUMEUP`（115），10 次实体按下全部收到；音量下键仍映射为 `KEY_VOLUMEDOWN`。 |
+| 音量键 | GPIO / PMIC PON input | ✅ | 音量上键上报 `KEY_VOLUMEUP`（115），10 次实体按下全部收到；音量下键仍映射为 `KEY_VOLUMEDOWN`。 |
 | 调频与测温 | SCMI / IIO / thermal | 🟡 | 调频和温度读取可用；持续负载下的温控与机身温度管理仍不完整。 |
 | 电池信息 | qcom_battmgr / UPower | ✅ | 可读电量、容量与估计剩余时间；充电能力另列。 |
 | Linux 充电 | USB 供电 / 厂商固件 | 🔧 | 能从 USB 取电，但未验证净充电：插电脑 USB 口（约 2.5 W）亮屏时，电量仍以每小时约 2–3% 下降；充电器下尚未实测，原厂快充协议在 Linux 下不可用。需要充电时返回 Android。 |

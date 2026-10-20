@@ -131,7 +131,7 @@ development are not included in the supported feature set.
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
 | Power button | Linux input / GNOME | 🟡 | Locks and blanks the display. With `/etc/erhai/power-key-action` set to `suspend`, a press also enters system suspend, and the same button wakes the tablet. Password re-entry after locking needs testing. |
-| Volume keys | GPIO / PMIC PON input | 🟡 | Volume up reports `KEY_VOLUMEUP` (115); all 10 physical presses passed. Volume down remains mapped to `KEY_VOLUMEDOWN`. |
+| Volume keys | GPIO / PMIC PON input | ✅ | Volume up reports `KEY_VOLUMEUP` (115); all 10 physical presses passed. Volume down remains mapped to `KEY_VOLUMEDOWN`. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management remain incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
 | Charging in Linux | USB power / vendor firmware | 🔧 | Power is drawn from USB, but net charging is not verified. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. Wall chargers are untested, and the stock fast-charging protocols are not available under Linux. Return to Android to charge. |
