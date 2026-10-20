@@ -7,7 +7,7 @@ import zipfile
 
 root = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--output', type=Path, default=Path('out/erhai-switch-v0.2.1.zip'))
+parser.add_argument('--output', type=Path, default=Path('out/erhai-switch-v0.2.2.zip'))
 args = parser.parse_args()
 args.output.parent.mkdir(parents=True, exist_ok=True)
 with zipfile.ZipFile(args.output, 'w', zipfile.ZIP_DEFLATED) as archive:

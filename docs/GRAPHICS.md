@@ -69,7 +69,7 @@ are separate checks.
 ## Graphics for core24 snaps
 
 This experimental provider requires a separately prepared kernel and Snap
-environment with working confinement. The v0.2.1 kernel does not enable AppArmor;
+environment with working confinement. The v0.2.2 kernel does not enable AppArmor;
 installing this provider alone does not make Snap applications supported.
 
 A desktop deb cannot supply libraries inside a snap with its own graphics runtime.

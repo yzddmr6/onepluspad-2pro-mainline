@@ -14,7 +14,7 @@ builds require no ROM download or manual extraction. The vendor firmware set is
 from **ColorOS `OPD2413_11.C.34_1340_202607031844`**; the ROCKNIX firmware set is
 pinned to **`2b7207cfcb80c53c09dc6e04165789ecaf2d3348`**. The four linux-firmware
 files are identified individually in the adjacent manifest. These are firmware
-source versions; the project release is **v0.2.1**.
+source versions; the project release is **v0.2.2**.
 
 ## Origin
 
