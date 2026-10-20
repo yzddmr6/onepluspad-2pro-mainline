@@ -103,7 +103,7 @@ development are not included in the supported feature set.
 
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
-| Wi-Fi | WCN7860 / ath12k | ✅ | Networking, automatic reconnect at boot and short transfers work. The radio stays in the world regulatory domain, where 5 GHz is passive, so a 5 GHz hotspot cannot be started; roaming, 2.4 GHz hotspot operation and sustained transfers need testing. |
+| Wi-Fi | WCN7860 / ath12k | ✅ | Networking, automatic reconnect at boot and short transfers work. v0.2.2 enables userspace regulatory hints and includes the ath12k frequency-range fix; packages leave the radio in world domain `00`. 5 GHz uses passive scanning and cannot host a hotspot; roaming, 2.4 GHz hotspot operation and sustained transfers need testing. Changing the country code while associated has caused WLAN firmware crashes; do not do so. |
 | Bluetooth | WCN7860 / BlueZ | 🟡 | Controller, firmware, discovery and per-device address verified; keyboard, mouse and headset use remain unverified. |
 | USB device mode | USB-C / NCM | 🟡 | USB networking works. Some reconnects failed to restore the connection and required a reboot. |
 | USB host peripherals | HID, storage, network and digital audio | 🟡 | Mouse use through the tested dock works without external PD power. The same mouse and USB-A adapter work directly in Android but fail in Linux; other peripherals remain untested. |
@@ -115,8 +115,8 @@ development are not included in the supported feature set.
 
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
-| Internal microphones | WCD939x / ALSA / PipeWire | 🟡 | Default input, two-channel capture and repeated recording passed. Speech quality, gain and background noise need listening tests. |
-| Speakers | Six AW88261 amplifiers / AudioReach | 🔧 | Playback is disabled by default. Low-level signal tests passed; listening, volume and noise need hardware testing. |
+| Internal microphones | WCD939x / ALSA / PipeWire | 🟡 | Default input and two-channel capture work. With ADC 13 / TX DEC 112, normal speech at about 30 cm peaks around -8 dBFS without clipping. Background-noise performance remains uncharacterized. |
+| Speakers | Six AW88261 amplifiers / AudioReach | 🟡 | The opt-in candidate at amplifier value 350 (-2.5 dB) passed listening checks for channel position, loudness and sound quality. Playback remains disabled by default and has no vendor speaker protection. |
 | USB-C analog audio | WCD939x headset path | ❌ | Analog adapters and headset detection are not implemented. Digital USB audio is tracked above. |
 | Video playback in desktop players | Ubuntu GStreamer packages | ❌ | Showtime, the default player, aborts on a Mesa freedreno assertion when it draws video frames. Other players are untested. |
 | Hardware video codecs | Qualcomm Iris | 🟡 | H.264 hardware decoding works on the tablet: a 60-frame test clip matches the software decoder frame by frame. Encoding and use from desktop players need testing. |
@@ -131,6 +131,7 @@ development are not included in the supported feature set.
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
 | Power button | Linux input / GNOME | 🟡 | Locks and blanks the display. With `/etc/erhai/power-key-action` set to `suspend`, a press also enters system suspend, and the same button wakes the tablet. Password re-entry after locking needs testing. |
+| Volume keys | GPIO / PMIC PON input | 🟡 | Volume up reports `KEY_VOLUMEUP` (115); all 10 physical presses passed. Volume down remains mapped to `KEY_VOLUMEDOWN`. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management remain incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
 | Charging in Linux | USB power / vendor firmware | 🔧 | Power is drawn from USB, but net charging is not verified. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. Wall chargers are untested, and the stock fast-charging protocols are not available under Linux. Return to Android to charge. |

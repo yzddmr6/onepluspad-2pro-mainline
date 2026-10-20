@@ -51,19 +51,19 @@ RAM 临时启动不替换启动分区，但使用已安装根系统的临时内�
 | `erhai-switch-版本.zip` | Android 侧切换模块 |
 | `SHA256SUMS` | 所有附件及拼接后镜像的校验值 |
 
-在下载目录中拼接并校验（以 v0.2.1 为例；setup 文件只在首次准备分区时需要）：
+在下载目录中拼接并校验（以 v0.2.2 为例；setup 文件只在首次准备分区时需要）：
 
 ```sh
-cat ubuntu-pad2pro-v0.2.1-rootfs.squashfs.part* > ubuntu-pad2pro-v0.2.1-rootfs.squashfs
-cat ubuntu-pad2pro-v0.2.1-setup-rootfs.squashfs.part* > ubuntu-pad2pro-v0.2.1-setup-rootfs.squashfs
+cat ubuntu-pad2pro-v0.2.2-rootfs.squashfs.part* > ubuntu-pad2pro-v0.2.2-rootfs.squashfs
+cat ubuntu-pad2pro-v0.2.2-setup-rootfs.squashfs.part* > ubuntu-pad2pro-v0.2.2-setup-rootfs.squashfs
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
 之后用它们替代下文的构建产物：首次准备分区时，把 setup 根文件系统移到
-`out/desktop-root/rootfs.squashfs`，并用 `ubuntu-pad2pro-v0.2.1-setup-boot.img` 代替
+`out/desktop-root/rootfs.squashfs`，并用 `ubuntu-pad2pro-v0.2.2-setup-boot.img` 代替
 `out/ram-desktop/boot-mainline.img`；安装时，把安装用根文件系统与其清单放在同一目录，
 分别命名为 `rootfs.squashfs` 和 `manifest.json`，再把该 `rootfs.squashfs` 传给 `--rootfs`；
-升级时，解开 `erhai-device-packages-v0.2.1.tar`，按[升级已有安装](#升级已有安装)安装其中的包。
+升级时，解开 `erhai-device-packages-v0.2.2.tar`，按[升级已有安装](#升级已有安装)安装其中的包。
 
 ## 首次准备 Linux 分区
 
@@ -155,7 +155,7 @@ fastboot -s "$device_serial" reboot
 清除 Android 数据会重置这项授权；仅开启 USB 调试还不够。从电脑把模块传到平板：
 
 ```sh
-adb -s "$device_serial" push out/erhai-switch-v0.2.1.zip /sdcard/Download/
+adb -s "$device_serial" push out/erhai-switch-v0.2.2.zip /sdcard/Download/
 ```
 
 在 KernelSU 中选择“下载”目录里的 ZIP 安装，重启 Android，随后执行下面的 Linux 安装步骤。
@@ -232,7 +232,7 @@ sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 ```
 
 也可以直接用 Release 里的 `erhai-device-packages-版本.tar`：其中的包不含 USB 调试通道，
-装上后调试安装也会变成普通安装（`tar xf erhai-device-packages-v0.2.1.tar && sudo apt install ./erhai-device-packages-v0.2.1/*.deb`）。
+装上后调试安装也会变成普通安装（`tar xf erhai-device-packages-v0.2.2.tar && sudo apt install ./erhai-device-packages-v0.2.2/*.deb`）。
 
 安装时内核包会把新的启动镜像写入活动槽，旧内核包仍保留；安装时导入的传感器注册表保持不变。
 新内核起不来时，按下文的恢复步骤处理。

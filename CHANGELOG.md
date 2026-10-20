@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.2
 
 - The internal microphones record at a usable level (ADC 13, TX DEC 112), and
   the opt-in speaker candidate runs the amplifiers at the stock -2.5 dB
@@ -8,7 +8,12 @@
   ([#7](https://github.com/yzddmr6/onepluspad-2pro-mainline/pull/7)).
 - Kernel: volume up reports `KEY_VOLUMEUP` through the PMIC PON resin input
   ([linux-sm8750-erhai#1](https://github.com/yzddmr6/linux-sm8750-erhai/pull/1));
-  it reaches installations once a release pins that kernel.
+  included in kernel `erhai-v0.2.2`.
+- Kernel: enable userspace regulatory hints and include the ath12k FROMLIST
+  single-pdev frequency-range fix. Device packages do not set a country code;
+  the radio remains in the world domain (`00`). Changing the country code while
+  associated has caused WLAN firmware crashes; do not do so.
+- Rebuilt installation and setup images include the 0.2.2 device packages.
 
 Thanks to @HOSHINO61 for both changes.
 
