@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- The internal microphones record at a usable level (ADC 13, TX DEC 112), and
+  the opt-in speaker candidate runs the amplifiers at the stock -2.5 dB
+  instead of -22.5 dB; this path still has no vendor speaker protection
+  ([#7](https://github.com/yzddmr6/onepluspad-2pro-mainline/pull/7)).
+- Kernel: volume up reports `KEY_VOLUMEUP` through the PMIC PON resin input
+  ([linux-sm8750-erhai#1](https://github.com/yzddmr6/linux-sm8750-erhai/pull/1));
+  it reaches installations once a release pins that kernel.
+
+Thanks to @HOSHINO61 for both changes.
+
 ## v0.2.1
 
 - Prebuilt images are attached to the release: an installation root filesystem
