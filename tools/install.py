@@ -38,6 +38,17 @@ def check_firmware(plan):
         raise RuntimeError('Firmware is outside the tested installation combination')
 
 
+def layout_identity(partitions):
+    """Partition identity that survives a reboot.
+
+    /dev/block/sdX names follow the UFS LUN probe order, which is not stable
+    across boots: the same boot_a node has been observed as sdd12 and sde12 on
+    one tablet. A layout is therefore identified by the size and start sector
+    of every partition, not by the node it was reached through.
+    """
+    return {name: (part['bytes'], part['start_512']) for name, part in partitions.items()}
+
+
 def check_linux_layout(plan):
     ranges = {}
     for name in ('userdata', 'linux_rootfs', 'linux_data'):
@@ -280,7 +291,9 @@ dumpsys battery
             raise RuntimeError('Installation erases Linux: --erase-linux is required')
         saved = self.load_backup()
         current = self.inspect()
-        if any(saved[key] != current[key] for key in ('serial', 'slot', 'partitions', 'firmware')):
+        if (saved['serial'] != current['serial'] or saved['slot'] != current['slot']
+                or saved['firmware'] != current['firmware']
+                or layout_identity(saved['partitions']) != layout_identity(current['partitions'])):
             raise RuntimeError('Device layout or firmware changed since backup')
         check_firmware(current)
         check_linux_layout(current)
