@@ -65,7 +65,11 @@ policy_installed=1
 printf '#!/bin/sh\nexit 101\n' > "$root/usr/sbin/policy-rc.d"
 chmod 755 "$root/usr/sbin/policy-rc.d"
 target apt-get "${apt_options[@]}" update
-target apt-get "${apt_options[@]}" --no-install-recommends --assume-yes install "$@"
+# Mozilla's firefox, requested by exact version, replaces Ubuntu's
+# transitional firefox, whose version epoch sorts higher, so apt counts it as
+# a downgrade. Apt never selects a lower version that was not requested.
+target apt-get "${apt_options[@]}" --no-install-recommends --assume-yes \
+    --allow-downgrades install "$@"
 cleanup_policy
 rm -rf "$build"
 

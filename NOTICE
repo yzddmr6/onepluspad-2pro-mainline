@@ -55,6 +55,11 @@ packages retain their own copyright and licensing notices. Binary deliveries
 must include the corresponding source information and materials required by
 their licenses. Upstream Ubuntu images and full stock ROMs are not mirrored here.
 
+Root filesystems include Mozilla's Firefox package unmodified; it retains
+Mozilla's licenses and trademark terms. The Mozilla APT configuration in
+packaging/erhai-firefox is based on TheMojoMan's oneplus-erhai-ubuntu:
+https://github.com/TheMojoMan/oneplus-erhai-ubuntu
+
 Firmware and device data
 -----------------------
 Qualcomm, OnePlus and Awinic binaries are separate from the project's code

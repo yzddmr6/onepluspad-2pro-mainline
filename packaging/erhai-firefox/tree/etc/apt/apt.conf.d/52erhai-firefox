@@ -1,0 +1,5 @@
+// Based on TheMojoMan's oneplus-erhai-ubuntu
+// https://github.com/TheMojoMan/oneplus-erhai-ubuntu
+// Unattended upgrades install Firefox updates from Mozilla's repository, as
+// snapd refreshes the Firefox snap.
+Unattended-Upgrade::Origins-Pattern:: "site=packages.mozilla.org,a=mozilla";

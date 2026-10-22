@@ -300,6 +300,12 @@ trusted attributes and the overlay mount; target package processes drop that
 added capability. Package installation uses a temporary local APT source and
 service-start policy. The target's normal Ubuntu APT sources remain intact.
 
+The lock also pins Mozilla's Firefox deb by URL and SHA-256. The assembly
+requests that exact version, which replaces Ubuntu's transitional `firefox`
+package; `erhai-firefox` from the device packages configures Mozilla's APT
+repository for later updates. When Mozilla no longer serves the pinned build,
+pin a current one.
+
 The output includes `rootfs.squashfs`, the selected package list and build inputs. Machine identifiers, radio addresses, sensor
 calibration and the Android rollback set must be supplied on installation.
 Use the [installation guide](FLASHING.md) for the supported layout and device

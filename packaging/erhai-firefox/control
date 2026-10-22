@@ -1,0 +1,22 @@
+Package: erhai-firefox
+Version: @VERSION@
+Architecture: all
+Maintainer: @MAINTAINER@
+Installed-Size: @INSTALLED_SIZE@
+Section: web
+Priority: optional
+Description: Firefox from Mozilla's APT repository for the OnePlus Pad 2 Pro
+ Ubuntu's firefox package installs the Firefox snap, which renders with the
+ graphics libraries of its own snap runtime. Those have no driver for this
+ tablet's Adreno 830, and this kernel does not provide the confinement snaps
+ expect. This package configures Mozilla's official APT repository
+ (packages.mozilla.org) with its signing key and gives Mozilla's firefox
+ priority over Ubuntu's transitional package, so Firefox runs with the system
+ graphics driver and is updated through APT, unattended upgrades included.
+ .
+ It does not install Firefox itself. The root filesystem build installs a
+ pinned Mozilla build; an existing installation runs "apt update" and
+ "apt install firefox" once. With Mozilla's Firefox installed, the Firefox
+ snap is removed after snapd has seeded it, unless a user has already started
+ it and so keeps a profile under ~/snap/firefox. snapd and the other snaps
+ stay. The Ubuntu dock pins Mozilla's Firefox in place of the snap.

@@ -284,6 +284,16 @@ installation, and the previous kernel package stays installed. The sensor
 registry imported at installation time is kept. If the new kernel does not start,
 follow the recovery steps below.
 
+The `erhai-firefox` package moves Firefox from the Ubuntu snap to Mozilla's deb.
+After the upgrade, run `sudo apt update && sudo apt install firefox` and accept
+the replacement of Ubuntu's transitional `firefox` package, which APT lists as a
+downgrade because of that package's version epoch. The snap keeps each user's
+profile in `~/snap/firefox/common/.mozilla/firefox`; to keep it, copy it before
+the first start of the new Firefox with
+`mkdir -p ~/.mozilla && cp -a ~/snap/firefox/common/.mozilla/firefox ~/.mozilla/`,
+then remove the snap with `sudo snap remove firefox`. The snap is removed
+automatically at boot only when no user has a `~/snap/firefox` directory.
+
 ## Failure and full stock recovery
 
 If the tablet stops responding, hold **Power + Volume Up for about 15 seconds**.

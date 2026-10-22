@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Mozilla's Firefox package replaces Ubuntu's transitional package, but snapd
+# still seeds the Firefox snap from the installation image. Once seeding is
+# done, remove that snap so that the desktop offers one Firefox; snapd and the
+# other snaps stay. A user who has started the snap has a profile under
+# ~/snap/firefox, and the snap is then kept until that profile is moved away.
+# snapd.seeded.service pulls this unit in through a drop-in.
+[Unit]
+Description=Remove the Firefox snap in favour of Mozilla's Firefox package
+After=snapd.seeded.service
+# Only Mozilla's package has this file; Ubuntu's transitional one does not.
+ConditionPathExists=/usr/lib/firefox/firefox
+ConditionPathExists=/snap/bin/firefox
+ConditionPathExists=!/root/snap/firefox
+ConditionPathExistsGlob=!/home/*/snap/firefox
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/snap remove firefox
+TimeoutStartSec=5min

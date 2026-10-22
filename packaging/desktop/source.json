@@ -1005,11 +1005,21 @@
       "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/universe/p/protobuf-c/libprotobuf-c1_1.5.1-1ubuntu2_arm64.deb",
       "sha256": "c1c5f545a5d11c98ad2eea8c9b610b253880a3f62cdd3481f18b52c66cca1de5",
       "file": "libprotobuf-c1_1.5.1-1ubuntu2_arm64.deb"
+    },
+    {
+      "package": "firefox",
+      "version": "158.0.1~build1",
+      "url": "https://packages.mozilla.org/apt/pool/mozilla/firefox_158.0.1~build1_arm64_9cfb667797b45d588269f88a64e12d56.deb",
+      "file": "firefox_158.0.1~build1_arm64.deb",
+      "bytes": 83144928,
+      "sha256": "19a76c333fd9930f0a581a7874c1388b629cd818f6ad0655cc2867f63056b34f",
+      "architecture": "arm64"
     }
   ],
   "runtime_snapshot": "20260924T000000Z",
   "runtime_seeds": [
     "gstreamer1.0-plugins-bad",
-    "gstreamer1.0-libav"
+    "gstreamer1.0-libav",
+    "firefox=158.0.1~build1"
   ]
 }

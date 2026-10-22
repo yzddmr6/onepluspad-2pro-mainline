@@ -237,6 +237,14 @@ sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 安装时内核包会把新的启动镜像写入活动槽，旧内核包仍保留；安装时导入的传感器注册表保持不变。
 新内核起不来时，按下文的恢复步骤处理。
 
+`erhai-firefox` 包把 Firefox 从 Ubuntu 的 Snap 换成 Mozilla 官方 deb。升级后执行
+`sudo apt update && sudo apt install firefox`，并确认替换 Ubuntu 的过渡包 `firefox`；
+该过渡包带版本 epoch，APT 会把替换显示为降级。Snap 版把每个用户的配置放在
+`~/snap/firefox/common/.mozilla/firefox`；需要保留时，在首次启动新 Firefox 前执行
+`mkdir -p ~/.mozilla && cp -a ~/snap/firefox/common/.mozilla/firefox ~/.mozilla/`，
+再用 `sudo snap remove firefox` 移除 Snap。只有在没有任何用户存在 `~/snap/firefox`
+目录时，开机才会自动移除该 Snap。
+
 ## 异常与完整恢复
 
 若平板无响应，同时按住 **电源键＋音量上键约 15 秒**，屏幕熄灭或出现 OnePlus

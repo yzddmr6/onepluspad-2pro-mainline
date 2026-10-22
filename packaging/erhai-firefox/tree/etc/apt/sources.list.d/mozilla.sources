@@ -1,0 +1,12 @@
+# Based on TheMojoMan's oneplus-erhai-ubuntu
+# https://github.com/TheMojoMan/oneplus-erhai-ubuntu
+# Mozilla's official APT repository for Firefox, configured by erhai-firefox.
+# Signing key fingerprint, as published by Mozilla:
+#   35BA A0B3 3E9E B396 F59C  A838 C0BA 5CE6 DC63 15A3
+# The key path is the one in Mozilla's installation instructions, so a
+# repository added by hand the same way does not conflict with this file.
+Types: deb
+URIs: https://packages.mozilla.org/apt
+Suites: mozilla
+Components: main
+Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc
