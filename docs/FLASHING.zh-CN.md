@@ -41,29 +41,27 @@ RAM 临时启动不替换启动分区，但使用已安装根系统的临时内�
 
 从 v0.2.1 起，Release 附带本文原本需要自行构建的镜像。安装仍需本仓库检出中的
 `tools/install.py` 和下文列出的主机工具，但无需构建内核、Mesa 或根文件系统。
+从 v0.3.0 起，首次准备分区和安装使用同一个根文件系统。
 
 | 附件 | 用途 |
 |---|---|
-| `ubuntu-pad2pro-版本-rootfs.squashfs.part*` 与 `…-rootfs.manifest.json` | 用于安装的根文件系统，不含 USB 调试通道 |
-| `ubuntu-pad2pro-版本-setup-rootfs.squashfs.part*` 与 `…-setup-rootfs.manifest.json` | 仅供首次准备分区时的临时内存桌面使用，含 USB 调试通道 |
-| `ubuntu-pad2pro-版本-setup-boot.img` | 该临时内存桌面的启动镜像，从主机加载 setup 根文件系统 |
+| `ubuntu-pad2pro-版本-rootfs.squashfs.part*` 与 `…-rootfs.manifest.json` | 用于安装的根文件系统，不含 USB 调试通道；首次准备分区时也用它运行临时内存桌面 |
+| `ubuntu-pad2pro-版本-setup-boot.img` 与 `…-setup-boot.manifest.json` | 该临时内存桌面的启动镜像，从主机加载上述根文件系统，只为这次会话加入 USB 调试通道 |
 | `erhai-device-packages-版本.tar` | 升级已有安装用的设备包与传感器包 |
 | `erhai-switch-版本.zip` | Android 侧切换模块 |
 | `SHA256SUMS` | 所有附件及拼接后镜像的校验值 |
 
-在下载目录中拼接并校验（以 v0.2.2 为例；setup 文件只在首次准备分区时需要）：
+在下载目录中拼接并校验（以 v0.3.0 为例）：
 
 ```sh
-cat ubuntu-pad2pro-v0.2.2-rootfs.squashfs.part* > ubuntu-pad2pro-v0.2.2-rootfs.squashfs
-cat ubuntu-pad2pro-v0.2.2-setup-rootfs.squashfs.part* > ubuntu-pad2pro-v0.2.2-setup-rootfs.squashfs
+cat ubuntu-pad2pro-v0.3.0-rootfs.squashfs.part* > ubuntu-pad2pro-v0.3.0-rootfs.squashfs
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
-之后用它们替代下文的构建产物：首次准备分区时，把 setup 根文件系统移到
-`out/desktop-root/rootfs.squashfs`，并用 `ubuntu-pad2pro-v0.2.2-setup-boot.img` 代替
-`out/ram-desktop/boot-mainline.img`；安装时，把安装用根文件系统与其清单放在同一目录，
-分别命名为 `rootfs.squashfs` 和 `manifest.json`，再把该 `rootfs.squashfs` 传给 `--rootfs`；
-升级时，解开 `erhai-device-packages-v0.2.2.tar`，按[升级已有安装](#升级已有安装)安装其中的包。
+之后用它替代下文的构建产物：在本仓库检出中，把拼接后的镜像存为 `out/desktop-root/rootfs.squashfs`，
+清单存为 `out/desktop-root/manifest.json`。首次准备分区时由文件服务器把它提供给平板，并用
+`ubuntu-pad2pro-v0.3.0-setup-boot.img` 代替 `out/ram-desktop/boot-mainline.img`；安装时把同一文件传给
+`--rootfs`。升级时，解开 `erhai-device-packages-v0.3.0.tar`，按[升级已有安装](#升级已有安装)安装其中的包。
 
 ## 首次准备 Linux 分区
 
@@ -76,17 +74,20 @@ KernelSU root 和 USB 调试权限。活动槽必须为 **A**，原厂固件须�
 分区方案为 Android 200 GiB、Linux 根分区 60 GiB，其余为 Linux 数据。
 它不改变活动槽、原厂启动镜像或其他 UFS 分区。
 
-按[构建指南](BUILD.zh-CN.md)构建设备包时，先在 `build-debs.py` 命令加入 `--debug`，
-再装配 `out/desktop-root/rootfs.squashfs`，以便首次准备时使用 RAM 桌面的调试通道。沿用构建指南中的
-`kernel_out`、DTB 与 initramfs，生成限时 RAM 启动镜像和切换模块：
+按[构建指南](BUILD.zh-CN.md)装配 `out/desktop-root/rootfs.squashfs`，后面的安装使用同一文件。
+首次准备时它作为临时 RAM 桌面运行：该桌面的启动镜像携带单独构建的 `erhai-debug` 包，在内存中安装以提供
+USB 调试通道；根文件系统本身不含该包。沿用构建指南中的 `kernel_out`、DTB 与 initramfs，
+生成该包、限时 RAM 启动镜像和切换模块：
 
 ```sh
+python3 tools/build-debs.py --only erhai-debug --output out/debug-package
 python3 tools/build-mainline-boot.py --output out/ram-desktop \
   --kernel-out "$kernel_out" --dtb out/abl-dtb/erhai-abl.dtb \
   --initramfs out/initramfs/initramfs-ncm.cpio.gz --profile desktop \
   --rootfs out/desktop-root/rootfs.squashfs \
   --rootfs-url http://192.168.77.10:8088/rootfs.squashfs \
-  --cmdline-extra 'erhai.session=1800 erhai.debug=1'
+  --debug-package out/debug-package/erhai-debug_*_all.deb \
+  --cmdline-extra erhai.session=1800
 python3 tools/package-switch.py
 ln -sf "$PWD/tools/prepare-dualboot.py" out/desktop-root/prepare-dualboot.py
 mkdir -p out/desktop-root/rootfs.squashfs.parts
@@ -206,19 +207,14 @@ python3 tools/install.py --serial "$device_serial" --work "$install_work" --phas
 
 ## 日常使用与 USB 调试
 
-首次分区准备使用 `--debug` 构建，包含免认证的 USB root shell 和文件服务。
-需要继续开发时可以保留，并仅连接可信电脑。日常使用要关闭整个启动过程的调试，
-请按[构建指南](BUILD.zh-CN.md#设备包与图形组件)重新打包同版本设备包，省略 `--debug`，
-并使用新的空输出目录 `--output out/device-packages-normal`，避免混入旧调试包；
-无需重编内核或重建 Ubuntu 根系统。将生成的 `device-packages-normal` 目录传入平板，
-在平板终端执行：
+首次准备时使用的免认证 USB root shell 和文件服务只存在于 setup 启动镜像的 RAM 会话中；
+根文件系统以及由它安装的系统都不含调试通道。需要在可信电脑上继续开发时，可按
+[构建指南](BUILD.zh-CN.md#设备包与图形组件)用 `--debug` 构建设备包，以此装配根文件系统后再安装：
+其内核包在启动镜像中加入 `erhai.debug=1`，并依赖 `erhai-debug`。
 
-```sh
-sudo apt install ./device-packages-normal/*.deb && sudo reboot
-```
-
-普通包替换调试启动镜像，重启后不再启用 USB shell、HTTP 和调试 DHCP。
-只停止桌面上的调试服务不能关闭调试镜像在启动早期提供的通道。
+在这样的安装上换装普通设备包（不带 `--debug` 构建到新的空输出目录，或取自 Release 的
+`erhai-device-packages-版本.tar`，安装方法见[升级已有安装](#升级已有安装)）即替换调试启动镜像，
+重启后不再启用 USB shell、HTTP 和调试 DHCP。只停止桌面上的调试服务不能关闭调试镜像在启动早期提供的通道。
 
 ## 升级已有安装
 

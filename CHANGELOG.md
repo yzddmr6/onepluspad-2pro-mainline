@@ -19,6 +19,11 @@
 - The on-screen keyboard is no longer forced on. GNOME offers it for touch
   input while the keyboard cover is detached and keeps it hidden while the
   cover is attached.
+- Releases attach one root filesystem instead of two. First-time preparation
+  runs the installation image as its RAM desktop; the setup boot image carries
+  the `erhai-debug` package and installs it into that RAM session only, so
+  neither the published image nor an installed system has USB diagnostics.
+  See "Prebuilt release images" in [FLASHING](docs/FLASHING.md).
 
 These changes await testing on the tablet.
 
