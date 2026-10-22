@@ -6,10 +6,13 @@ Installed-Size: @INSTALLED_SIZE@
 Section: sound
 Priority: optional
 Depends: alsa-ucm-conf (>= 1.2.4), alsa-utils, python3
+Breaks: erhai-kernel (<< 0.3.0~)
 Description: OnePlus Pad 2 Pro (erhai) audio topology and configuration
  Device-specific AudioReach topology built from pinned upstream sources.
  The HiFi profile provides the two internal microphones and an independent
  DisplayPort playback candidate, using standard jack availability reporting.
+ The DisplayPort output needs a kernel that accepts preparing its stream with
+ no monitor connected; creating /etc/erhai/no-displayport-audio leaves it out.
  .
  The internal speakers are a candidate that stays off: erhai-audio-speaker
  enable offers them until the next boot, at an amplifier level 20 dB below
