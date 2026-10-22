@@ -26,7 +26,7 @@ because it was signed again is an image nobody can tell apart from a real
 change.
 
     sign-boot-triplet.py --triplet out/mainline-gki-mNNN \\
-        --stock cache/stock-c34/images --key private/avb/erhai-test-rsa4096.pem \\
+        --stock cache/stock-c34/images --key keys/boot.pem \\
         --output out/mainline-gki-mNNN-avb
 
 Needs avbtool: --avbtool, $AVBTOOL, or `avbtool` on PATH.
