@@ -95,7 +95,7 @@ development are not included in the supported feature set.
 | Touch | Novatek NT36536 | ✅ | Finger input, desktop interaction and login verified. Pen support is tracked separately. |
 | GPU and desktop | Adreno 830 / Freedreno / Mesa | 🟡 | GNOME and OpenGL hardware rendering are verified. Vulkan testing triggered a GPU timeout and is unsupported. Sandboxed applications and sustained loads need testing. |
 | Brightness | Dual KTZ8868 / one backlight interface | 🟡 | Unified brightness control and blanking are integrated; the slider’s usable brightness range needs physical testing. |
-| Magnetic keyboard | Pogo keyboard / touchpad | 🟡 | Keyboard input works. Full key mapping, touchpad gestures and detach/reattach need testing. |
+| Magnetic keyboard | Pogo keyboard / touchpad | 🟡 | Keyboard input works. The on-screen keyboard is meant to appear for touch input only while the keyboard is detached. Full key mapping, touchpad gestures, detach/reattach and the on-screen keyboard behavior need testing. |
 | Active pen | NT36536 pen input | 🔧 | Pen input code is available; position, pressure and buttons await physical testing. |
 | Pen charging | CPS8601 | ❌ | Charging, battery reporting and automatic scan control are not implemented. |
 
@@ -109,7 +109,7 @@ development are not included in the supported feature set.
 | USB host peripherals | HID, storage, network and digital audio | 🟡 | Mouse use through the tested dock works without external PD power. The same mouse and USB-A adapter work directly in Android but fail in Linux; other peripherals remain untested. |
 | USB storage formats | UAS, exFAT and NTFS3 | 🔧 | Emulated filesystem tests include independent verification of Chinese NTFS filenames. Real drives and desktop mounting remain untested. |
 | External display | USB-C DisplayPort Alt Mode | 🟡 | Output on a physical monitor is confirmed. Display-mode selection and hotplug stability still need testing. |
-| External display audio | DisplayPort / ALSA / PipeWire | ❌ | Disabled by default: playback configuration prevents microphone discovery with no monitor attached. Playback and hotplug recovery need further work and testing. |
+| External display audio | DisplayPort / ALSA / PipeWire | 🔧 | The HiFi profile includes the DisplayPort output again; it needs a kernel that accepts preparing playback with no monitor connected. Playback, hotplug and the microphones without a monitor await hardware testing. Creating `/etc/erhai/no-displayport-audio` withdraws the output. |
 
 ### Audio, Video and Sensors
 
@@ -144,6 +144,8 @@ development are not included in the supported feature set.
 
 The base system comes from the official Ubuntu Desktop image. Device support is
 delivered as separate `erhai-*` packages; Ubuntu packages remain managed by APT.
+Firefox comes from Mozilla's APT repository (`erhai-firefox`) instead of the
+snap, so that it renders with the device graphics driver and updates through APT.
 The display-power adapter currently targets GNOME Settings Daemon 50; desktop
 major-version upgrades need compatibility checks.
 

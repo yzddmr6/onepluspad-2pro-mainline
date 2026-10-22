@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+- Firefox is Mozilla's deb from packages.mozilla.org instead of the Ubuntu
+  snap, so that it can render with the device graphics driver; it is updated
+  through APT. The new `erhai-firefox` package configures the repository with
+  Mozilla's signing key and gives Mozilla's builds priority over Ubuntu's
+  transitional package. The root filesystem installs a pinned build, and the
+  Firefox snap is removed after first-boot seeding. Existing installations
+  switch as described in
+  [FLASHING](docs/FLASHING.md#upgrading-an-existing-installation). The
+  repository setup is based on
+  [TheMojoMan's oneplus-erhai-ubuntu](https://github.com/TheMojoMan/oneplus-erhai-ubuntu).
+- External display audio is back in the HiFi profile. It needs a kernel that
+  accepts preparing DisplayPort playback with no monitor connected, so
+  `erhai-audio` breaks older `erhai-kernel` packages. Creating
+  `/etc/erhai/no-displayport-audio` withdraws the output.
+- The on-screen keyboard is no longer forced on. GNOME offers it for touch
+  input while the keyboard cover is detached and keeps it hidden while the
+  cover is attached.
+
+These changes await testing on the tablet.
+
 ## v0.2.2
 
 - The internal microphones record at a usable level (ADC 13, TX DEC 112), and
