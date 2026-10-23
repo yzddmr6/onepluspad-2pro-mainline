@@ -150,7 +150,14 @@ EOF
 	for p in $(pidof telnetd httpd udhcpd dd 2>/dev/null); do kill "$p" 2>/dev/null; done
 	echo "SWITCHROOT systemd $(cat /proc/uptime)" >> "$1"
 	sync
-	exec switch_root /newroot /sbin/init
+	# Move the new root over / and enter it, instead of busybox switch_root,
+	# which deletes the initramfs before it mounts the new root. In between,
+	# neither root has /lib/firmware, and a built-in driver that requests
+	# firmware at that moment fails; the Bluetooth NVM file was lost this way.
+	# The initramfs contents stay in memory underneath the new root.
+	cd /newroot || return 1
+	mount -o move . / || return 1
+	exec chroot . /sbin/init
 }
 
 # A setup boot image appends the optional diagnostics package to its ramdisk
