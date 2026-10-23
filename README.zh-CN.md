@@ -95,7 +95,7 @@
 | USB 主机外设 | 键鼠、存储、网卡、数字音频 | 🟡 | 已测扩展坞无需外接 PD 即可使用鼠标；同一鼠标与 USB-A 转接头在 Android 直连正常，Linux 直连失败。其他外设待验。 |
 | USB 存储格式 | UAS、exFAT、NTFS3 | 🔧 | 模拟环境下读写与 NTFS 中文文件名检查通过；实盘与桌面挂载待验。 |
 | 外接显示 | USB-C DisplayPort Alt Mode | 🟡 | 外接显示器实际出图已确认；显示模式选择与热插拔稳定性待验。 |
-| 外屏声音 | DisplayPort / ALSA / PipeWire | 🔧 | HiFi 配置重新包含 DisplayPort 输出，需要未接外屏时也能准备播放的内核；播放、插拔及未接外屏时的麦克风待实测。创建 `/etc/erhai/no-displayport-audio` 可撤下该输出。 |
+| 外屏声音 | DisplayPort / ALSA / PipeWire | ❌ | 默认关闭：播放配置会影响未接外屏时的麦克风发现；播放与插拔恢复待修复、验证。 |
 
 ### 音视频与传感器
 

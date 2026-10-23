@@ -12,10 +12,6 @@
   [FLASHING](docs/FLASHING.md#upgrading-an-existing-installation). The
   repository setup is based on
   [TheMojoMan's oneplus-erhai-ubuntu](https://github.com/TheMojoMan/oneplus-erhai-ubuntu).
-- External display audio is back in the HiFi profile. It needs a kernel that
-  accepts preparing DisplayPort playback with no monitor connected, so
-  `erhai-audio` breaks older `erhai-kernel` packages. Creating
-  `/etc/erhai/no-displayport-audio` withdraws the output.
 - The on-screen keyboard is no longer forced on. GNOME offers it for touch
   input while the keyboard cover is detached and keeps it hidden while the
   cover is attached.

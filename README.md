@@ -109,7 +109,7 @@ development are not included in the supported feature set.
 | USB host peripherals | HID, storage, network and digital audio | 🟡 | Mouse use through the tested dock works without external PD power. The same mouse and USB-A adapter work directly in Android but fail in Linux; other peripherals remain untested. |
 | USB storage formats | UAS, exFAT and NTFS3 | 🔧 | Emulated filesystem tests include independent verification of Chinese NTFS filenames. Real drives and desktop mounting remain untested. |
 | External display | USB-C DisplayPort Alt Mode | 🟡 | Output on a physical monitor is confirmed. Display-mode selection and hotplug stability still need testing. |
-| External display audio | DisplayPort / ALSA / PipeWire | 🔧 | The HiFi profile includes the DisplayPort output again; it needs a kernel that accepts preparing playback with no monitor connected. Playback, hotplug and the microphones without a monitor await hardware testing. Creating `/etc/erhai/no-displayport-audio` withdraws the output. |
+| External display audio | DisplayPort / ALSA / PipeWire | ❌ | Disabled by default: playback configuration prevents microphone discovery with no monitor attached. Playback and hotplug recovery need further work and testing. |
 
 ### Audio, Video and Sensors
 
