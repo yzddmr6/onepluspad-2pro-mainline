@@ -59,7 +59,7 @@ installation.
 |---|---|
 | `ubuntu-pad2pro-VERSION-rootfs.squashfs.part*` and `…-rootfs.manifest.json` | Root filesystem to install, without USB diagnostics; first-time preparation also runs it as the temporary RAM desktop |
 | `ubuntu-pad2pro-VERSION-setup-boot.img` and `…-setup-boot.manifest.json` | Boot image of that temporary RAM desktop; it loads the root filesystem from the host and adds the USB diagnostic channel to that session only |
-| `erhai-device-packages-VERSION.tar` | Device and sensor packages for upgrading an existing installation |
+| `erhai-device-packages-VERSION.tar` | Packages for upgrading an existing installation, without USB diagnostics: the device packages built by `tools/build-debs.py` (kernel, firmware, audio, display power, device support, Firefox repository and the `erhai-device` metapackage), `erhai-mesa` and `erhai-sensors` |
 | `erhai-switch-VERSION.zip` | Android switch module |
 | `SHA256SUMS` | Checksums of every asset and of the joined image |
 
@@ -278,9 +278,9 @@ both directories to the tablet, then run in its terminal:
 sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 ```
 
-The release's `erhai-device-packages-VERSION.tar` holds the same packages without
-USB diagnostics; installing them also turns a diagnostic installation into a regular
-one (`tar xf erhai-device-packages-v0.3.0.tar && sudo apt install ./erhai-device-packages-v0.3.0/*.deb`).
+The release's `erhai-device-packages-VERSION.tar` holds the same packages and
+`erhai-mesa`, without USB diagnostics; installing them also turns a diagnostic
+installation into a regular one (`tar xf erhai-device-packages-v0.3.0.tar && sudo apt install ./erhai-device-packages-v0.3.0/*.deb`).
 
 The kernel package writes the new boot images to the active slot during the
 installation, and the previous kernel package stays installed. The sensor
