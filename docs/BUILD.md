@@ -172,7 +172,7 @@ python3 tools/build-debs.py --output out/device-packages \
 | `erhai-firmware` | the firmware closure the mainline drivers ask for and the distribution does not ship under those names |
 | `erhai-audio` | the board AudioReach topology and UCM for the internal microphones; DisplayPort audio is disabled in the default profile, and internal speaker playback remains opt-in |
 | `erhai-display-power` | the backlight power service, its socket and the GNOME 50 display-power adapter; it requires the kernel's single led-backlight device |
-| `erhai-debug` (optional) | USB diagnostic DHCP, HTTP and root-shell units, using Ubuntu's `busybox-static`; all units require `erhai.debug=1` |
+| `erhai-debug` (optional) | USB diagnostic DHCP, HTTP and root-shell units, using Ubuntu's `busybox-static`; all units require `erhai.debug=1`. While installed, the kernel panics on a hung task, soft lockup or oops and reboots 10 s later |
 | `erhai-device` | a metapackage depending on the required device packages |
 
 The kernel build includes all configured modules and records their hashes.
