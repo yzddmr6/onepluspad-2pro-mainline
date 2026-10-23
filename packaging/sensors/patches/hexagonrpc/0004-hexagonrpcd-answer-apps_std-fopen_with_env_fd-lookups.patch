@@ -1,5 +1,5 @@
 From 022bed29b7fb6380717169815696eac19bf66735 Mon Sep 17 00:00:00 2001
-From: Erwin <yzddmr7@gmail.com>
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
 Date: Fri, 25 Sep 2026 20:00:00 +0800
 Subject: [PATCH] hexagonrpcd: answer apps_std fopen_with_env_fd lookups
 

@@ -47,7 +47,7 @@ PACKAGE = REPO / 'packaging/erhai-sensors'
 PREFIX = 'usr/lib/erhai/sensors'
 RPCD_ROOT = 'usr/share/erhai-sensors/hexagonrpcd'
 STATE = '/var/lib/erhai/sensors'
-MAINTAINER = 'Erwin <yzddmr7@gmail.com>'
+MAINTAINER = 'yzddmr6 <46088090+yzddmr6@users.noreply.github.com>'
 # What the package takes from the staged installs. Headers, pkg-config files,
 # the CHRE client, the mock SSC server and the proxy's own unit, rules and
 # D-Bus policy are build by-products: Ubuntu's iio-sensor-proxy keeps owning

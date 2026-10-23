@@ -1,5 +1,5 @@
 From a194ba77fee54a59fb79ba0bfd6bee56f0d7242b Mon Sep 17 00:00:00 2001
-From: Erwin <yzddmr7@gmail.com>
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
 Date: Sat, 26 Sep 2026 16:00:00 +0800
 Subject: [PATCH] libssc: select the delivery and batching of streams at run
  time
@@ -291,7 +291,7 @@ index 0000000..fc88053
 @@ -0,0 +1,182 @@
 +/*
 + * libssc: Library to expose Qualcomm Sensor Core sensors
-+ * Copyright (C) 2026 Erwin
++ * Copyright (C) 2026 yzddmr6
 + *
 + * This program is free software: you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published

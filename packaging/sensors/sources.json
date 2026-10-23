@@ -55,28 +55,28 @@
       "patches": [
         {
           "file": "patches/hexagonrpc/0001-hexagonrpcd-expose-the-SSC-registry-version-sibling.patch",
-          "sha256": "856b046e572209b5f13c54ef100e685463aba23eefb850d0f3389c4c7ac6fa90",
-          "origin": "xiaomipad-6pro-mainline (Xiaomi Pad 6 Pro port), unmodified",
+          "sha256": "2dd07af5d94dac11171f4e461d3fb76400d121e22f122b3c227e5656fcf29fea",
+          "origin": "xiaomipad-6pro-mainline (Xiaomi Pad 6 Pro port), unmodified except for the author identity",
           "origin_url": "https://github.com/yzddmr6/xiaomipad-6pro-mainline/blob/e08c1488ef03b2d737c16f01d0d22f7258fd3289/device/sensors/patches/0001-hexagonrpcd-expose-the-SSC-registry-version-sibling.patch",
           "upstream_status": "not upstream"
         },
         {
           "file": "patches/hexagonrpc/0002-hexagonrpcd-add-a-narrow-sns_registry-property-shim.patch",
-          "sha256": "7826943d36a93bbddf1746e96b831bbc2efd5e7c7ff1f0d8460fe2f2acf7a1a5",
-          "origin": "xiaomipad-6pro-mainline (Xiaomi Pad 6 Pro port), unmodified",
+          "sha256": "1fd0eb8b6f1731ab49c55fd88f02a9eba8054f0082897a05a5f6a25d55d37d6f",
+          "origin": "xiaomipad-6pro-mainline (Xiaomi Pad 6 Pro port), unmodified except for the author identity",
           "origin_url": "https://github.com/yzddmr6/xiaomipad-6pro-mainline/blob/e08c1488ef03b2d737c16f01d0d22f7258fd3289/device/sensors/patches/0002-hexagonrpcd-add-a-narrow-sns_registry-property-shim.patch",
           "upstream_status": "not upstream"
         },
         {
           "file": "patches/hexagonrpc/0003-hexagonrpcd-serve-the-ODM-sensor-configuration-directory.patch",
-          "sha256": "8b43791c97bf750cbbee1caf51ced2ef007e73206d317c7e21c8ba4e9f727698",
+          "sha256": "aafe8d77959bd05c6cb5327bfc8775c0a9145c9d253823dabcca36ccbf99400d",
           "origin": "this project",
           "upstream_status": "not submitted",
           "note": "The ADSP sensor image names both /vendor/etc/sensors/config (json.lst) and /odm/etc/sensor/config (json_list); the stock sns_reg_config points its config directory at the ODM path."
         },
         {
           "file": "patches/hexagonrpc/0004-hexagonrpcd-answer-apps_std-fopen_with_env_fd-lookups.patch",
-          "sha256": "fe73ca530d87612078def87cffbc07994e6e21043f7ab29ea671074c8f25bcd8",
+          "sha256": "b233ec4ada75271c64a263e542e90f84a23f205de4e062f68b98b3f2eeb01ad4",
           "origin": "this project",
           "upstream_status": "not submitted",
           "note": "apps_std method 36 is fopen_with_env_fd in Qualcomm's apps_std IDL (quic/fastrpc src/apps_std_skel.c at d247519650fe5cb16de6c78edaa95bcc4be25073); the stock libadsprpc.so dispatcher accepts it only as sc 0x1f050100. Absent files answer ENOENT like the reference; serving a present file as a DSP-mapped buffer is not implemented and is refused with AEE_EUNSUPPORTED.",
@@ -105,7 +105,7 @@
         },
         {
           "file": "patches/hexagonrpc/0005-hexagonrpcd-keep-listening-after-refusing-a-request.patch",
-          "sha256": "aae6e7b1ce97018ffc58a63d60155f78222dccbe70c68906eb85bdb589c63cc2",
+          "sha256": "d1d62233e4bf8b6c587e8781a9d164fb6e62b8e86eb683c985f423a46906cfae",
           "origin": "this project",
           "upstream_status": "not submitted",
           "note": "Upstream hexagonrpcd exits on any refused request; the reference listener (quic/fastrpc src/listener_android.c) replies with the error and empty output buffers and keeps serving. Refusals stay logged.",
@@ -133,7 +133,7 @@
       "patches": [
         {
           "file": "patches/libssc/0001-libssc-select-the-delivery-and-batching-of-streams-at-run-time.patch",
-          "sha256": "20a41d2ded187804904ec4b8676d1a2de669c3b07aeb9b1d98945d2ae4a35ec5",
+          "sha256": "0d9945fcde4de14a42eef92f0ff6d71d92a301a978bcac596bd29b667205db00",
           "origin": "this project",
           "upstream_status": "not submitted",
           "note": "Stream requests take their delivery type and optional batching from SSC_SUSPEND_MODE, SSC_BATCH_PERIOD_US and SSC_FLUSH_PERIOD_US, read once per process; without them the requests are unchanged. Made the single-variable wake-up A/B of the ADSP SMP2P interrupts possible; 0002 turns the unset case into a per-sensor-type default.",
@@ -152,7 +152,7 @@
         },
         {
           "file": "patches/libssc/0002-libssc-choose-the-stream-delivery-by-sensor-type.patch",
-          "sha256": "ca6ea62fd23b6c036cad00298376255f359d3b54bed35fabd24760cca94ec324",
+          "sha256": "435d75da463a7615c9c7e9b183f68b4eb011be35b0edc56880fc9f73d72770c1",
           "origin": "this project",
           "upstream_status": "not submitted",
           "note": "Without SSC_SUSPEND_MODE the stream request of a sensor takes the delivery of its data type: accel, gyro, mag and rotv non-wakeup (delivery_type 1), every other type wake-up as in 0.4.4; streams stay unbatched unless SSC_BATCH_PERIOD_US is set. SSC_SUSPEND_MODE=wakeup|nowakeup still forces one delivery for every stream of the process (A/B and fallback). On this tablet non-wakeup delivery of the 5 Hz accelerometer stream removed the per-sample ADSP SMP2P interrupts (4.9/s to 0) with the sample rate unchanged; behaviour while the processor is suspended is not measured.",

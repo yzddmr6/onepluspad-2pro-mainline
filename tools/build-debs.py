@@ -112,7 +112,7 @@ PACKAGING = REPO / 'packaging'
 FIRMWARE = PACKAGING / 'firmware'
 MANIFEST = PACKAGING / 'firmware-manifest.json'
 VERSION_FILE = PACKAGING / 'VERSION'
-MAINTAINER = 'Erwin <yzddmr7@gmail.com>'
+MAINTAINER = 'yzddmr6 <46088090+yzddmr6@users.noreply.github.com>'
 DEBIAN_SCRIPTS = ('preinst', 'postinst', 'prerm', 'postrm')
 PACKAGES = ('erhai-display-power', 'erhai-device-support', 'erhai-firmware', 'erhai-audio',
             'erhai-firefox', 'erhai-kernel', 'erhai-debug', 'erhai-device')
