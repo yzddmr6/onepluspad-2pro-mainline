@@ -156,7 +156,7 @@ fastboot -s "$device_serial" reboot
 清除 Android 数据会重置这项授权；仅开启 USB 调试还不够。从电脑把模块传到平板：
 
 ```sh
-adb -s "$device_serial" push out/erhai-switch-v0.2.2.zip /sdcard/Download/
+adb -s "$device_serial" push out/erhai-switch-v0.3.0.zip /sdcard/Download/
 ```
 
 在 KernelSU 中选择“下载”目录里的 ZIP 安装，重启 Android，随后执行下面的 Linux 安装步骤。
@@ -228,7 +228,7 @@ sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 ```
 
 也可以直接用 Release 里的 `erhai-device-packages-版本.tar`：其中的包不含 USB 调试通道，
-装上后调试安装也会变成普通安装（`tar xf erhai-device-packages-v0.2.2.tar && sudo apt install ./erhai-device-packages-v0.2.2/*.deb`）。
+装上后调试安装也会变成普通安装（`tar xf erhai-device-packages-v0.3.0.tar && sudo apt install ./erhai-device-packages-v0.3.0/*.deb`）。
 
 安装时内核包会把新的启动镜像写入活动槽，旧内核包仍保留；安装时导入的传感器注册表保持不变。
 新内核起不来时，按下文的恢复步骤处理。

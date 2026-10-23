@@ -79,8 +79,8 @@ identity before moving the source directory.
 ## Build the Android module
 
 From the project root, run `python3 tools/package-switch.py`. Install the resulting
-`out/erhai-switch-v0.2.2.zip` through KernelSU and reboot Android. Transfer it first
-with `adb -s DEVICE_SERIAL push out/erhai-switch-v0.2.2.zip /sdcard/Download/`,
+`out/erhai-switch-v0.3.0.zip` through KernelSU and reboot Android. Transfer it first
+with `adb -s DEVICE_SERIAL push out/erhai-switch-v0.3.0.zip /sdcard/Download/`,
 then select the ZIP from Downloads in KernelSU. The module uses
 Android `flock` or KernelSU's bundled BusyBox to serialize writes.
 

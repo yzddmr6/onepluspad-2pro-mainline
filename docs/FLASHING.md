@@ -184,7 +184,7 @@ root access under KernelSU's Superuser page. Erasing Android data resets this
 grant; enabling USB debugging alone is not enough. Transfer the module from the host:
 
 ```sh
-adb -s "$device_serial" push out/erhai-switch-v0.2.2.zip /sdcard/Download/
+adb -s "$device_serial" push out/erhai-switch-v0.3.0.zip /sdcard/Download/
 ```
 
 Select the ZIP from Downloads in KernelSU, install it and reboot Android.
@@ -280,7 +280,7 @@ sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 
 The release's `erhai-device-packages-VERSION.tar` holds the same packages without
 USB diagnostics; installing them also turns a diagnostic installation into a regular
-one (`tar xf erhai-device-packages-v0.2.2.tar && sudo apt install ./erhai-device-packages-v0.2.2/*.deb`).
+one (`tar xf erhai-device-packages-v0.3.0.tar && sudo apt install ./erhai-device-packages-v0.3.0/*.deb`).
 
 The kernel package writes the new boot images to the active slot during the
 installation, and the previous kernel package stays installed. The sensor
