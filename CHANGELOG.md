@@ -24,6 +24,12 @@
   the `erhai-debug` package and installs it into that RAM session only, so
   neither the published image nor an installed system has USB diagnostics.
   See "Prebuilt release images" in [FLASHING](docs/FLASHING.md).
+- erhai-mesa revision 5 fixes the Mesa freedreno abort on the
+  `fd6_texture_state` assertion. One GL context allocated sampler view seqnos
+  in the application thread and freed them in the driver thread without
+  locking, so two live textures could share cached texture state. Showtime
+  aborted on it during video playback and GNOME Shell aborted on it once.
+  The fix is a project patch to Mesa 26.2.3 and is not yet upstream.
 
 These changes await testing on the tablet.
 

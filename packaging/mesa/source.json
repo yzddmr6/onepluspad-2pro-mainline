@@ -13,6 +13,15 @@
       "equivalence_note": "Previous patch envelope included one extra unchanged blank context line. Both apply with fuzz=0 to byte-identical source trees.",
       "upstream_commit": "2061a5ee6184e465eafb87cf465aed92c04f1a41",
       "note": "Unmodified upstream one-line device-table addition; not a fake GPU override."
+    },
+    {
+      "file": "patches/0002-freedreno-a6xx-thread-safe-tex-seqno-allocator.patch",
+      "sha256": "20894ab355ed33388b45a3b82ed3677be4bf20b3c63ba4f191defdb85fd3c479",
+      "upstream_commit": null,
+      "origin": "this project",
+      "upstream_status": "not submitted",
+      "fixes": "7b387997244679dcc995f3b5cb6cd50ce6e132c7",
+      "note": "Serializes the per-context sampler and sampler view seqno allocator, which threaded_context uses from two threads, and reserves seqno 0. Duplicate seqnos made the A6xx-A8xx texture state cache return state built for another texture (fd6_texture_state assertion `state->view_rsc_seqno[i] == seqno`). Still unfixed in upstream main as of 2026-10-22."
     }
   ],
   "purpose": "Isolated Freedreno build; no claim of verified hardware rendering until the real probe passes."

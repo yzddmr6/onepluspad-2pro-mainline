@@ -2,12 +2,15 @@
 
 ## Mesa build and device package
 
-`packaging/mesa/source.json` pins the original Mesa archive and one unmodified
-upstream A830v1 device-table patch. `tools/build-mesa.py` checks both hashes and
-builds natively on ARM64. It installs only into an output staging tree; it does
-not replace the host's graphics libraries. `tools/package-mesa.py` turns a verified
-desktop build into the separately removable `erhai-mesa` package.
-The patch retains its original author and the affected file's MIT license;
+`packaging/mesa/source.json` pins the original Mesa archive and two patches: the
+unmodified upstream A830v1 device-table entry, and a freedreno fix, not yet
+upstream, that makes the texture state seqno allocator thread-safe. Without it,
+GTK drawing GStreamer video frames could abort on the `fd6_texture_state`
+assertion. `tools/build-mesa.py` checks all hashes and builds natively on
+ARM64. It installs only into an output staging tree; it does not replace the
+host's graphics libraries. `tools/package-mesa.py` turns a verified desktop
+build into the separately removable `erhai-mesa` package.
+The patches keep their authors and the affected files' MIT license;
 Mesa's own `docs/license.rst` and per-file notices govern the source archive.
 This repository's GPL license applies to its build tooling, not to Mesa.
 

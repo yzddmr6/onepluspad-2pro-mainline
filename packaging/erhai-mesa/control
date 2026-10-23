@@ -6,7 +6,8 @@ Section: libs
 Priority: optional
 Depends: @DEPENDS@
 Description: Freedreno OpenGL desktop driver for the OnePlus Pad 2 Pro
- Private Mesa libraries with the upstream Adreno 830v1 device entry.
+ Private Mesa libraries with the upstream Adreno 830v1 device entry and a
+ fix for texture state mix-ups between threads of one GL context.
  GNOME and systemd user sessions select this driver at their next start
  while the GPU is bound to its kernel driver, and Ubuntu's software renderer
  otherwise; distribution libraries remain owned and updated by Ubuntu.
