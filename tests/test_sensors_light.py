@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-only
 """Reproduce nested Claim/Release against the upstream SSC light driver."""
 import hashlib
+import importlib.machinery
+import importlib.util
 import json
 from pathlib import Path
 import shutil
@@ -11,6 +13,19 @@ import unittest
 
 REPO = Path(__file__).resolve().parents[1]
 INPUTS = REPO / 'packaging/sensors'
+
+
+def load(path, name):
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    module = importlib.util.module_from_spec(spec)
+    loader.exec_module(module)
+    return module
+
+
+# Resolve the pinned source cache the way the tools do (ERHAI_WORKSPACE or the
+# checkout root), not by walking up from the tests directory.
+BUILDER = load(REPO / 'tools/build-sensors.py', 'build_sensors')
 
 
 PRELUDE = r'''
@@ -76,7 +91,7 @@ class LightTransitions(unittest.TestCase):
     def test_nested_release_and_latest_claim(self):
         pin = next(s for s in json.loads((INPUTS / 'sources.json').read_text())['sources']
                    if s['name'] == 'iio-sensor-proxy')
-        archive = REPO.parents[1] / 'cache/sensors' / pin['archive']
+        archive = BUILDER.WS / 'cache/sensors' / pin['archive']
         if not archive.is_file() or not shutil.which('cc'):
             self.skipTest('requires pinned source cache and host C compiler')
         self.assertEqual(hashlib.sha256(archive.read_bytes()).hexdigest(), pin['sha256'])
