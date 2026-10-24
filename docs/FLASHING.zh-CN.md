@@ -29,7 +29,8 @@ RAM 临时启动不替换启动分区，但使用已安装根系统的临时内�
 - Ubuntu 桌面打开 **Switch to Android（切换到 Android）**，按提示输入管理员密码，等待自动重启。
 - Android 侧使用已安装的 KernelSU 切换模块；其安装和路径约定见
   [切换器说明](../switch/README.md)。
-- Linux 或 Fastboot 下电量下降时，先返回 Android 充电，确认电量恢复后再继续。
+- 已装 Linux 中可接 USB PD 充电器充电（电脑 USB 口供电不足以净充电）；Fastboot 下不能充电，
+  电量不足时返回 Android 充电，确认电量恢复后再继续。
 
 两个方向的切换在既有测试布局上已有验证。切换会改写三个启动分区，不能用于尚未
 安装、缺失回退镜像或布局不一致的设备。

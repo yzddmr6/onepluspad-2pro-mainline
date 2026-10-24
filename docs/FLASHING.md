@@ -36,8 +36,10 @@ These steps require the established project layout and complete switcher storage
   for the automatic reboot.
 - In Android, use the installed KernelSU switching module; see the
   [switcher reference](../switch/README.md) for its installation and path conventions.
-- If battery charge falls in Linux or Fastboot, return to Android to charge and
-  confirm that capacity has recovered before continuing.
+- An installed Linux system charges from a USB PD charger; a computer's USB port
+  does not supply enough to charge it. Fastboot does not charge: when the battery
+  runs low there, return to Android to charge and confirm that capacity has
+  recovered before continuing.
 
 Both switching directions have been tested on the existing layout. Switching
 writes three boot partitions; it does not apply to a fresh tablet, missing
