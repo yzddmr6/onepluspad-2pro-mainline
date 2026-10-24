@@ -29,8 +29,9 @@ package archive of the release now also carries `erhai-mesa`.
     standard power-supply attributes, power for USB devices attached directly
     to the port, such as a mouse on a USB-C to USB-A adapter, and PPS
     charging at up to 8.4 V and 3 A. The end threshold defaults to 100 %,
-    which leaves charging to the firmware as before; PPS charging stays off
-    unless `qcom_battmgr.pps_enable=1` is set.
+    which leaves charging to the firmware as before. PPS charging stays off
+    unless `qcom_battmgr.pps_enable=1` is set, and is experimental: on the
+    tested charger it did not start a PPS contract.
 - Firefox is Mozilla's deb from packages.mozilla.org instead of the Ubuntu
   snap, so that it can render with the device graphics driver; it is updated
   through APT. The new `erhai-firefox` package configures the repository with
@@ -62,7 +63,22 @@ package archive of the release now also carries `erhai-mesa`.
 Several kernel changes build on @TheMojoMan's
 [oneplus-erhai-linux](https://github.com/TheMojoMan/oneplus-erhai-linux).
 
-<!-- Tablet test results: to be added. -->
+Tested on the tablet: the installed system upgraded to these packages with
+the boot images read back intact, and Bluetooth came up with its address on
+every boot during testing and after three power cycles. Everyday applications
+ran with hardware OpenGL without GPU faults, including Firefox and video
+playback in Showtime; recording used the 75 Hz filters; the 70 % end threshold
+stopped charging and 100 % resumed it; a two-minute suspend resumed. With the
+keyboard cover, the on-screen keyboard appeared when it was detached and hid
+when it was attached, and the top row and its F1 to F12 layer reported the
+expected keys. A USB drive on a USB-C to USB-A adapter was powered, mounted on
+the desktop and written with a Chinese filename on two insertions. A USB PD
+charger charged the battery at about 1.6 A at 5 V and 2 A.
+
+Known issues: the touchpad key of the keyboard cover gives F4 with the
+magnifier key held only on every other press. After a period without input
+the keyboard cover can stop responding and does not recover when reattached;
+restarting Linux restores it. PPS charging has no effect yet, as noted above.
 
 ## v0.2.2
 
