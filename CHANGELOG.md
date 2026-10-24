@@ -73,7 +73,7 @@ keyboard cover, the on-screen keyboard appeared when it was detached and hid
 when it was attached, and the top row and its F1 to F12 layer reported the
 expected keys. A USB drive on a USB-C to USB-A adapter was powered, mounted on
 the desktop and written with a Chinese filename on two insertions. A USB PD
-charger charged the battery at about 1.6 A at 5 V and 2 A.
+charger net-charged the battery at about 1.6 A at 5 V and 2 A.
 
 Known issues: the touchpad key of the keyboard cover gives F4 with the
 magnifier key held only on every other press. After a period without input

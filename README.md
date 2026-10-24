@@ -22,8 +22,8 @@ primarily in Chinese.
   and reinstallation are provided for the 512 GB model. First-time partitioning
   erases Android data. See the [installation and recovery guide](docs/FLASHING.md)
   for firmware and layout requirements.
-- **Power:** Linux charges the battery from a USB PD charger: a 5 V, 2 A contract
-  charged it at about 1.6 A with the screen on. On a computer's USB port with the
+- **Power:** Linux net-charges the battery from a USB PD charger: a 5 V, 2 A
+  contract charged it at about 1.6 A with the screen on, and capacity rose. On a computer's USB port with the
   screen on, the tablet uses more than the port supplies and the battery still
   drains slowly. The stock fast-charging protocols are not available under Linux,
   and the optional PPS charging does not take effect yet. Fastboot is not a
@@ -135,7 +135,7 @@ development are not included in the supported feature set.
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up reports `KEY_VOLUMEUP` (115); all 10 physical presses passed. Volume down remains mapped to `KEY_VOLUMEDOWN`. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management remain incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
-| Charging in Linux | USB power / vendor firmware | 🟡 | A USB PD charger charges the battery: a 5 V, 2 A contract charged it at about 1.6 A with the screen on. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock fast-charging protocols are not available under Linux; the optional PPS charging (`qcom_battmgr.pps_enable=1`) did not start a PPS contract on the tested charger. |
+| Charging in Linux | USB power / vendor firmware | 🟡 | A USB PD charger net-charges the battery: a 5 V, 2 A contract charged it at about 1.6 A with the screen on, and capacity rose. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock fast-charging protocols are not available under Linux; the optional PPS charging (`qcom_battmgr.pps_enable=1`) did not start a PPS contract on the tested charger. |
 | Suspend and resume | Linux power management | 🟡 | Defaults to s2idle. On the installed v0.2.0 system, 300-second RTC-timed suspends in both display modes resumed the display, touch, Wi-Fi and sensors; power-button wake was verified by a contributor. Unplugged standby life and the deepest SoC power states remain open; the firmware-advertised `deep` state is not used by default. |
 | RTC | Qualcomm PMIC RTC | 🟡 | Time read/write verified. Clock rollback was observed after restarting and requires time synchronization. |
 | Snap applications | AppArmor / snapd / graphics runtime | ❌ | Full confinement and graphical Snap apps are unsupported in this release. The selected kernel does not enable AppArmor. |
