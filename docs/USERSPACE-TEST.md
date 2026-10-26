@@ -41,3 +41,7 @@ trace 有实际 session/解码提交，画面正确且 seek 后继续；`about:s
 确认 `about:config` 的包默认值生效、无旧用户覆盖；拒绝把 V4L2 直解或软件回退记作 VA-API。
 若原生 Firefox 不支持 HEVC、沙箱拒绝视频节点或缺 decode-order 控制，记录为未通过并停在
 该层，不关闭沙箱、不换浏览器构建来掩盖结果。设备会话结束后恢复临时日志/设置并核对。
+
+当前已知限制：Showtime 50 的默认 V4L2 路径播放 VP9 时，可能在启动阶段的 flush/restart
+后停住，没有渲染帧；不能据此宣称系统播放器的三格式播放与 seek 全部通过。原生 Firefox
+的 H.264、HEVC、VP9 VA-API 播放和 seek 已在设备上通过，两个应用路径须分别验收。
