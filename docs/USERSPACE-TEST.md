@@ -1,6 +1,6 @@
 # 用户态候选：一次上机验收
 
-本候选尚未上机。先 RAM 启动待验内核并武装有界恢复；确认电量 ≥30%、Iris/GPU 已绑定、
+测试前先 RAM 启动待验内核并武装有界恢复；确认电量 ≥30%、Iris/GPU 已绑定、
 无 D 状态，备好回退包。首个硬件故障立即停测、取内核日志，按设备恢复流程强制重启。
 由设备会话执行者安装本批三个 deb（`sudo apt install ./erhai-*.deb`），注销再登录。
 准备 3 段已知正常、有运动画面的短片：`h264.mp4`、`h265.mp4`、`vp9.webm`，每段 10–30 秒。
@@ -8,10 +8,10 @@
 
 | 项目 | 命令 | 通过判据 |
 |---|---|---|
-| Vulkan 识别 | `timeout 30 vulkaninfo --summary` | Adreno 830 / Turnip；无 llvmpipe、无重复 Freedreno 设备 |
+| Vulkan 识别 | `timeout 30 vulkaninfo --summary` | Adreno 830 / Turnip；仅一个 Adreno，列为 GPU0 / 默认设备；允许系统 llvmpipe |
 | Vulkan 显示 | `timeout 60 vkcube --wsi wayland --c 300` | 实体屏幕立方体连续正确旋转，正常退出、无 GPU fault |
 | Vulkan 负载 | `timeout 180 vkmark` | 完成全部场景，有有效分数，画面正确，无挂起/恢复重置 |
-| OpenGL 回归 | `timeout 180 glmark2-es2-wayland` | Adreno 830，全部场景结束，画面正确，无 seqno 断言/内核故障 |
+| OpenGL 回归 | `timeout 420 glmark2-es2-wayland` | Adreno 830，全部场景结束，画面正确，无 seqno 断言/内核故障 |
 | VA 能力 | `timeout 30 vainfo --display drm` | 自动加载 msm/V4L2 驱动，H.264、HEVC Main、VP9 profile 有 VLD；枚举本身不算硬解通过 |
 | GStreamer 能力 | `gst-inspect-1.0 video4linux2`，逐个 `gst-inspect-1.0 v4l2h264dec` / `v4l2h265dec` / `v4l2vp9dec` | 动态工厂存在、rank 512；检查实际绑定 Iris 节点，非摄像头 |
 

@@ -1,9 +1,11 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-only
 set -e
-ICD=/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json
 case "$1" in
 install | upgrade)
-    dpkg-divert --package erhai-mesa --add --rename --divert "$ICD.distrib" "$ICD"
+    for ICD in /usr/share/vulkan/icd.d/freedreno_icd.json \
+               /usr/share/vulkan/icd.d/freedreno_icd.aarch64.json; do
+        dpkg-divert --package erhai-mesa --add --rename --divert "$ICD.distrib" "$ICD"
+    done
     ;;
 esac

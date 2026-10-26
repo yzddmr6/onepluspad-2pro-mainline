@@ -21,7 +21,8 @@ Run `tools/package-mesa.py` in the target ARM64 root for dependency scanning.
 With QEMU user emulation, always set `QEMU_CPU=max,pauth-impdef=on`.
 
 Libraries stay under `/usr/lib/erhai/mesa`; session selection is unchanged.
-The package diverts Ubuntu's standard Freedreno ICD using `dpkg-divert`, installs
+The package diverts both distribution Freedreno ICD filenames
+(`freedreno_icd.json` and `freedreno_icd.aarch64.json`) using `dpkg-divert`, installs
 an ICD pointing to its private Turnip library, and restores the distribution ICD
 on removal. Other Vulkan ICDs remain available. Start a new desktop session
 after installation/removal so applications load the intended library versions.
