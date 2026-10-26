@@ -19,9 +19,14 @@ is involved. Iris decode-order/display-delay controls in the running kernel are 
 for the intended low-latency path; display-order fallback is not qualified. H.264, HEVC and VP9 are candidates; AV1 is not enabled.
 Build and host smoke results do not establish hardware playback.
 
-`erhai-video-defaults` prefers the distribution's stateful V4L2 GStreamer
-decoders over software decoders and enables VA-API defaults for native Firefox
-installed in `/usr/lib/firefox` or `/usr/lib/firefox-esr`. User preferences take
+`erhai-video-defaults` prefers the distribution's `vah264dec`, `vah265dec`
+and `vavp9dec` GStreamer elements, using the same Iris VA adapter as Firefox.
+`GST_VA_ALL_DRIVERS=1` admits this driver's real vendor string through
+GStreamer's vendor filter; no driver identity is spoofed. The generic V4L2
+VP9 path can stop producing frames across an initial flush/restart, so it
+is no longer promoted by this package. The package leaves decoder selection
+to playbin and respects an explicit `GST_PLUGIN_FEATURE_RANK` override.
+It also enables VA-API defaults for native Firefox installed in `/usr/lib/firefox` or `/usr/lib/firefox-esr`. User preferences take
 precedence. Hardware video decoding is force-enabled for this candidate; the
 Vulkan Video path is disabled to keep the browser on VA-API. Log out and back in after installing or removing it. The package
 does not modify profiles, policies, application launchers or sandbox settings.

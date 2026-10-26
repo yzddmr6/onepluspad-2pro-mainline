@@ -6,5 +6,5 @@ Section: video
 Priority: optional
 Depends: erhai-iris-vaapi (>= 0.4.0~rc1), gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav
 Description: Iris video defaults for GStreamer and native Firefox
- Prefer stateful V4L2 decoders in GStreamer and enable Firefox VA-API.
+ Prefer Iris-backed VA decoders in GStreamer and enable Firefox VA-API.
  Firefox snap and Flatpak require separate runtime integration.

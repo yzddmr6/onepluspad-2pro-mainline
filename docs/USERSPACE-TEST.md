@@ -13,19 +13,19 @@
 | Vulkan 负载 | `timeout 180 vkmark` | 完成全部场景，有有效分数，画面正确，无挂起/恢复重置 |
 | OpenGL 回归 | `timeout 420 glmark2-es2-wayland` | Adreno 830，全部场景结束，画面正确，无 seqno 断言/内核故障 |
 | VA 能力 | `timeout 30 vainfo --display drm` | 自动加载 msm/V4L2 驱动，H.264、HEVC Main、VP9 profile 有 VLD；枚举本身不算硬解通过 |
-| GStreamer 能力 | `gst-inspect-1.0 video4linux2`，逐个 `gst-inspect-1.0 v4l2h264dec` / `v4l2h265dec` / `v4l2vp9dec` | 动态工厂存在、rank 512；检查实际绑定 Iris 节点，非摄像头 |
+| GStreamer 能力 | `gst-inspect-1.0 va`，逐个 `gst-inspect-1.0 vah264dec` / `vah265dec` / `vavp9dec` | 动态工厂存在、rank 512；VA 驱动为 Iris，实际打开 Iris 解码节点 |
 
 播放器逐段执行（保持默认自动选择，不能指定 decoder 来代替默认路径验收）：
 
 ```sh
 for f in h264.mp4 h265.mp4 vp9.webm; do
-  GST_DEBUG='decodebin*:5,v4l2*:5' GST_DEBUG_FILE="/tmp/$f.gst.log" \
+  V4L2_VA_TRACE=1 GST_DEBUG='decodebin*:5,va*:5' GST_DEBUG_FILE="/tmp/$f.gst.log" \
     timeout 90 gst-launch-1.0 -m -v playbin uri="file://$PWD/$f" || break
 done
 ```
 
-三段都须：日志中实际解码元素分别为 `v4l2h264dec`、`v4l2h265dec`、`v4l2vp9dec`，
-其 CAPTURE 队列持续 DQBUF、正常 EOS；实体画面正确、声音正常（有音轨时）。同样用系统
+三段都须：日志中实际解码元素分别为 `vah264dec`、`vah265dec`、`vavp9dec`，
+Iris trace 中有实际提交和完成，渲染帧数持续增长、正常 EOS；实体画面正确、声音正常（有音轨时）。同样用系统
 播放器各打开一段并拖动进度条；仅画面播放、低 CPU 或 `avdec_*` 不算硬解通过。
 
 完全退出原生 Firefox 后运行（snap/Flatpak 不在这组 deb 的覆盖范围）：
@@ -42,6 +42,7 @@ trace 有实际 session/解码提交，画面正确且 seek 后继续；`about:s
 若原生 Firefox 不支持 HEVC、沙箱拒绝视频节点或缺 decode-order 控制，记录为未通过并停在
 该层，不关闭沙箱、不换浏览器构建来掩盖结果。设备会话结束后恢复临时日志/设置并核对。
 
-当前已知限制：Showtime 50 的默认 V4L2 路径播放 VP9 时，可能在启动阶段的 flush/restart
-后停住，没有渲染帧；不能据此宣称系统播放器的三格式播放与 seek 全部通过。原生 Firefox
-的 H.264、HEVC、VP9 VA-API 播放和 seek 已在设备上通过，两个应用路径须分别验收。
+当前默认路径已验证 Showtime 50 中 1280×720、30 fps、8 位 H.264/HEVC/VP9 的播放、
+暂停及进度条拖动；没有使用软件解码回退。通用 `v4l2vp9dec` 在初始化 flush/restart 后
+停帧的问题仍存在，本包不再提高该路径的优先级。手动覆盖 rank 选择它不属于上述通过结果。
+原生 Firefox 的 VA-API 与系统播放器分别验收；截图或帧计数不替代实体听音与完整画质验收。
