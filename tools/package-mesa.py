@@ -31,6 +31,12 @@ def main():
     build = args.build_output.resolve()
     result = json.loads((build / 'build-result.json').read_text())
     identity = json.loads((build / 'input.json').read_text())
+    # Publish compiler identity without local executable/sysroot paths.
+    if 'target_compilers' in result:
+        result['target_compilers'] = {
+            language: {key: compiler[key] for key in
+                       ('id', 'version', 'full_version', 'linker_id')}
+            for language, compiler in result['target_compilers'].items()}
     source = json.loads((REPO / 'packaging/mesa/source.json').read_text())
     if (result['input_sha256'] != sha(build / 'input.json')
             or result['profile'] != 'desktop'

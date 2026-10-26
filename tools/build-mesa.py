@@ -106,6 +106,11 @@ def main():
         build = out / 'build'
         if not (build / 'build.ninja').exists():
             run(['meson', 'setup', build, src, *flags], env=env)
+        compilers = json.loads((build / 'meson-info/intro-compilers.json').read_text())
+        cpp = compilers['host']['cpp']
+        if cpp['id'] == 'gcc' and int(cpp['version'].split('.')[0]) < 14:
+            parser.error('Mesa requires GCC 14 or newer: GCC 13 -O3 miscompiles '
+                         'ir_constant::is_value, discarding valid floating-point cases')
         if args.configure_only:
             return
         run(['meson', 'compile', '-C', build, '-j', args.jobs], env=env)
@@ -117,6 +122,7 @@ def main():
                     for path in sorted(stage.rglob('*')) if path.is_symlink()}
         result = {'status': 'OFFLINE_BUILD_ONLY', 'version': lock['version'],
                   'profile': args.profile, 'prefix': prefix,
+                  'target_compilers': compilers['host'],
                   'input_sha256': sha(identity_file), 'files_sha256': files,
                   'symlinks': symlinks}
         (out / 'build-result.json').write_text(json.dumps(result, indent=2) + '\n')
