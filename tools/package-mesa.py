@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-only
-"""Package the verified Freedreno OpenGL desktop driver."""
+"""Package the verified Freedreno OpenGL and Turnip desktop drivers."""
 import argparse
 import hashlib
 import json
@@ -14,7 +14,7 @@ import tempfile
 
 REPO = Path(__file__).resolve().parents[1]
 PREFIX = 'usr/lib/erhai/mesa'
-SCRIPTS = ('postinst', 'postrm')
+SCRIPTS = ('preinst', 'postrm')
 
 
 def sha(path):
@@ -69,10 +69,9 @@ def main():
             # Headers, static libraries and pkg-config files are build inputs,
             # not dependencies of an installed desktop.
             if not (name.startswith(PREFIX + '/lib/') and '.so' in Path(name).name
+                    or name.startswith(PREFIX + '/share/vulkan/icd.d/')
                     or name.startswith(PREFIX + '/share/glvnd/')
                     or name.startswith(PREFIX + '/share/drirc.d/')):
-                continue
-            if 'libvulkan' in Path(name).name:
                 continue
             dst = root / name
             dst.parent.mkdir(parents=True, exist_ok=True)
@@ -80,6 +79,12 @@ def main():
                 dst.symlink_to(result['symlinks'][name])
             else:
                 shutil.copy2(stage / name, dst)
+        icds = list((prefix / 'share/vulkan/icd.d').glob('*.json'))
+        if len(icds) != 1:
+            parser.error('expected exactly one Turnip ICD')
+        icd_dir = root / 'usr/share/vulkan/icd.d'
+        icd_dir.mkdir(parents=True)
+        (icd_dir / 'freedreno_icd.aarch64.json').symlink_to('/' + str(icds[0].relative_to(root)))
         # Every private path the selection entries name must be in this package.
         for config in sorted((metadata / 'tree').rglob('*')):
             if config.is_file():

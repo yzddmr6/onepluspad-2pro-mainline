@@ -1,0 +1,438 @@
+From d1d5b64cf46e6092fde7286f258b39c9d21d0f9f Mon Sep 17 00:00:00 2001
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Date: Mon, 26 Oct 2026 09:31:24 +0800
+Subject: [PATCH] turnip/ir3: use exact-width typed reads for aligned readonly
+ SSBOs
+
+Add R32, RG32 and RGBA32 aliases to storage-buffer descriptors and select
+ordinary typed reads for aligned readonly vectors. Decompose vectors
+without reading extra components; retain the existing path for unaligned
+accesses and robustness2.
+
+Expand the descriptor stride from two to five slots and use multiplication
+for resource index and reindex addressing. Update dynamic offsets, mutable
+pool sizing, descriptor-buffer sizes and null descriptors consistently.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+---
+ src/freedreno/ir3/ir3_compiler.h          | 19 +++++
+ src/freedreno/ir3/ir3_compiler_nir.c      | 53 +++++++++++--
+ src/freedreno/vulkan/tu_common.h          |  2 +-
+ src/freedreno/vulkan/tu_descriptor_set.cc | 19 ++++-
+ src/freedreno/vulkan/tu_device.cc         | 12 +--
+ src/freedreno/vulkan/tu_shader.cc         | 94 ++++++++++++++++++++---
+ 6 files changed, 174 insertions(+), 25 deletions(-)
+
+diff --git a/src/freedreno/ir3/ir3_compiler.h b/src/freedreno/ir3/ir3_compiler.h
+index 2a581a2..568b560 100644
+--- a/src/freedreno/ir3/ir3_compiler.h
++++ b/src/freedreno/ir3/ir3_compiler.h
+@@ -23,6 +23,23 @@ BEGINC;
+ struct ir3_ra_reg_set;
+ struct ir3_shader;
+ 
++/* Maximum format alignment used by the exact-width decomposition, including
++ * a scalar prefix followed by a wider suffix (e.g. vec4.yzw). */
++static inline unsigned
++ir3_ssbo_typed_alignment(const nir_intrinsic_instr *intr)
++{
++   unsigned alignment = 4;
++   for (unsigned c = 0; c < intr->def.num_components; c++) {
++      for (unsigned w = 2; w <= 4; w *= 2) {
++         if (intr->def.num_components - c >= w &&
++             nir_intrinsic_align_mul(intr) >= w * 4 &&
++             (nir_intrinsic_align_offset(intr) + c * 4) % (w * 4) == 0)
++            alignment = MAX2(alignment, w * 4);
++      }
++   }
++   return alignment;
++}
++
+ struct ir3_compiler_options {
+    /* If true, promote UBOs (except for constant data) to constants using ldc.k
+     * in the preamble. The driver should ignore everything in ubo_state except
+@@ -46,6 +63,8 @@ struct ir3_compiler_options {
+    bool storage_16bit;
+    /* True if 8-bit descriptors are available. */
+    bool storage_8bit;
++   /* Driver appends R32/RG32/RGBA32 aliases after the storage descriptors. */
++   bool typed_isam_ssbo;
+ 
+    /* If base_vertex should be lowered in nir */
+    bool lower_base_vertex;
+diff --git a/src/freedreno/ir3/ir3_compiler_nir.c b/src/freedreno/ir3/ir3_compiler_nir.c
+index 16ad700..35d8a01 100644
+--- a/src/freedreno/ir3/ir3_compiler_nir.c
++++ b/src/freedreno/ir3/ir3_compiler_nir.c
+@@ -1640,7 +1640,8 @@ struct tex_src_info {
+  * to handle with the image_mapping table..
+  */
+ static struct tex_src_info
+-get_image_ssbo_samp_tex_src(struct ir3_context *ctx, nir_src *src, bool image)
++get_image_ssbo_samp_tex_src(struct ir3_context *ctx, nir_src *src, bool image,
++                            unsigned descriptor_delta)
+ {
+    struct ir3_builder *b = &ctx->build;
+    struct tex_src_info info = {0};
+@@ -1657,7 +1658,7 @@ get_image_ssbo_samp_tex_src(struct ir3_context *ctx, nir_src *src, bool image)
+       info.tex_base = nir_intrinsic_desc_set(bindless_tex);
+       bool tex_const = nir_src_is_const(bindless_tex->src[0]);
+       if (tex_const)
+-         info.tex_idx = nir_src_as_uint(bindless_tex->src[0]);
++         info.tex_idx = nir_src_as_uint(bindless_tex->src[0]) + descriptor_delta;
+       info.samp_idx = 0;
+ 
+       /* Choose encoding. */
+@@ -1683,11 +1684,14 @@ get_image_ssbo_samp_tex_src(struct ir3_context *ctx, nir_src *src, bool image)
+          struct ir3_instruction *texture, *sampler;
+ 
+          texture = ir3_get_src(ctx, src)[0];
++         if (descriptor_delta)
++            texture = ir3_ADD_U(b, texture, 0, create_immed(b, descriptor_delta), 0);
+          sampler = create_immed(b, 0);
+          info.samp_tex = ir3_collect(b, texture, sampler);
+       }
+    } else {
+       info.flags |= IR3_INSTR_S2EN;
++      assert(descriptor_delta == 0);
+       unsigned slot = nir_src_as_uint(*src);
+       unsigned tex_idx = image ?
+             ir3_image_to_tex(&ctx->so->image_mapping, slot) :
+@@ -1751,7 +1755,7 @@ emit_intrinsic_load_image(struct ir3_context *ctx, nir_intrinsic_instr *intr,
+    }
+ 
+    struct ir3_builder *b = &ctx->build;
+-   struct tex_src_info info = get_image_ssbo_samp_tex_src(ctx, &intr->src[0], true);
++   struct tex_src_info info = get_image_ssbo_samp_tex_src(ctx, &intr->src[0], true, 0);
+    struct ir3_instruction *sam, *rck;
+    struct ir3_instruction *const *src0 = ir3_get_src(ctx, &intr->src[1]);
+    struct ir3_instruction *coords[4];
+@@ -1804,7 +1808,7 @@ emit_intrinsic_image_size_tex(struct ir3_context *ctx,
+                               struct ir3_instruction **dst)
+ {
+    struct ir3_builder *b = &ctx->build;
+-   struct tex_src_info info = get_image_ssbo_samp_tex_src(ctx, &intr->src[0], true);
++   struct tex_src_info info = get_image_ssbo_samp_tex_src(ctx, &intr->src[0], true, 0);
+    struct ir3_instruction *sam, *lod;
+    unsigned flags, ncoords = ir3_get_image_coords(intr, &flags);
+    type_t dst_type = intr->def.bit_size == 16 ? TYPE_U16 : TYPE_U32;
+@@ -1995,7 +1999,7 @@ emit_readonly_load_uav(struct ir3_context *ctx,
+                        struct ir3_instruction **dst)
+ {
+    struct ir3_builder *b = &ctx->build;
+-   struct tex_src_info info = get_image_ssbo_samp_tex_src(ctx, index, false);
++   struct tex_src_info info = get_image_ssbo_samp_tex_src(ctx, index, false, 0);
+ 
+    struct ir3_instruction *src1;
+    if (ctx->compiler->info->props.has_isam_v && !uav_load) {
+@@ -2068,6 +2072,45 @@ emit_intrinsic_load_ssbo(struct ir3_context *ctx,
+          ir3_collect(b, ir3_get_src(ctx, offset_src)[0], create_immed(b, 0));
+    }
+ 
++   if (ctx->compiler->options.typed_isam_ssbo &&
++       ctx->so->type == MESA_SHADER_COMPUTE && intr->def.bit_size == 32 &&
++       (intr->def.num_components == 1 || ir3_ssbo_typed_alignment(intr) > 4) &&
++       !(ctx->so->shader_options.nir_options.robust_modes & nir_var_mem_ssbo)) {
++      /* Exact-width chunks: never read a fourth component for a vec3.  Keep
++       * robust2 on the original component-wise bounds-checked path. */
++      const unsigned aliases = 1 + ctx->compiler->options.storage_8bit +
++         (ctx->compiler->options.storage_16bit &&
++          !ctx->compiler->info->props.has_isam_v);
++      for (unsigned c = 0; c < intr->def.num_components;) {
++         unsigned width = 1;
++         for (unsigned w = 4; w >= 2; w /= 2) {
++            if (intr->def.num_components - c >= w &&
++                nir_intrinsic_align_mul(intr) >= w * 4 &&
++                (nir_intrinsic_align_offset(intr) + c * 4) % (w * 4) == 0) {
++               width = w;
++               break;
++            }
++         }
++         unsigned shift = util_logbase2(width);
++         struct tex_src_info info = get_image_ssbo_samp_tex_src(
++            ctx, &intr->src[0], false, aliases + shift);
++         struct ir3_instruction *offset = coords;
++         if (imm_offset + c)
++            offset = ir3_ADD_U(b, offset, 0, create_immed(b, imm_offset + c), 0);
++         if (shift)
++            offset = ir3_SHR_B(b, offset, 0, create_immed(b, shift), 0);
++         struct ir3_instruction *xy = ir3_collect(b, offset, create_immed(b, 0));
++         struct ir3_instruction *sam =
++            emit_sam(ctx, OPC_ISAM, info, TYPE_U32, MASK(width), xy, NULL);
++         ir3_handle_nonuniform(sam, intr);
++         sam->barrier_class = IR3_BARRIER_BUFFER_R;
++         sam->barrier_conflict = IR3_BARRIER_BUFFER_W;
++         ir3_split_dest(b, dst + c, sam, 0, width);
++         c += width;
++      }
++      return;
++   }
++
+    emit_readonly_load_uav(ctx, intr, &intr->src[0], coords, imm_offset, false, dst);
+ }
+ 
+diff --git a/src/freedreno/vulkan/tu_common.h b/src/freedreno/vulkan/tu_common.h
+index bf5c503..e28da85 100644
+--- a/src/freedreno/vulkan/tu_common.h
++++ b/src/freedreno/vulkan/tu_common.h
+@@ -89,7 +89,7 @@
+ #define MAX_DYNAMIC_UNIFORM_BUFFERS 16
+ #define MAX_DYNAMIC_STORAGE_BUFFERS 8
+ #define MAX_DYNAMIC_BUFFERS_SIZE                                             \
+-   (MAX_DYNAMIC_UNIFORM_BUFFERS + 2 * MAX_DYNAMIC_STORAGE_BUFFERS) *         \
++   (MAX_DYNAMIC_UNIFORM_BUFFERS + 5 * MAX_DYNAMIC_STORAGE_BUFFERS) *         \
+    FDL6_TEX_CONST_DWORDS
+ 
+ #define TU_MAX_VIS_STREAMS 4
+diff --git a/src/freedreno/vulkan/tu_descriptor_set.cc b/src/freedreno/vulkan/tu_descriptor_set.cc
+index 2ff6826..254bcc2 100644
+--- a/src/freedreno/vulkan/tu_descriptor_set.cc
++++ b/src/freedreno/vulkan/tu_descriptor_set.cc
+@@ -66,7 +66,8 @@ descriptor_size(struct tu_device *dev,
+       return FDL6_TEX_CONST_DWORDS * 4 * (1 +
+          COND(dev->physical_device->info->props.storage_16bit &&
+               !dev->physical_device->info->props.has_isam_v, 1) +
+-         COND(dev->physical_device->info->props.storage_8bit, 1));
++         COND(dev->physical_device->info->props.storage_8bit, 1) +
++         COND(dev->physical_device->info->chip >= A8XX, 3));
+    case VK_DESCRIPTOR_TYPE_INLINE_UNIFORM_BLOCK:
+       return binding->descriptorCount;
+    case VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR:
+@@ -766,7 +767,8 @@ tu_CreateDescriptorPool(VkDevice _device,
+                   pool_size->descriptorCount;
+          } else {
+             /* Allocate the maximum size possible. */
+-            bo_size += 2 * FDL6_TEX_CONST_DWORDS * 4 *
++            bo_size += MAX2(2 * FDL6_TEX_CONST_DWORDS * 4,
++               descriptor_size(device, NULL, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, false)) *
+                   pool_size->descriptorCount;
+          }
+          break;
+@@ -1125,7 +1127,7 @@ write_buffer_descriptor_addr(const struct tu_device *device,
+ 
+    unsigned num_descriptors = 1 +
+       COND(info->props.storage_16bit && !info->props.has_isam_v, 1) +
+-      COND(info->props.storage_8bit, 1);
++      COND(info->props.storage_8bit, 1) + COND(CHIP >= A8XX, 3);
+    memset(dst, 0, num_descriptors * FDL6_TEX_CONST_DWORDS * sizeof(uint32_t));
+ 
+    if (!buffer_info || buffer_info->address == 0)
+@@ -1154,6 +1156,17 @@ write_buffer_descriptor_addr(const struct tu_device *device,
+       fdl6_buffer_view_init<CHIP>(dst, PIPE_FORMAT_R8_UINT, tu_swiz(X, Y, Z, W), va, range, 1, ssbo_emulation_mode);
+       dst += FDL6_TEX_CONST_DWORDS;
+    }
++
++   if (CHIP >= A8XX) {
++      /* Keep the original R16/R8 slots and their untyped size encoding. */
++      const pipe_format formats[] = { PIPE_FORMAT_R32_UINT,
++         PIPE_FORMAT_R32G32_UINT, PIPE_FORMAT_R32G32B32A32_UINT };
++      for (pipe_format format : formats) {
++         fdl6_buffer_view_init<CHIP>(dst, format, tu_swiz(X, Y, Z, W),
++                                    va, range, 1, ssbo_emulation_mode);
++         dst += FDL6_TEX_CONST_DWORDS;
++      }
++   }
+ }
+ 
+ template <chip CHIP>
+diff --git a/src/freedreno/vulkan/tu_device.cc b/src/freedreno/vulkan/tu_device.cc
+index 6ed37f3..036cfbe 100644
+--- a/src/freedreno/vulkan/tu_device.cc
++++ b/src/freedreno/vulkan/tu_device.cc
+@@ -957,10 +957,10 @@ tu_get_physical_device_properties_1_1(struct tu_physical_device *pdevice,
+       tu_has_multiview(pdevice) ? MAX_VIEWS : 1;
+    p->maxMultiviewInstanceIndex = INT_MAX;
+    p->protectedNoFault = false;
+-   /* Our largest descriptors are 2 texture descriptors, or a texture and
+-    * sampler descriptor.
+-    */
+-   p->maxPerSetDescriptors = MAX_SET_SIZE / (2 * FDL6_TEX_CONST_DWORDS * 4);
++   /* A8xx storage buffers carry five texture descriptor aliases. */
++   unsigned max_descriptor_slots = pdevice->info->chip >= A8XX ? 5 : 2;
++   p->maxPerSetDescriptors = MAX_SET_SIZE /
++      (max_descriptor_slots * FDL6_TEX_CONST_DWORDS * 4);
+    /* Our buffer size fields allow only this much */
+    p->maxMemoryAllocationSize = 0xFFFFFFFFull;
+ 
+@@ -1466,7 +1466,8 @@ tu_get_properties(struct tu_physical_device *pdevice,
+    props->robustUniformBufferDescriptorSize = FDL6_TEX_CONST_DWORDS * 4;
+    props->storageBufferDescriptorSize = FDL6_TEX_CONST_DWORDS * 4 * (1 +
+       COND(pdevice->info->props.storage_16bit && !pdevice->info->props.has_isam_v, 1) +
+-      COND(pdevice->info->props.storage_8bit, 1));
++      COND(pdevice->info->props.storage_8bit, 1) +
++      COND(pdevice->info->chip >= A8XX, 3));
+    props->robustStorageBufferDescriptorSize =
+       props->storageBufferDescriptorSize;
+    props->accelerationStructureDescriptorSize = 4 * FDL6_TEX_CONST_DWORDS;
+@@ -2982,6 +2983,7 @@ tu_CreateDevice(VkPhysicalDevice physicalDevice,
+          .bindless_fb_read_slot = -1,
+          .storage_16bit = physical_device->info->props.storage_16bit,
+          .storage_8bit = physical_device->info->props.storage_8bit,
++         .typed_isam_ssbo = physical_device->info->chip >= A8XX,
+          .shared_push_consts = !TU_DEBUG(PUSH_CONSTS_PER_STAGE),
+          .uche_trap_base = physical_device->uche_trap_base,
+       };
+diff --git a/src/freedreno/vulkan/tu_shader.cc b/src/freedreno/vulkan/tu_shader.cc
+index b481478..40123e0 100644
+--- a/src/freedreno/vulkan/tu_shader.cc
++++ b/src/freedreno/vulkan/tu_shader.cc
+@@ -382,13 +382,12 @@ lower_vulkan_resource_index(struct tu_device *dev, nir_builder *b,
+       base = nir_imm_int(b, binding_layout->offset / (4 * FDL6_TEX_CONST_DWORDS));
+ 
+    unsigned stride = binding_layout->size / (4 * FDL6_TEX_CONST_DWORDS);
+-   assert(util_is_power_of_two_nonzero(stride));
+-   nir_def *shift = nir_imm_int(b, util_logbase2(stride));
++   nir_def *stride_def = nir_imm_int(b, stride);
+ 
+    nir_def *def = nir_vec3(b, nir_imm_int(b, set),
+                                nir_iadd(b, base,
+-                                        nir_ishl(b, vulkan_idx, shift)),
+-                               shift);
++                                        nir_imul(b, vulkan_idx, stride_def)),
++                               stride_def);
+ 
+    nir_def_replace(&instr->def, def);
+ }
+@@ -398,13 +397,13 @@ lower_vulkan_resource_reindex(nir_builder *b, nir_intrinsic_instr *instr)
+ {
+    nir_def *old_index = instr->src[0].ssa;
+    nir_def *delta = instr->src[1].ssa;
+-   nir_def *shift = nir_channel(b, old_index, 2);
++   nir_def *stride = nir_channel(b, old_index, 2);
+ 
+    nir_def *new_index =
+       nir_vec3(b, nir_channel(b, old_index, 0),
+                nir_iadd(b, nir_channel(b, old_index, 1),
+-                        nir_ishl(b, delta, shift)),
+-               shift);
++                        nir_imul(b, delta, stride)),
++               stride);
+ 
+    nir_def_replace(&instr->def, new_index);
+ }
+@@ -414,7 +413,7 @@ lower_load_vulkan_descriptor(nir_builder *b, nir_intrinsic_instr *intrin)
+ {
+    nir_def *old_index = intrin->src[0].ssa;
+    /* Loading the descriptor happens as part of the load/store instruction so
+-    * this is a no-op. We just need to turn the shift into an offset of 0.
++    * this is a no-op. We just need to turn the stride into an offset of 0.
+     */
+    nir_def *new_index =
+       nir_vec3(b, nir_channel(b, old_index, 0),
+@@ -1362,7 +1361,8 @@ tu_lower_io(nir_shader *shader, struct tu_device *dev,
+ 
+    ir3_const_alloc(const_allocs, IR3_CONST_ALLOC_INLINE_UNIFORM_ADDRS, ldgk_consts, 1);
+ 
+-   if (dev->physical_device->enable_ssbo_emulation) {
++   if (dev->physical_device->enable_ssbo_emulation ||
++       (dev->physical_device->info->chip >= A8XX && shader->info.stage == MESA_SHADER_COMPUTE)) {
+       const_state->num_bindless_base_addresses = layout->num_sets;
+       const_state->bindless_base_const_offset_vec4 = const_allocs->max_const_offset_vec4;
+ 
+@@ -1598,7 +1598,8 @@ build_ssbo_global_addr(nir_builder *b,
+                        nir_intrinsic_instr *bindless,
+                        struct tu_shader *shader,
+                        bool load_shader_consts_via_preamble,
+-                       const struct ir3_const_allocations *const_allocs)
++                       const struct ir3_const_allocations *const_allocs,
++                       unsigned address_dword = 11)
+ {
+    nir_def *set_base;
+ 
+@@ -1618,7 +1619,7 @@ build_ssbo_global_addr(nir_builder *b,
+ 
+    nir_def *descriptor_offset = nir_iadd_imm(
+       b, nir_imul_imm(b, bindless->src[0].ssa, FDL6_TEX_CONST_DWORDS * 4),
+-      11 * 4);
++      address_dword * 4);
+    nir_def *descriptor_words = nir_load_global_offset(
+       b, 2, 32, nir_pack_64_2x32(b, set_base), descriptor_offset,
+       .access = (enum gl_access_qualifier)(
+@@ -1634,6 +1635,66 @@ struct lower_ssbo_address_size_state {
+    bool load_shader_consts_via_preamble;
+ };
+ 
++/* NIR alignment is relative to the SSBO base.  Vulkan permits a 4-byte
++ * base even for an 8/16-byte vector.  The typed hardware path rounds that base
++ * down to its format size, so select it only when the real base is aligned. */
++static bool
++lower_wide_ssbo_alignment(nir_builder *b, nir_intrinsic_instr *intr, void *data)
++{
++   if (intr->intrinsic != nir_intrinsic_load_ssbo ||
++       intr->def.bit_size != 32 || intr->def.num_components < 2 ||
++       !(nir_intrinsic_access(intr) & ACCESS_CAN_REORDER))
++      return false;
++   unsigned alignment = ir3_ssbo_typed_alignment(intr);
++   if (alignment == 4)
++      return false;
++
++   auto state = static_cast<const lower_ssbo_address_size_state *>(data);
++   b->cursor = nir_before_instr(&intr->instr);
++   nir_def *base = build_ssbo_global_addr(
++      b, get_ssbo_bindless(intr), state->shader,
++      state->load_shader_consts_via_preamble, state->const_allocs, 0);
++   nir_def *low = nir_unpack_64_2x32_split_x(b, base);
++   nir_if *nif = nir_push_if(b, nir_ieq_imm(b, nir_iand_imm(b, low, alignment - 1), 0));
++   auto wide = nir_instr_as_intrinsic(nir_instr_clone(b->shader, &intr->instr));
++   nir_builder_instr_insert(b, &wide->instr);
++   nir_push_else(b, nif);
++   auto fallback = nir_instr_as_intrinsic(nir_instr_clone(b->shader, &intr->instr));
++   /* Conservative access metadata keeps the exact-width untyped LDIB fallback. */
++   nir_intrinsic_set_access(fallback, (gl_access_qualifier)(nir_intrinsic_access(fallback) & ~ACCESS_CAN_REORDER));
++   nir_builder_instr_insert(b, &fallback->instr);
++   nir_pop_if(b, nif);
++   nir_def *value = nir_if_phi(b, &wide->def, &fallback->def);
++   nir_def_rewrite_uses(&intr->def, value);
++   nir_instr_remove(&intr->instr);
++   return true;
++}
++
++static bool
++tu_nir_lower_wide_alignment(nir_shader *shader, void *state)
++{
++   bool progress = false;
++   nir_foreach_function_impl(impl, shader) {
++      struct util_dynarray originals;
++      util_dynarray_init(&originals, NULL);
++      nir_foreach_block(block, impl) {
++         nir_foreach_instr(instr, block) {
++            if (instr->type == nir_instr_type_intrinsic)
++               util_dynarray_append(&originals, nir_instr_as_intrinsic(instr));
++         }
++      }
++      nir_builder b = nir_builder_create(impl);
++      bool changed = false;
++      util_dynarray_foreach(&originals, nir_intrinsic_instr *, intr)
++         changed |= lower_wide_ssbo_alignment(&b, *intr, state);
++      util_dynarray_fini(&originals);
++      if (changed)
++         nir_progress(true, impl, nir_metadata_none);
++      progress |= changed;
++   }
++   return progress;
++}
++
+ static bool
+ lower_ssbo_address_size(nir_builder *b, nir_intrinsic_instr *intr, void *data)
+ {
+@@ -3400,6 +3461,17 @@ tu_shader_create(struct tu_device *dev,
+     */
+    NIR_PASS(_, nir, tu_nir_lower_ssbo_descriptor, dev);
+ 
++   if (dev->physical_device->info->chip >= A8XX &&
++       nir->info.stage == MESA_SHADER_COMPUTE && !key->robust_storage_access2) {
++      struct lower_ssbo_address_size_state state = {
++         .shader = shader, .const_allocs = &const_allocs,
++         .load_shader_consts_via_preamble =
++            dev->compiler->info->props.load_shader_consts_via_preamble,
++      };
++      NIR_PASS(_, nir, tu_nir_lower_wide_alignment, &state);
++   }
++
++
+    if (dev->physical_device->enable_ssbo_emulation) {
+       nir_lower_ssbo_options options = {
+          .native_offset = true,
+-- 
+2.43.0
+

@@ -36,8 +36,9 @@ def main():
     parser.add_argument('--configure-only', action='store_true',
                         help='prepare the verified source and Ninja rules without compiling')
     parser.add_argument('--profile', choices=('probe', 'desktop', 'gpu-2404'), default='probe')
+    parser.add_argument('--cross-file', type=Path, help='Meson ARM64 cross file and target sysroot')
     args = parser.parse_args()
-    if platform.machine() not in ('aarch64', 'arm64'):
+    if not args.cross_file and platform.machine() not in ('aarch64', 'arm64'):
         parser.error('this recipe currently requires a native arm64 build environment')
     if not 1 <= args.jobs <= 8:
         parser.error('--jobs must be between 1 and 8')
@@ -63,21 +64,22 @@ def main():
                  '-Dllvm=disabled', '-Dgallium-va=disabled', '-Dvideo-codecs=[]',
                  '-Dvalgrind=disabled', '-Dbuild-tests=false']
         if args.profile in ('desktop', 'gpu-2404'):
-            # Keep the desktop on the verified OpenGL path. Turnip remains
-            # isolated in the experimental core24 build after a device hang.
             flags += ['-Dplatforms=wayland,x11', '-Dglx=dri', '-Dglvnd=enabled',
-                      '-Dvulkan-drivers=' + ('freedreno' if content else '[]'),
+                      '-Dvulkan-drivers=freedreno',
                       '-Dspirv-tools=disabled']
-            if not content:
+            if not content and not args.cross_file:
                 flags += [f'-Dc_link_args=-Wl,-rpath,{prefix}/lib',
                           f'-Dcpp_link_args=-Wl,-rpath,{prefix}/lib']
         else:
             flags += ['-Dplatforms=[]', '-Dglx=disabled', '-Dglvnd=disabled',
                       '-Dvulkan-drivers=[]']
+        if args.cross_file:
+            flags += ['--cross-file=' + str(args.cross_file.resolve())]
         packages = subprocess.check_output(
             ['dpkg-query', '-W', '-f=${Package} ${Version}\\n'], text=True)
         identity = {'source': lock, 'flags': flags, 'profile': args.profile,
                     'recipe_sha256': sha(__file__),
+                    'cross_file_sha256': sha(args.cross_file) if args.cross_file else None,
                     'native_packages': packages.splitlines(),
                     'tools': {name: version([name, '--version']) for name in ('gcc', 'g++', 'meson', 'ninja')}}
         identity_file = out / 'input.json'
