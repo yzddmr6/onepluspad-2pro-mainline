@@ -22,11 +22,12 @@ primarily in Chinese.
   and reinstallation are provided for the 512 GB model. First-time partitioning
   erases Android data. See the [installation and recovery guide](docs/FLASHING.md)
   for firmware and layout requirements.
-- **Power:** Linux draws power from USB, but net charging is not verified. On a
-  computer's USB port with the screen on, the tablet uses more than the port
-  supplies and the battery still drains slowly; wall chargers have not been
-  measured, and the stock fast-charging protocols are not available under Linux.
-  Return to Android to charge; Fastboot is not a charging fallback.
+- **Power:** Linux net-charges the battery from a USB PD charger: a 5 V, 2 A
+  contract charged it at about 1.6 A with the screen on, and capacity rose. On a computer's USB port with the
+  screen on, the tablet uses more than the port supplies and the battery still
+  drains slowly. The stock fast-charging protocols are not available under Linux,
+  and the optional PPS charging does not take effect yet. Fastboot is not a
+  charging fallback.
   Backlight-only screen blanking also consumes more power than normal standby;
   system suspend on the power button is opt-in, see [System suspend](docs/SUSPEND.md).
 - **Data and recovery:** unlocking the bootloader erases user data. Back up
@@ -95,7 +96,7 @@ development are not included in the supported feature set.
 | Touch | Novatek NT36536 | ✅ | Finger input, desktop interaction and login verified. Pen support is tracked separately. |
 | GPU and desktop | Adreno 830 / Freedreno / Mesa | 🟡 | GNOME and OpenGL hardware rendering are verified. Vulkan testing triggered a GPU timeout and is unsupported. Sandboxed applications and sustained loads need testing. |
 | Brightness | Dual KTZ8868 / one backlight interface | 🟡 | Unified brightness control and blanking are integrated; the slider’s usable brightness range needs physical testing. |
-| Magnetic keyboard | Pogo keyboard / touchpad | 🟡 | Keyboard input works. Full key mapping, touchpad gestures and detach/reattach need testing. |
+| Magnetic keyboard | Pogo keyboard / touchpad | 🟡 | Keyboard input works. The on-screen keyboard appears for touch input while the keyboard is detached and hides when it is attached. Holding the magnifier key turns the top row into F1 to F12; the touchpad key gives F4 only on every other press. After a period without input the keyboard can stop responding and does not recover when reattached; restarting Linux restores it. Touchpad gestures need testing. |
 | Active pen | NT36536 pen input | 🔧 | Pen input code is available; position, pressure and buttons await physical testing. |
 | Pen charging | CPS8601 | ❌ | Charging, battery reporting and automatic scan control are not implemented. |
 
@@ -106,8 +107,8 @@ development are not included in the supported feature set.
 | Wi-Fi | WCN7860 / ath12k | ✅ | Networking, automatic reconnect at boot and short transfers work. v0.2.2 enables userspace regulatory hints and includes the ath12k frequency-range fix; packages leave the radio in world domain `00`. 5 GHz uses passive scanning and cannot host a hotspot; roaming, 2.4 GHz hotspot operation and sustained transfers need testing. Changing the country code while associated has caused WLAN firmware crashes; do not do so. |
 | Bluetooth | WCN7860 / BlueZ | 🟡 | Controller, firmware, discovery and per-device address verified; keyboard, mouse and headset use remain unverified. |
 | USB device mode | USB-C / NCM | 🟡 | USB networking works. Some reconnects failed to restore the connection and required a reboot. |
-| USB host peripherals | HID, storage, network and digital audio | 🟡 | Mouse use through the tested dock works without external PD power. The same mouse and USB-A adapter work directly in Android but fail in Linux; other peripherals remain untested. |
-| USB storage formats | UAS, exFAT and NTFS3 | 🔧 | Emulated filesystem tests include independent verification of Chinese NTFS filenames. Real drives and desktop mounting remain untested. |
+| USB host peripherals | HID, storage, network and digital audio | 🟡 | Devices connected directly through a USB-C to USB-A adapter receive power: a USB drive was recognized and mounted on two consecutive insertions. Mouse use through the tested dock works without external PD power. Other peripherals remain untested. |
+| USB storage formats | UAS, exFAT and NTFS3 | 🟡 | An NTFS USB drive mounts automatically on the desktop, and Chinese filenames are written and read back. exFAT and NTFS3 pass the same filename check on disk images on the tablet. UAS drives remain untested. |
 | External display | USB-C DisplayPort Alt Mode | 🟡 | Output on a physical monitor is confirmed. Display-mode selection and hotplug stability still need testing. |
 | External display audio | DisplayPort / ALSA / PipeWire | ❌ | Disabled by default: playback configuration prevents microphone discovery with no monitor attached. Playback and hotplug recovery need further work and testing. |
 
@@ -118,7 +119,7 @@ development are not included in the supported feature set.
 | Internal microphones | WCD939x / ALSA / PipeWire | 🟡 | Default input and two-channel capture work. With ADC 13 / TX DEC 112, normal speech at about 30 cm peaks around -8 dBFS without clipping. Background-noise performance remains uncharacterized. |
 | Speakers | Six AW88261 amplifiers / AudioReach | 🟡 | The opt-in candidate at amplifier value 350 (-2.5 dB) passed listening checks for channel position, loudness and sound quality. Playback remains disabled by default and has no vendor speaker protection. |
 | USB-C analog audio | WCD939x headset path | ❌ | Analog adapters and headset detection are not implemented. Digital USB audio is tracked above. |
-| Video playback in desktop players | Ubuntu GStreamer packages | ❌ | Showtime, the default player, aborts on a Mesa freedreno assertion when it draws video frames. Other players are untested. |
+| Video playback in desktop players | Ubuntu GStreamer packages | 🟡 | With erhai-mesa revision 5 or later, Showtime, the default player, plays a 640 × 360 Theora test clip to the end with hardware OpenGL; earlier revisions can abort on a Mesa freedreno assertion. Other players, formats and long playback are untested. |
 | Hardware video codecs | Qualcomm Iris | 🟡 | H.264 hardware decoding works on the tablet: a 60-frame test clip matches the software decoder frame by frame. Encoding and use from desktop players need testing. |
 | Front and rear cameras | SC820CS / SC1300CS | ❌ | Camera capture and video calls are not implemented. |
 | Automatic rotation | SSC / iio-sensor-proxy | 🟡 | Orientation reaches the desktop and the screen rotates in the initial-setup session, but not yet in a normal session even with the switch on. The mount matrix is a candidate and unmeasured. |
@@ -134,7 +135,7 @@ development are not included in the supported feature set.
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up reports `KEY_VOLUMEUP` (115); all 10 physical presses passed. Volume down remains mapped to `KEY_VOLUMEDOWN`. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management remain incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
-| Charging in Linux | USB power / vendor firmware | 🔧 | Power is drawn from USB, but net charging is not verified. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. Wall chargers are untested, and the stock fast-charging protocols are not available under Linux. Return to Android to charge. |
+| Charging in Linux | USB power / vendor firmware | 🟡 | A USB PD charger net-charges the battery: a 5 V, 2 A contract charged it at about 1.6 A with the screen on, and capacity rose. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock fast-charging protocols are not available under Linux; the optional PPS charging (`qcom_battmgr.pps_enable=1`) did not start a PPS contract on the tested charger. |
 | Suspend and resume | Linux power management | 🟡 | Defaults to s2idle. On the installed v0.2.0 system, 300-second RTC-timed suspends in both display modes resumed the display, touch, Wi-Fi and sensors; power-button wake was verified by a contributor. Unplugged standby life and the deepest SoC power states remain open; the firmware-advertised `deep` state is not used by default. |
 | RTC | Qualcomm PMIC RTC | 🟡 | Time read/write verified. Clock rollback was observed after restarting and requires time synchronization. |
 | Snap applications | AppArmor / snapd / graphics runtime | ❌ | Full confinement and graphical Snap apps are unsupported in this release. The selected kernel does not enable AppArmor. |
@@ -144,6 +145,8 @@ development are not included in the supported feature set.
 
 The base system comes from the official Ubuntu Desktop image. Device support is
 delivered as separate `erhai-*` packages; Ubuntu packages remain managed by APT.
+Firefox comes from Mozilla's APT repository (`erhai-firefox`) instead of the
+snap, so that it renders with the device graphics driver and updates through APT.
 The display-power adapter currently targets GNOME Settings Daemon 50; desktop
 major-version upgrades need compatibility checks.
 

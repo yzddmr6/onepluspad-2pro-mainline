@@ -1,5 +1,85 @@
 # Changelog
 
+## v0.3.0
+
+Device and sensor packages are numbered 0.3.0 and install over v0.2.x with
+APT; see "Upgrading an existing installation" in
+[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation). The device
+package archive of the release now also carries `erhai-mesa`.
+
+- Kernel `erhai-v0.3.0`:
+  - DisplayPort retries reading the sink capabilities after an AUX failure,
+    so that a monitor behind a USB-C hub in the reverse plug orientation no
+    longer has to be plugged in again.
+  - The Iris video decoder offers decode-order output, and clients can set a
+    10-bit capture format before the stream is parsed.
+  - Each CPU thermal zone has a passive trip at 118 °C, the stock threshold,
+    that throttles the core's frequency domain; until now nothing in Linux
+    cooled a hot core before the critical shutdown at 125 °C.
+  - Holding the magnifier key of the keyboard cover turns the top row into
+    F1 to F12. The magnifier key reports `KEY_FN` instead of `KEY_F23`.
+  - High-pass filter controls for the TX decimators. `erhai-audio` sets the
+    filters of both internal microphones to 75 Hz instead of their 4 Hz reset
+    corner, so that rumble and handling noise below 30 Hz no longer set the
+    peak level of a recording, and therefore requires this kernel.
+  - Bluetooth resets its in-band sleep state when the controller is powered
+    off (from a patch posted upstream), so that powering the controller on
+    again shortly afterwards does not break its UART link.
+  - The battery manager gains charge start and end thresholds through the
+    standard power-supply attributes, power for USB devices attached directly
+    to the port, such as a mouse on a USB-C to USB-A adapter, and PPS
+    charging at up to 8.4 V and 3 A. The end threshold defaults to 100 %,
+    which leaves charging to the firmware as before. PPS charging stays off
+    unless `qcom_battmgr.pps_enable=1` is set, and is experimental: on the
+    tested charger it did not start a PPS contract.
+- Firefox is Mozilla's deb from packages.mozilla.org instead of the Ubuntu
+  snap, so that it can render with the device graphics driver; it is updated
+  through APT. The new `erhai-firefox` package configures the repository with
+  Mozilla's signing key and gives Mozilla's builds priority over Ubuntu's
+  transitional package. The root filesystem installs a pinned build, and the
+  Firefox snap is removed after first-boot seeding. Existing installations
+  switch as described in
+  [FLASHING](docs/FLASHING.md#upgrading-an-existing-installation). The
+  repository setup is based on
+  [TheMojoMan's oneplus-erhai-ubuntu](https://github.com/TheMojoMan/oneplus-erhai-ubuntu).
+- The on-screen keyboard is no longer forced on. GNOME offers it for touch
+  input while the keyboard cover is detached and keeps it hidden while the
+  cover is attached.
+- Releases attach one root filesystem instead of two. First-time preparation
+  runs the installation image as its RAM desktop; the setup boot image carries
+  the `erhai-debug` package and installs it into that RAM session only, so
+  neither the published image nor an installed system has USB diagnostics.
+  See "Prebuilt release images" in [FLASHING](docs/FLASHING.md).
+- erhai-mesa revision 5 fixes the Mesa freedreno abort on the
+  `fd6_texture_state` assertion. One GL context allocated sampler view seqnos
+  in the application thread and freed them in the driver thread without
+  locking, so two live textures could share cached texture state. Showtime
+  aborted on it during video playback and GNOME Shell aborted on it once.
+  The fix is a project patch to Mesa 26.2.3 and is not yet upstream.
+- `apt update` no longer fails on the Ubuntu ISO's installation medium
+  source, `cdrom.sources`: the root filesystem no longer contains it, and
+  the 0.3.0 device packages remove it from existing installations.
+
+Several kernel changes build on @TheMojoMan's
+[oneplus-erhai-linux](https://github.com/TheMojoMan/oneplus-erhai-linux).
+
+Tested on the tablet: the installed system upgraded to these packages with
+the boot images read back intact, and Bluetooth came up with its address on
+every boot during testing and after three power cycles. Everyday applications
+ran with hardware OpenGL without GPU faults, including Firefox and video
+playback in Showtime; recording used the 75 Hz filters; the 70 % end threshold
+stopped charging and 100 % resumed it; a two-minute suspend resumed. With the
+keyboard cover, the on-screen keyboard appeared when it was detached and hid
+when it was attached, and the top row and its F1 to F12 layer reported the
+expected keys. A USB drive on a USB-C to USB-A adapter was powered, mounted on
+the desktop and written with a Chinese filename on two insertions. A USB PD
+charger net-charged the battery at about 1.6 A at 5 V and 2 A.
+
+Known issues: the touchpad key of the keyboard cover gives F4 with the
+magnifier key held only on every other press. After a period without input
+the keyboard cover can stop responding and does not recover when reattached;
+restarting Linux restores it. PPS charging has no effect yet, as noted above.
+
 ## v0.2.2
 
 - The internal microphones record at a usable level (ADC 13, TX DEC 112), and

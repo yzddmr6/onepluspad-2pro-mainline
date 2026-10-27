@@ -36,8 +36,10 @@ These steps require the established project layout and complete switcher storage
   for the automatic reboot.
 - In Android, use the installed KernelSU switching module; see the
   [switcher reference](../switch/README.md) for its installation and path conventions.
-- If battery charge falls in Linux or Fastboot, return to Android to charge and
-  confirm that capacity has recovered before continuing.
+- An installed Linux system net-charges from a USB PD charger; on a computer's USB
+  port the battery still drains. Fastboot does not charge: when the battery
+  runs low there, return to Android to charge and confirm that capacity has
+  recovered before continuing.
 
 Both switching directions have been tested on the existing layout. Switching
 writes three boot partitions; it does not apply to a fresh tablet, missing
@@ -52,32 +54,31 @@ backup on the host and use the Fastboot recovery procedure below after an interr
 Releases from v0.2.1 attach the images this guide otherwise builds. The
 installation still runs `tools/install.py` from this repository's checkout with
 the host tools listed below, but no kernel, Mesa or root filesystem build is needed.
+From v0.3.0, one root filesystem serves both first-time preparation and
+installation.
 
 | Asset | Use |
 |---|---|
-| `ubuntu-pad2pro-VERSION-rootfs.squashfs.part*` and `…-rootfs.manifest.json` | Root filesystem to install; no USB diagnostics |
-| `ubuntu-pad2pro-VERSION-setup-rootfs.squashfs.part*` and `…-setup-rootfs.manifest.json` | Root filesystem of the temporary RAM desktop for first-time preparation only; it contains the USB diagnostic channel |
-| `ubuntu-pad2pro-VERSION-setup-boot.img` | Boot image of that temporary RAM desktop; it loads the setup root filesystem from the host |
-| `erhai-device-packages-VERSION.tar` | Device and sensor packages for upgrading an existing installation |
+| `ubuntu-pad2pro-VERSION-rootfs.squashfs.part*` and `…-rootfs.manifest.json` | Root filesystem to install, without USB diagnostics; first-time preparation also runs it as the temporary RAM desktop |
+| `ubuntu-pad2pro-VERSION-setup-boot.img` and `…-setup-boot.manifest.json` | Boot image of that temporary RAM desktop; it loads the root filesystem from the host and adds the USB diagnostic channel to that session only |
+| `erhai-device-packages-VERSION.tar` | Packages for upgrading an existing installation, without USB diagnostics: the device packages built by `tools/build-debs.py` (kernel, firmware, audio, display power, device support, Firefox repository and the `erhai-device` metapackage), `erhai-mesa` and `erhai-sensors` |
 | `erhai-switch-VERSION.zip` | Android switch module |
-| `SHA256SUMS` | Checksums of every asset and of the joined images |
+| `SHA256SUMS` | Checksums of every asset and of the joined image |
 
-Join and check the images in the download directory (shown for v0.2.2; the
-setup files are only needed for first-time preparation):
+Join and check the image in the download directory (shown for v0.3.0):
 
 ```sh
-cat ubuntu-pad2pro-v0.2.2-rootfs.squashfs.part* > ubuntu-pad2pro-v0.2.2-rootfs.squashfs
-cat ubuntu-pad2pro-v0.2.2-setup-rootfs.squashfs.part* > ubuntu-pad2pro-v0.2.2-setup-rootfs.squashfs
+cat ubuntu-pad2pro-v0.3.0-rootfs.squashfs.part* > ubuntu-pad2pro-v0.3.0-rootfs.squashfs
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
-Then use them in place of the build outputs named below. For first-time
-preparation, move the setup root filesystem to `out/desktop-root/rootfs.squashfs`
-and boot `ubuntu-pad2pro-v0.2.2-setup-boot.img` instead of
-`out/ram-desktop/boot-mainline.img`. For installation, put the installation root
-filesystem and its manifest in one directory as `rootfs.squashfs` and
-`manifest.json`, and pass that `rootfs.squashfs` to `--rootfs`. For an upgrade,
-unpack `erhai-device-packages-v0.2.2.tar` and install its packages as described in
+Then use it in place of the build outputs named below. In this checkout, save
+the joined image as `out/desktop-root/rootfs.squashfs` and its manifest as
+`out/desktop-root/manifest.json`. First-time preparation serves that file to the
+tablet and boots `ubuntu-pad2pro-v0.3.0-setup-boot.img` instead of
+`out/ram-desktop/boot-mainline.img`; installation passes the same file to
+`--rootfs`. For an upgrade, unpack `erhai-device-packages-v0.3.0.tar` and install
+its packages as described in
 [Upgrading an existing installation](#upgrading-an-existing-installation).
 
 ## Preparing Linux partitions for the first time
@@ -94,18 +95,23 @@ specified above. The allocation is 200 GiB Android, 60 GiB Linux root and the
 remaining space for Linux home. It leaves the active slot, stock boot images
 and other UFS partitions unchanged.
 
-Follow the [build guide](BUILD.md), adding `--debug` to the device-package build
-before assembling `out/desktop-root/rootfs.squashfs`. Preparation uses a temporary
-RAM desktop. With the build guide's `kernel_out`, DTB and initramfs, create the
-bounded RAM image and Android switch module:
+Follow the [build guide](BUILD.md) to assemble `out/desktop-root/rootfs.squashfs`;
+the installation below uses the same file. Preparation runs it as a temporary
+RAM desktop. The boot image of that desktop carries the separately built
+`erhai-debug` package and installs it in RAM for the USB diagnostic channel;
+the root filesystem itself stays without it. With the build guide's
+`kernel_out`, DTB and initramfs, create the package, the bounded RAM image and
+the Android switch module:
 
 ```sh
+python3 tools/build-debs.py --only erhai-debug --output out/debug-package
 python3 tools/build-mainline-boot.py --output out/ram-desktop \
   --kernel-out "$kernel_out" --dtb out/abl-dtb/erhai-abl.dtb \
   --initramfs out/initramfs/initramfs-ncm.cpio.gz --profile desktop \
   --rootfs out/desktop-root/rootfs.squashfs \
   --rootfs-url http://192.168.77.10:8088/rootfs.squashfs \
-  --cmdline-extra 'erhai.session=1800 erhai.debug=1'
+  --debug-package out/debug-package/erhai-debug_*_all.deb \
+  --cmdline-extra erhai.session=1800
 python3 tools/package-switch.py
 ln -sf "$PWD/tools/prepare-dualboot.py" out/desktop-root/prepare-dualboot.py
 mkdir -p out/desktop-root/rootfs.squashfs.parts
@@ -180,7 +186,7 @@ root access under KernelSU's Superuser page. Erasing Android data resets this
 grant; enabling USB debugging alone is not enough. Transfer the module from the host:
 
 ```sh
-adb -s "$device_serial" push out/erhai-switch-v0.2.2.zip /sdcard/Download/
+adb -s "$device_serial" push out/erhai-switch-v0.3.0.zip /sdcard/Download/
 ```
 
 Select the ZIP from Downloads in KernelSU, install it and reboot Android.
@@ -245,22 +251,21 @@ the newly installed contents.
 
 ## Daily use and USB diagnostics
 
-First-time partition preparation uses a `--debug` build with an unauthenticated
-USB root shell and file service. Keep it only for development with a trusted host.
-To disable diagnostics throughout boot, rebuild the same release's device packages
-following the [build guide](BUILD.md#device-packages), omitting `--debug` and using
-a new empty output directory, `--output out/device-packages-normal`, to keep old
-diagnostic packages out of the installation.
-The kernel and Ubuntu root filesystem do not need rebuilding. Transfer the resulting
-`device-packages-normal` directory to the tablet, then run in its terminal:
+The unauthenticated USB root shell and file service of first-time preparation
+exist only in the RAM session of the setup boot image. The root filesystem and
+an installation made from it have no diagnostic channel. To keep the channel
+for development with a trusted host, assemble the root filesystem from device
+packages built with `--debug` (see the [build guide](BUILD.md#device-packages))
+and install that root instead: their kernel package adds `erhai.debug=1` to the
+boot images and requires `erhai-debug`.
 
-```sh
-sudo apt install ./device-packages-normal/*.deb && sudo reboot
-```
-
-The regular package replaces the diagnostic boot images. After reboot, the USB
-shell, HTTP service and diagnostic DHCP stay disabled. Stopping only the desktop
-services does not disable the early-boot channels in a diagnostic image.
+Installing regular device packages over such an installation, built without
+`--debug` into a new empty output directory or taken from a release's
+`erhai-device-packages-VERSION.tar` as described in
+[Upgrading an existing installation](#upgrading-an-existing-installation),
+replaces the diagnostic boot images. After reboot, the USB shell, HTTP service
+and diagnostic DHCP stay disabled. Stopping only the desktop services does not
+disable the early-boot channels in a diagnostic image.
 
 ## Upgrading an existing installation
 
@@ -275,14 +280,24 @@ both directories to the tablet, then run in its terminal:
 sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 ```
 
-The release's `erhai-device-packages-VERSION.tar` holds the same packages without
-USB diagnostics; installing them also turns a diagnostic installation into a regular
-one (`tar xf erhai-device-packages-v0.2.2.tar && sudo apt install ./erhai-device-packages-v0.2.2/*.deb`).
+The release's `erhai-device-packages-VERSION.tar` holds the same packages and
+`erhai-mesa`, without USB diagnostics; installing them also turns a diagnostic
+installation into a regular one (`tar xf erhai-device-packages-v0.3.0.tar && sudo apt install ./erhai-device-packages-v0.3.0/*.deb`).
 
 The kernel package writes the new boot images to the active slot during the
 installation, and the previous kernel package stays installed. The sensor
 registry imported at installation time is kept. If the new kernel does not start,
 follow the recovery steps below.
+
+The `erhai-firefox` package moves Firefox from the Ubuntu snap to Mozilla's deb.
+After the upgrade, run `sudo apt update && sudo apt install firefox` and accept
+the replacement of Ubuntu's transitional `firefox` package, which APT lists as a
+downgrade because of that package's version epoch. The snap keeps each user's
+profile in `~/snap/firefox/common/.mozilla/firefox`; to keep it, copy it before
+the first start of the new Firefox with
+`mkdir -p ~/.mozilla && cp -a ~/snap/firefox/common/.mozilla/firefox ~/.mozilla/`,
+then remove the snap with `sudo snap remove firefox`. The snap is removed
+automatically at boot only when no user has a `~/snap/firefox` directory.
 
 ## Failure and full stock recovery
 
