@@ -18,6 +18,8 @@ Device packages are numbered 0.4.0 and install over v0.3.x with APT; see
     a boot without audio, charging information or sensors.
   - USB keeps working after its PHY powers up again, and touch stays in sync
     across system sleep.
+  - Touchscreen transfers no longer stall in the deepest idle state: the SPI
+    controller keeps the system out of it while a DMA transfer runs.
   - The keyboard cover stays connected while idle and after system sleep:
     the driver completes the wake exchange the keyboard expects. Its touchpad
     key gives F4 with the magnifier key on every press.
@@ -40,7 +42,9 @@ sleeps the keyboard, touch and USB still worked. glmark2 and vkmark completed;
 H.264, H.265 and VP9 played and seeked in Showtime and Firefox with hardware
 decoding; two 30-second sequential reads completed without errors. With the
 keyboard cover, detaching and reattaching it, typing, and the touchpad key's
-F4 with the magnifier key all worked.
+F4 with the magnifier key all worked. In long test reads of the touch
+controller, nine in ten stalled in the deepest idle state before the SPI
+change and none did after it.
 
 ## v0.3.0
 
