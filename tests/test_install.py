@@ -49,6 +49,30 @@ class InstallBoundaries(unittest.TestCase):
             self.installer.install()
         self.installer.run.assert_not_called()
 
+    def test_changed_partition_geometry_is_rejected(self):
+        # A real repartition must still stop the install before any transition.
+        changed = {**self.plan, 'partitions': {
+            **self.plan['partitions'],
+            'linux_rootfs': {**self.plan['partitions']['linux_rootfs'], 'bytes': 8192}}}
+        self.installer.inspect.return_value = changed
+        with self.assertRaisesRegex(RuntimeError, 'layout or firmware changed'):
+            self.installer.install()
+        self.installer.run.assert_not_called()
+
+    def test_partition_node_rename_is_not_a_layout_change(self):
+        """UFS LUN probe order moves /dev/block/sdX between boots.
+
+        The same boot_a has been observed as sdd12 before a reboot and sde12
+        after it, with identical size and start sector. That must not read as
+        a changed layout, or every install after a reboot would abort.
+        """
+        renamed = {name: {**part, 'device': part['device'].replace('/sda', '/sde')}
+                   for name, part in self.plan['partitions'].items()}
+        self.installer.inspect.return_value = {**self.plan, 'partitions': renamed}
+        # Past the layout gate the run stops on the missing prepared images.
+        with self.assertRaises(FileNotFoundError):
+            self.installer.install()
+
     def test_unchanged_but_unsupported_firmware_is_rejected(self):
         self.plan['firmware'] = 'untested OTA'
         with self.assertRaisesRegex(RuntimeError, 'outside the tested'):
