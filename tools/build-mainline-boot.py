@@ -7,12 +7,19 @@ ABL: kernel, ramdisk and --dtb. Output identity records the kernel commit,
 config fragment, every input hash and the ABL overlay sink layout read back
 from the DTB (tools/lib/abl_layout.py). A DTB with the legacy root-level sink
 is only taken with --legacy-sink: that layout is for fallback and comparison.
+
+The setup image for first-time preparation is a RAM desktop built with
+--debug-package: the erhai-debug deb rides in a second archive appended to
+the ramdisk, and the initramfs installs it into the RAM overlay of that one
+session. The published root filesystem and installed systems stay without it.
 """
 import argparse
+import gzip
 import hashlib
 import json
 import os
 from pathlib import Path
+import stat
 import subprocess
 
 from lib.abl_layout import LayoutError, add_arguments as add_layout_arguments, \
@@ -31,10 +38,38 @@ KERNEL_GIT = WS / 'kernel/linux'
 DEFAULT_OUT = WS / 'out/kernel-firstboot'
 # AOSP mkbootimg, vendored at cache/tools/mkbootimg.py (see README inputs).
 MKBOOT = Path(os.environ.get('MKBOOTIMG', str(WS / 'cache/tools/mkbootimg.py')))
+# Where initramfs/init-ncm looks for the package a setup session installs.
+CARRIED_DEBUG = 'usr/lib/erhai/debug/erhai-debug.deb'
 
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def newc(entries):
+    """A newc cpio archive of (path, mode, data) entries, owned by root at time 0."""
+    archive = bytearray()
+    for ino, (name, mode, data) in enumerate([*entries, ('TRAILER!!!', 0, b'')], 1):
+        fields = (ino, mode, 0, 0, 2 if stat.S_ISDIR(mode) else 1, 0, len(data),
+                  0, 0, 0, 0, len(name) + 1, 0)
+        archive += b'070701' + ''.join(f'{field:08X}' for field in fields).encode()
+        archive += name.encode() + b'\0'
+        archive += bytes(-len(archive) % 4) + data
+        archive += bytes(-len(archive) % 4)
+    return bytes(archive)
+
+
+def carried_package(deb):
+    """The ramdisk addition holding a setup session's diagnostics package.
+
+    The kernel unpacks concatenated archives in order, so appending this one
+    to the shared initramfs leaves the installed init_boot ramdisk unchanged.
+    """
+    parts = CARRIED_DEBUG.split('/')
+    directories = [('/'.join(parts[:i]), stat.S_IFDIR | 0o755, b'')
+                   for i in range(1, len(parts))]
+    archive = newc(directories + [(CARRIED_DEBUG, stat.S_IFREG | 0o644, deb.read_bytes())])
+    return gzip.compress(archive, compresslevel=9, mtime=0)
 
 
 def main():
@@ -54,9 +89,26 @@ def main():
                         help='RAM desktop squashfs to hash; requires --profile desktop')
     parser.add_argument('--rootfs-url',
                         help='HTTP URL serving that squashfs to the tablet')
+    parser.add_argument('--debug-package', type=Path,
+                        help='erhai-debug deb for a setup session: the initramfs installs '
+                             'it into the RAM overlay only; adds erhai.debug=1')
     add_layout_arguments(parser)
     args = parser.parse_args()
     rootfs = None
+    debug_package = None
+    if args.debug_package:
+        if args.profile != 'desktop':
+            parser.error('--debug-package requires --profile desktop')
+        if not args.debug_package.is_file():
+            parser.error(f'Missing input: {args.debug_package}')
+        fields = subprocess.run(['dpkg-deb', '--field', str(args.debug_package),
+                                 'Package', 'Version'],
+                                capture_output=True, text=True)
+        control = dict(line.split(': ', 1) for line in fields.stdout.splitlines()
+                       if ': ' in line)
+        if fields.returncode or control.get('Package') != 'erhai-debug':
+            parser.error(f'{args.debug_package} is not an erhai-debug package')
+        debug_package = {'version': control.get('Version'), 'path': '/' + CARRIED_DEBUG}
     if args.profile == 'desktop':
         if not args.rootfs or not args.rootfs_url:
             parser.error('--profile desktop requires --rootfs and --rootfs-url')
@@ -78,6 +130,8 @@ def main():
         cmdline += ' ' + PROFILE_EXTRA[args.profile]
     if rootfs:
         cmdline += f' erhai.rootfs={rootfs["url"]} erhai.rootfs.sha256={rootfs["sha256"]}'
+    if debug_package and 'erhai.debug=1' not in args.cmdline_extra.split():
+        cmdline += ' erhai.debug=1'
     if args.cmdline_extra.strip():
         cmdline += ' ' + args.cmdline_extra.strip()
     kout = args.kernel_out.resolve()
@@ -103,16 +157,24 @@ def main():
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     inputs = {'Image': image, 'sm8750-erhai.dtb': dtb, 'initramfs.cpio.gz': initramfs}
+    if debug_package:
+        inputs['erhai-debug.deb'] = args.debug_package.resolve()
     hashes = {name: sha(path) for name, path in inputs.items()}
+    ramdisk = initramfs
+    if debug_package:
+        ramdisk = out / 'ramdisk.cpio.gz'
+        ramdisk.write_bytes(initramfs.read_bytes() + carried_package(args.debug_package))
     boot = out / 'boot-mainline.img'
     subprocess.run(['python3', str(MKBOOT), '--header_version', '2', '--pagesize', '4096',
                     '--base', '0', '--kernel_offset', '0x00008000',
                     '--ramdisk_offset', '0x01000000', '--tags_offset', '0x00000100',
                     '--dtb_offset', '0x01f00000',
-                    '--kernel', str(image), '--ramdisk', str(initramfs),
+                    '--kernel', str(image), '--ramdisk', str(ramdisk),
                     '--dtb', str(dtb), '--os_version', '15.0.0',
                     '--os_patch_level', '2026-07', '--cmdline', cmdline,
                     '--output', str(boot)], check=True)
+    if debug_package:
+        ramdisk.unlink()
     assert boot.stat().st_size <= 100663296, 'exceeds boot partition capacity'
     manifest = {'status': 'OFFLINE_CANDIDATE_NOT_DEVICE_TESTED',
                 'kernel_commit': head, 'kernel_out': str(kout),
@@ -123,6 +185,8 @@ def main():
                          'RAM userspace with NCM/HTTP evidence, telnet end, watchdog self-recovery.'}
     if rootfs:
         manifest['ram_rootfs'] = rootfs
+    if debug_package:
+        manifest['debug_package'] = debug_package
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     print(json.dumps({k: manifest[k] for k in ['status', 'kernel_commit', 'abl_sink_layout',
                                                    'boot_sha256', 'boot_size']}, indent=2))

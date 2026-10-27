@@ -126,6 +126,15 @@ configure)
 	if command -v erhai-wifi-address >/dev/null 2>&1; then
 		erhai-wifi-address --apply || true
 	fi
+
+	# Root filesystems before 0.3.0 kept the Ubuntu ISO's cdrom.sources, which
+	# names the installation medium as a package source. An installed system
+	# has no /cdrom, so apt update fails on it. Remove that one file, and only
+	# while it points at /cdrom; every other source stays as it is.
+	cdrom=/etc/apt/sources.list.d/cdrom.sources
+	if [ -f "$cdrom" ] && grep -qx 'URIs: file:///cdrom' "$cdrom"; then
+		rm -f "$cdrom"
+	fi
 	;;
 esac
 

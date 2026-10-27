@@ -98,5 +98,53 @@ class RamRootIntegrityTest(unittest.TestCase):
         self.fetch('missing.squashfs', self.digest, False)
 
 
+class CarriedDebugPackageTest(unittest.TestCase):
+    """A setup session installs its carried package with the overlay's dpkg.
+
+    mount, umount and chroot are recorded instead of run; the copy, cleanup
+    and status handling run in the selected real shell.
+    """
+
+    def install(self, dpkg_status):
+        source = (REPO / 'initramfs/init-ncm').read_text()
+        start = source.index('install_carried_debug() {')
+        function = source[start:source.index('\n}\n', start) + 3]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'newroot/run').mkdir(parents=True)
+            package = root / 'erhai-debug.deb'
+            package.write_bytes(b'package fixture')
+            calls = root / 'calls'
+            staged = root / 'newroot/run/erhai-setup/erhai-debug.deb'
+            stubs = (f'CARRIED_DEBUG={shlex.quote(str(package))}\n'
+                     f'mount() {{ echo "mount $*" >> {shlex.quote(str(calls))}; }}\n'
+                     f'umount() {{ echo "umount $*" >> {shlex.quote(str(calls))}; }}\n'
+                     f'chroot() {{ echo "chroot $*" >> {shlex.quote(str(calls))}; '
+                     f'cmp -s {shlex.quote(str(package))} {shlex.quote(str(staged))} || return 9; '
+                     f'return {dpkg_status}; }}\n')
+            script = root / 'install.sh'
+            script.write_text(stubs + function.replace('/newroot', f'{root}/newroot')
+                              + 'install_carried_debug\necho "status=$?"\n')
+            shell = json.loads(os.environ.get('RAM_ROOT_SHELL', '["sh"]'))
+            result = subprocess.run(shell + [str(script)], capture_output=True, text=True,
+                                    timeout=15)
+            self.assertFalse((root / 'newroot/run/erhai-setup').exists())
+            newroot = f'{root}/newroot'
+            self.assertEqual(calls.read_text().splitlines(), [
+                f'mount -o bind /dev {newroot}/dev',
+                f'mount -t proc proc {newroot}/proc',
+                f'chroot {newroot} /usr/bin/env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin '
+                '/usr/bin/dpkg --install /run/erhai-setup/erhai-debug.deb',
+                f'umount {newroot}/proc',
+                f'umount {newroot}/dev'])
+            return result.stdout.strip()
+
+    def test_installed_package_is_reported(self):
+        self.assertEqual(self.install(0), 'status=0')
+
+    def test_failed_installation_still_releases_the_overlay(self):
+        self.assertEqual(self.install(1), 'status=1')
+
+
 if __name__ == '__main__':
     unittest.main()

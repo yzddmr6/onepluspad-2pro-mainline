@@ -12,3 +12,6 @@ Description: Optional USB NCM diagnostics for the OnePlus Pad 2 Pro
  command line. Ordinary installed boots leave the channel closed.
  The HTTP server exposes the root filesystem and the shell is unauthenticated;
  this package is intended for explicitly enabled local development sessions.
+ While installed, it also sets the kernel to panic on a hung task, a soft
+ lockup or an oops and to reboot 10 seconds later, so that a hang cannot
+ keep an unattended development device stuck.

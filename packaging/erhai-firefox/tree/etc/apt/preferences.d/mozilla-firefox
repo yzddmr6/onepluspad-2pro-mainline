@@ -1,0 +1,13 @@
+# Based on TheMojoMan's oneplus-erhai-ubuntu
+# https://github.com/TheMojoMan/oneplus-erhai-ubuntu
+# Firefox comes from Mozilla's APT repository (mozilla.sources). Ubuntu's
+# firefox is a transitional package that installs the Firefox snap, and its
+# version epoch sorts it above every Mozilla release: Mozilla's builds need a
+# priority of at least 1000 to replace it, and Ubuntu's is never selected.
+Package: firefox*
+Pin: origin packages.mozilla.org
+Pin-Priority: 1000
+
+Package: firefox
+Pin: release o=Ubuntu
+Pin-Priority: -1

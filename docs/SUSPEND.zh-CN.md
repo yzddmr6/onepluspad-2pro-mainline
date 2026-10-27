@@ -33,7 +33,6 @@ compatible 的默认值，而 `qcom,pmk8350-pwrkey` 对应
 显示、触控、Wi-Fi、蓝牙、电池和传感器都能恢复；但 deep 下 ADSP 经 IPCC/glink 中断
 发来的任何消息都会让整机完整恢复，曾因此提前醒来。
 s2idle 处理这类中断时不会离开挂起。
-同 SoC 的小米平板 8 Pro（`piano`）也使用同样的默认值。
 
 ## 电源键
 
@@ -102,9 +101,6 @@ ddr   Count: 0
 
 ## 参考
 
-* `piano: defconfig: default to s2idle for suspend` 与
-  `piano: default the rootfs image to s2idle as well`（小米平板 8 Pro，SM8750）——
-  同样的默认、同样的理由，并提醒**两处 cmdline 都要改**。
 * postmarketOS wiki《Qualcomm Snapdragon 845/850》——“高通平台目前没有真正的 suspend 模式”；
   wakeirq 与 `IRQF_NO_SUSPEND` 语义；用 `wakeup_count` 反查唤醒源。
 * 骁龙 X Elite 挂起笔记（Lenovo Yoga Slim 7x）——`deep` 存在但 resume 是坏的、hibernation 未编入、

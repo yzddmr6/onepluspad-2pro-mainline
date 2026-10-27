@@ -1,5 +1,5 @@
 From 8e87805ac5a0c192b9df4a71d02bc199235c34f1 Mon Sep 17 00:00:00 2001
-From: Erwin <yzddmr7@gmail.com>
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
 Date: Fri, 25 Sep 2026 20:10:00 +0800
 Subject: [PATCH] hexagonrpcd: keep listening after refusing a request
 

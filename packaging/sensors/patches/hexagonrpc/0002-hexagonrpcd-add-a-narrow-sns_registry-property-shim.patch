@@ -1,5 +1,5 @@
 From c16e7bc3cce78ed37c3d9d815f75100add6ff7af Mon Sep 17 00:00:00 2001
-From: Erwin <yzddmr7@gmail.com>
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
 Date: Sun, 30 Aug 2026 00:13:22 +0800
 Subject: [PATCH] hexagonrpcd: add a narrow sns_registry property shim
 
@@ -9,7 +9,7 @@ Expose only the two property names present in the pinned ROM sns_reg_config and 
 
 Propagate reverse-listener failures out of hexagonrpcd so a service manager can distinguish a torn-down tunnel from a successful exit. Cover the recovered ROM wire encoding, both allowlisted names, non-empty near misses, short outputs, unsupported methods, and scalar-shape deviations with a host test.
 
-Signed-off-by: Erwin <yzddmr7@gmail.com>
+Signed-off-by: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
 
 diff --git a/hexagonrpcd/interface/sns_registry.c b/hexagonrpcd/interface/sns_registry.c
 new file mode 100644

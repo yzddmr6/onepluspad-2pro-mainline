@@ -16,7 +16,8 @@
 #   erhai.root=PARTLABEL=<name> mount that partition rw and boot it as the
 #                               persistent root (no expiry unless explicitly set)
 #   erhai.debug=1               enable USB NCM diagnostics; desktop handoff
-#                               requires the optional erhai-debug package.
+#                               requires the optional erhai-debug package,
+#                               which a setup image carries for its RAM root.
 #                               Ordinary installed boots expose no channel.
 export PATH=/bin
 mount -t proc proc /proc
@@ -149,7 +150,36 @@ EOF
 	for p in $(pidof telnetd httpd udhcpd dd 2>/dev/null); do kill "$p" 2>/dev/null; done
 	echo "SWITCHROOT systemd $(cat /proc/uptime)" >> "$1"
 	sync
-	exec switch_root /newroot /sbin/init
+	# Move the new root over / and enter it, instead of busybox switch_root,
+	# which deletes the initramfs before it mounts the new root. In between,
+	# neither root has /lib/firmware, and a built-in driver that requests
+	# firmware at that moment fails; the Bluetooth NVM file was lost this way.
+	# The initramfs contents stay in memory underneath the new root.
+	cd /newroot || return 1
+	mount -o move . / || return 1
+	exec chroot . /sbin/init
+}
+
+# A setup boot image appends the optional diagnostics package to its ramdisk
+# (tools/build-mainline-boot.py --debug-package), so the published root stays
+# without it. dpkg installs it into the RAM overlay only; the downloaded image
+# and every partition stay unchanged.
+CARRIED_DEBUG=/usr/lib/erhai/debug/erhai-debug.deb
+install_carried_debug() {
+	rc=1
+	if mkdir -p /newroot/run/erhai-setup &&
+	   cp "$CARRIED_DEBUG" /newroot/run/erhai-setup/erhai-debug.deb &&
+	   mount -o bind /dev /newroot/dev; then
+		if mount -t proc proc /newroot/proc; then
+			chroot /newroot /usr/bin/env -i PATH=/usr/sbin:/usr/bin:/sbin:/bin \
+				/usr/bin/dpkg --install /run/erhai-setup/erhai-debug.deb
+			rc=$?
+			umount /newroot/proc
+		fi
+		umount /newroot/dev
+	fi
+	rm -rf /newroot/run/erhai-setup
+	return "$rc"
 }
 
 # Liveness + clock observability: refreshed evidence for late HTTP fetches.
@@ -361,6 +391,14 @@ WantedBy=multi-user.target
 EOF
 			ln -sf ../erhai-weston.service \
 				/newroot/etc/systemd/system/multi-user.target.wants/erhai-weston.service
+		fi
+		if [ "$DEBUG_CHANNEL" = 1 ] && [ -f "$CARRIED_DEBUG" ] &&
+		   [ ! -f /newroot/usr/lib/systemd/system/erhai-debug.service ]; then
+			if install_carried_debug >> /run/evidence/rootfs.txt 2>&1; then
+				echo DEBUG_PACKAGE_INSTALLED >> /run/evidence/rootfs.txt
+			else
+				echo DEBUG_PACKAGE_INSTALL_FAILED >> /run/evidence/rootfs.txt
+			fi
 		fi
 		switch_to_newroot /run/evidence/rootfs.txt
 	fi

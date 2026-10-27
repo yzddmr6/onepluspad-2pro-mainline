@@ -15,6 +15,8 @@ is a package, and each package owns exactly what it installs:
                           so a kernel update is an apt upgrade
     erhai-firmware        the firmware closure the mainline drivers ask for
     erhai-audio           the board AudioReach topology and audio configuration
+    erhai-firefox         Mozilla's APT repository and signing key for the
+                          Firefox deb, in place of the Firefox snap
     erhai-device          a metapackage depending on the required device layer
 
 Inputs are pinned, never inherited: the kernel comes from a clean checkout at a
@@ -110,10 +112,10 @@ PACKAGING = REPO / 'packaging'
 FIRMWARE = PACKAGING / 'firmware'
 MANIFEST = PACKAGING / 'firmware-manifest.json'
 VERSION_FILE = PACKAGING / 'VERSION'
-MAINTAINER = 'Erwin <yzddmr7@gmail.com>'
+MAINTAINER = 'yzddmr6 <46088090+yzddmr6@users.noreply.github.com>'
 DEBIAN_SCRIPTS = ('preinst', 'postinst', 'prerm', 'postrm')
 PACKAGES = ('erhai-display-power', 'erhai-device-support', 'erhai-firmware', 'erhai-audio',
-            'erhai-kernel', 'erhai-debug', 'erhai-device')
+            'erhai-firefox', 'erhai-kernel', 'erhai-debug', 'erhai-device')
 PARTS = ('boot', 'init_boot', 'vendor_boot')
 SWITCHER_PROGRAMS = ('erhai-switch', 'erhai-switch-install-ubuntu-images')
 
@@ -1111,8 +1113,8 @@ def main():
                 stage_device_support(root)
             elif package == 'erhai-display-power':
                 stage_display_power(root)
-            elif package == 'erhai-debug':
-                copy_tree(PACKAGING / 'erhai-debug/tree', root)
+            elif package in ('erhai-debug', 'erhai-firefox'):
+                copy_tree(PACKAGING / package / 'tree', root)
             elif package == 'erhai-firmware':
                 stage_firmware(root, manifest)
             elif package == 'erhai-audio':

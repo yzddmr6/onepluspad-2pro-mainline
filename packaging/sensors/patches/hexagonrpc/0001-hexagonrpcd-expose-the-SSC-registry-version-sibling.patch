@@ -1,5 +1,5 @@
 From a702cc5781c896970925d1e6a9e43a5f66fceaba Mon Sep 17 00:00:00 2001
-From: Erwin <yzddmr7@gmail.com>
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
 Date: Sat, 29 Aug 2026 21:09:07 +0800
 Subject: [PATCH] hexagonrpcd: expose the SSC registry version sibling
 
@@ -10,7 +10,7 @@ directory sibling and cover the exact firmware path with a host test.
 Use SNS_REG_VERSION rather than the SNS_REG_CONFIG typo in the draft
 upstream change.
 
-Signed-off-by: Erwin <yzddmr7@gmail.com>
+Signed-off-by: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
 ---
  hexagonrpcd/rpcd_builder.c             | 15 ++++++--
  tests/meson.build                      | 13 +++++++

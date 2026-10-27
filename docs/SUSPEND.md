@@ -35,7 +35,6 @@ Without it the kernel prefers the firmware-advertised `deep`. Deep suspend has c
 300-second RTC-timed cycles on this board with the display, touch, Wi-Fi, Bluetooth, battery
 and sensors recovering, but in deep any ADSP message on the IPCC/glink interrupts completes a
 full resume, which caused early wakes. s2idle handles such interrupts without leaving suspend.
-The other SM8750-class tablet (Xiaomi Pad 8 Pro, `piano`) uses the same default.
 
 ## Power button
 
@@ -113,9 +112,6 @@ whose `wakeup_count` does not move did not wake the system, even if its IRQ fire
 
 ## References
 
-* `piano: defconfig: default to s2idle for suspend` and `piano: default the rootfs image to
-  s2idle as well` (Xiaomi Pad 8 Pro, SM8750) — the same default, the same reason, plus the
-  reminder that both command-line sources have to be checked.
 * postmarketOS wiki, *Qualcomm Snapdragon 845/850* — "Qualcomm platforms currently don't
   have a real suspend mode"; wakeirqs and `IRQF_NO_SUSPEND` semantics; waking by
   `wakeup_count`.

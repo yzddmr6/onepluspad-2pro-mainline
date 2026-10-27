@@ -156,6 +156,9 @@ python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/u
 
 上述命令使用 Bash。输出包括 `rootfs.squashfs`、软件包列表、构建输入与日志。
 装配通过官方 APT 包加入运行依赖和设备组件，保留 Ubuntu 正常的软件源。
+清单还按 URL 与 SHA-256 钉住 Mozilla 官方 Firefox deb；装配按确切版本安装它，替换
+Ubuntu 的过渡包 `firefox`，设备包中的 `erhai-firefox` 配置 Mozilla APT 源供之后更新。
+Mozilla 不再提供已钉住的版本时，改钉当前版本。
 账户、校准、无线地址与 Android 回退镜像需要在后续安装阶段处理，不进入通用根树。
 
 安装范围与操作见[试用、安装与恢复](FLASHING.zh-CN.md)。
