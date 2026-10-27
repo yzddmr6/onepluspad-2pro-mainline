@@ -108,9 +108,12 @@ def main():
             run(['meson', 'setup', build, src, *flags], env=env)
         compilers = json.loads((build / 'meson-info/intro-compilers.json').read_text())
         cpp = compilers['host']['cpp']
-        if cpp['id'] == 'gcc' and int(cpp['version'].split('.')[0]) < 14:
-            parser.error('Mesa requires GCC 14 or newer: GCC 13 -O3 miscompiles '
-                         'ir_constant::is_value, discarding valid floating-point cases')
+        toolchain = json.loads((INPUTS / 'toolchain.json').read_text())
+        if any(compilers['host'][lang]['id'] != 'gcc' or
+               compilers['host'][lang]['version'] != toolchain['version']
+               for lang in ('c', 'cpp')):
+            parser.error('Use the GCC toolchain pinned in packaging/mesa/toolchain.json; '
+                         'GCC 13 miscompiles GLSL floating-point constants')
         if args.configure_only:
             return
         run(['meson', 'compile', '-C', build, '-j', args.jobs], env=env)

@@ -38,6 +38,12 @@ def main():
                        ('id', 'version', 'full_version', 'linker_id')}
             for language, compiler in result['target_compilers'].items()}
     source = json.loads((REPO / 'packaging/mesa/source.json').read_text())
+    toolchain = json.loads((REPO / 'packaging/mesa/toolchain.json').read_text())
+    if any(result.get('target_compilers', {}).get(lang, {}).get('id') != 'gcc' or
+           result.get('target_compilers', {}).get(lang, {}).get('version') != toolchain['version']
+           for lang in ('c', 'cpp')):
+        parser.error('Build compiler differs from the pinned GCC toolchain')
+
     if (result['input_sha256'] != sha(build / 'input.json')
             or result['profile'] != 'desktop'
             or result['prefix'] != '/usr/lib/erhai/mesa'

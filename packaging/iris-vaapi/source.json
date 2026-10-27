@@ -4,7 +4,7 @@
   "commit": "f587b14e6b22955c7250a45ff5f43588bbce2114",
   "archive_url": "https://codeload.github.com/phxinyang/qualcomm-iris-vaapi/tar.gz/f587b14e6b22955c7250a45ff5f43588bbce2114",
   "archive_sha256": "7b4c073b575f4ba6692d03f15990807c1dd8b4775474b74d4558ca7877e184fc",
-  "version": "0.4.0~rc1",
+  "version": "0.4.0",
   "license": "MIT and LGPL-2.1; bundled kernel patches are GPL-2.0-only",
   "patches": [
     "0001-pin-archive-build-version.patch",
