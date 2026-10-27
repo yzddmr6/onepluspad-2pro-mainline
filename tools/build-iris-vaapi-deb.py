@@ -91,10 +91,20 @@ def main():
     # Ship corresponding source inside the deb as well as beside it: normal
     # release packaging then carries the LGPL source without a separate step.
     source_archive = out / f"{package}_{lock['version']}.tar.xz"
+    with tarfile.open(args.source_archive) as original:
+        epoch = min(member.mtime for member in original.getmembers())
+
+    def source_metadata(member):
+        member.uid = member.gid = 0
+        member.uname = member.gname = ""
+        member.mtime = epoch
+        return member
+
     with tarfile.open(source_archive, "w:xz") as archive:
-        archive.add(source, arcname=source.name)
-        archive.add(INPUT, arcname="erhai-integration")
-        archive.add(Path(__file__).resolve(), arcname="erhai-integration/build-iris-vaapi-deb.py")
+        archive.add(source, arcname=source.name, filter=source_metadata)
+        archive.add(INPUT, arcname="erhai-integration", filter=source_metadata)
+        archive.add(Path(__file__).resolve(), arcname="erhai-integration/build-iris-vaapi-deb.py",
+                    filter=source_metadata)
     shutil.copy2(source_archive, doc / "source.tar.xz")
     control = stage / "DEBIAN"
     control.mkdir()
