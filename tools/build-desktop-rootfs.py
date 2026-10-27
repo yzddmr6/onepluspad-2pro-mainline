@@ -101,7 +101,7 @@ def main():
     (out / 'inputs.json').write_text(json.dumps(inputs, indent=2) + '\n')
     name = 'erhai-desktop-build-' + uuid.uuid4().hex[:12]
     command = ['docker', 'run', '--rm', '--name', name, '--network', 'none',
-               '--cap-add', 'SYS_ADMIN', '--security-opt', 'apparmor=unconfined',
+               '--env', 'QEMU_CPU=max,pauth-impdef=on', '--cap-add', 'SYS_ADMIN', '--security-opt', 'apparmor=unconfined',
                '--volume', f'{out}:/work',
                '--volume', f'{args.layers.resolve()}:/layers:ro',
                '--volume', f'{assembly_script}:/assemble:ro',

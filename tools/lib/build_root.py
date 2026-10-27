@@ -49,7 +49,7 @@ def fetch(url, target, expected):
 def chroot(root, script, env=None, log=None):
     """Run a bash script as root inside the arm64 build root."""
     variables = {'PATH': CHROOT_PATH, 'HOME': '/root', 'LC_ALL': 'C.UTF-8',
-                 'DEBIAN_FRONTEND': 'noninteractive', **(env or {})}
+                 'DEBIAN_FRONTEND': 'noninteractive', 'QEMU_CPU': 'max,pauth-impdef=on', **(env or {})}
     inner = ['/usr/bin/env', '-i', *[f'{k}={v}' for k, v in variables.items()],
              '/bin/bash', '-euo', 'pipefail', '-c', script]
     wrapper = ('mount --rbind /dev "$1/dev" && mount -t proc proc "$1/proc" && '
@@ -68,7 +68,7 @@ def capture(root, script):
         ['unshare', '--map-root-user', '--mount', '--pid', '--fork', '--kill-child',
          'sh', '-c', 'mount -t proc proc "$1/proc" && exec chroot "$1" /bin/bash -euo pipefail -c "$2"',
          'sh', str(root), script],
-        capture_output=True, text=True, env={'PATH': CHROOT_PATH, 'LC_ALL': 'C.UTF-8'})
+        capture_output=True, text=True, env={'PATH': CHROOT_PATH, 'LC_ALL': 'C.UTF-8', 'QEMU_CPU': 'max,pauth-impdef=on'})
     if result.returncode:
         die(f'chroot query failed: {result.stderr.strip()}')
     return result.stdout
