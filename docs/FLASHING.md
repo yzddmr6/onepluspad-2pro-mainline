@@ -54,8 +54,7 @@ backup on the host and use the Fastboot recovery procedure below after an interr
 Releases from v0.2.1 attach the images this guide otherwise builds. The
 installation still runs `tools/install.py` from this repository's checkout with
 the host tools listed below, but no kernel, Mesa or root filesystem build is needed.
-From v0.3.0, one root filesystem serves both first-time preparation and
-installation.
+One root filesystem serves both first-time preparation and installation.
 
 | Asset | Use |
 |---|---|
@@ -65,19 +64,20 @@ installation.
 | `erhai-switch-VERSION.zip` | Android switch module |
 | `SHA256SUMS` | Checksums of every asset and of the joined image |
 
-Join and check the image in the download directory (shown for v0.3.0):
+Join and check the image in the download directory:
 
 ```sh
-cat ubuntu-pad2pro-v0.3.0-rootfs.squashfs.part* > ubuntu-pad2pro-v0.3.0-rootfs.squashfs
+image=$(ls ubuntu-pad2pro-*-rootfs.squashfs.part0); image=${image%.part0}
+cat "$image".part* > "$image"
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
 Then use it in place of the build outputs named below. In this checkout, save
 the joined image as `out/desktop-root/rootfs.squashfs` and its manifest as
 `out/desktop-root/manifest.json`. First-time preparation serves that file to the
-tablet and boots `ubuntu-pad2pro-v0.3.0-setup-boot.img` instead of
+tablet and boots `ubuntu-pad2pro-VERSION-setup-boot.img` instead of
 `out/ram-desktop/boot-mainline.img`; installation passes the same file to
-`--rootfs`. For an upgrade, unpack `erhai-device-packages-v0.3.0.tar` and install
+`--rootfs`. For an upgrade, unpack `erhai-device-packages-VERSION.tar` and install
 its packages as described in
 [Upgrading an existing installation](#upgrading-an-existing-installation).
 
@@ -186,7 +186,7 @@ root access under KernelSU's Superuser page. Erasing Android data resets this
 grant; enabling USB debugging alone is not enough. Transfer the module from the host:
 
 ```sh
-adb -s "$device_serial" push out/erhai-switch-v0.3.0.zip /sdcard/Download/
+adb -s "$device_serial" push out/erhai-switch-*.zip /sdcard/Download/
 ```
 
 Select the ZIP from Downloads in KernelSU, install it and reboot Android.
@@ -282,7 +282,7 @@ sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 
 The release's `erhai-device-packages-VERSION.tar` holds the same packages and
 `erhai-mesa`, without USB diagnostics; installing them also turns a diagnostic
-installation into a regular one (`tar xf erhai-device-packages-v0.3.0.tar && sudo apt install ./erhai-device-packages-v0.3.0/*.deb`).
+installation into a regular one (`tar xf erhai-device-packages-*.tar && sudo apt install ./erhai-device-packages-*/*.deb`).
 
 The kernel package writes the new boot images to the active slot during the
 installation, and the previous kernel package stays installed. The sensor

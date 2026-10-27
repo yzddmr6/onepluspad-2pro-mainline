@@ -27,7 +27,5 @@ an ICD pointing to its private Turnip library, and restores the distribution ICD
 on removal. Other Vulkan ICDs remain available. Start a new desktop session
 after installation/removal so applications load the intended library versions.
 
-These are experimental Vulkan/compiler changes. Offline construction and library
-loading do not establish rendering, performance or suspend reliability. Remove
-local patches when the pinned upstream contains equivalent fixes and the affected
-workloads pass on the device. See `docs/USERSPACE-TEST.md` for device acceptance.
+These are project patches for the Adreno 830 Vulkan and compiler paths. Remove
+each one when the pinned upstream contains an equivalent fix.

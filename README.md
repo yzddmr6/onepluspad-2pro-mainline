@@ -94,9 +94,9 @@ development are not included in the supported feature set.
 | Boot and storage | SM8750P / UFS | ✅ | Ubuntu boot and storage access work. Dual-boot switching is limited to the tested layout described above. |
 | Internal display | Dual DSI / DSC | ✅ | 3392 × 2400 at 120 Hz. Other refresh rates await hardware testing. |
 | Touch | Novatek NT36536 | ✅ | Finger input, desktop interaction and login verified. Pen support is tracked separately. |
-| GPU and desktop | Adreno 830 / Freedreno / Mesa | 🟡 | GNOME and OpenGL hardware rendering are verified. Vulkan testing triggered a GPU timeout and is unsupported. Sandboxed applications and sustained loads need testing. |
+| GPU and desktop | Adreno 830 / Freedreno / Turnip / Mesa | 🟡 | GNOME, OpenGL and Vulkan hardware rendering work: glmark2 completes all scenes, and Vulkan runs through Turnip (vkcube, vkmark). Sandboxed applications and sustained loads need testing. |
 | Brightness | Dual KTZ8868 / one backlight interface | 🟡 | Unified brightness control and blanking are integrated; the slider’s usable brightness range needs physical testing. |
-| Magnetic keyboard | Pogo keyboard / touchpad | 🟡 | Keyboard input works. The on-screen keyboard appears for touch input while the keyboard is detached and hides when it is attached. Holding the magnifier key turns the top row into F1 to F12; the touchpad key gives F4 only on every other press. After a period without input the keyboard can stop responding and does not recover when reattached; restarting Linux restores it. Touchpad gestures need testing. |
+| Magnetic keyboard | Pogo keyboard / touchpad | 🟡 | Keyboard input works and the keyboard stays connected while idle and after system sleep. The on-screen keyboard appears for touch input while the keyboard is detached and hides when it is attached. Holding the magnifier key turns the top row into F1 to F12. Touchpad gestures need testing. |
 | Active pen | NT36536 pen input | 🔧 | Pen input code is available; position, pressure and buttons await physical testing. |
 | Pen charging | CPS8601 | ❌ | Charging, battery reporting and automatic scan control are not implemented. |
 
@@ -119,8 +119,8 @@ development are not included in the supported feature set.
 | Internal microphones | WCD939x / ALSA / PipeWire | 🟡 | Default input and two-channel capture work. With ADC 13 / TX DEC 112, normal speech at about 30 cm peaks around -8 dBFS without clipping. Background-noise performance remains uncharacterized. |
 | Speakers | Six AW88261 amplifiers / AudioReach | 🟡 | The opt-in candidate at amplifier value 350 (-2.5 dB) passed listening checks for channel position, loudness and sound quality. Playback remains disabled by default and has no vendor speaker protection. |
 | USB-C analog audio | WCD939x headset path | ❌ | Analog adapters and headset detection are not implemented. Digital USB audio is tracked above. |
-| Video playback in desktop players | Ubuntu GStreamer packages | 🟡 | With erhai-mesa revision 5 or later, Showtime, the default player, plays a 640 × 360 Theora test clip to the end with hardware OpenGL; earlier revisions can abort on a Mesa freedreno assertion. Other players, formats and long playback are untested. |
-| Hardware video codecs | Qualcomm Iris | 🟡 | H.264 hardware decoding works on the tablet: a 60-frame test clip matches the software decoder frame by frame. Encoding and use from desktop players need testing. |
+| Video playback in desktop players | Ubuntu GStreamer packages / Iris | 🟡 | Showtime, the default player, plays H.264, H.265 and VP9 with hardware decoding and keeps playing after seeking. Other players and long playback are untested. |
+| Hardware video codecs | Qualcomm Iris | 🟡 | H.264, H.265 and VP9 hardware decoding works in the default player through GStreamer and in Firefox through VA-API. Hardware encoding is untested. |
 | Front and rear cameras | SC820CS / SC1300CS | ❌ | Camera capture and video calls are not implemented. |
 | Automatic rotation | SSC / iio-sensor-proxy | 🟡 | Orientation reaches the desktop and the screen rotates in the initial-setup session, but not yet in a normal session even with the switch on. The mount matrix is a candidate and unmeasured. |
 | Automatic brightness | SSC ambient light / GNOME | 🟡 | The light sensor reaches GNOME, and with automatic brightness enabled the backlight level adjusted on hardware (1500 → 1805 of 2047). GNOME idle dimming is off because the panel is never blanked automatically. |

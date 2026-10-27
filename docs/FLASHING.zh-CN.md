@@ -42,7 +42,7 @@ RAM 临时启动不替换启动分区，但使用已安装根系统的临时内�
 
 从 v0.2.1 起，Release 附带本文原本需要自行构建的镜像。安装仍需本仓库检出中的
 `tools/install.py` 和下文列出的主机工具，但无需构建内核、Mesa 或根文件系统。
-从 v0.3.0 起，首次准备分区和安装使用同一个根文件系统。
+首次准备分区和安装使用同一个根文件系统。
 
 | 附件 | 用途 |
 |---|---|
@@ -52,17 +52,18 @@ RAM 临时启动不替换启动分区，但使用已安装根系统的临时内�
 | `erhai-switch-版本.zip` | Android 侧切换模块 |
 | `SHA256SUMS` | 所有附件及拼接后镜像的校验值 |
 
-在下载目录中拼接并校验（以 v0.3.0 为例）：
+在下载目录中拼接并校验：
 
 ```sh
-cat ubuntu-pad2pro-v0.3.0-rootfs.squashfs.part* > ubuntu-pad2pro-v0.3.0-rootfs.squashfs
+image=$(ls ubuntu-pad2pro-*-rootfs.squashfs.part0); image=${image%.part0}
+cat "$image".part* > "$image"
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
 之后用它替代下文的构建产物：在本仓库检出中，把拼接后的镜像存为 `out/desktop-root/rootfs.squashfs`，
 清单存为 `out/desktop-root/manifest.json`。首次准备分区时由文件服务器把它提供给平板，并用
-`ubuntu-pad2pro-v0.3.0-setup-boot.img` 代替 `out/ram-desktop/boot-mainline.img`；安装时把同一文件传给
-`--rootfs`。升级时，解开 `erhai-device-packages-v0.3.0.tar`，按[升级已有安装](#升级已有安装)安装其中的包。
+`ubuntu-pad2pro-版本-setup-boot.img` 代替 `out/ram-desktop/boot-mainline.img`；安装时把同一文件传给
+`--rootfs`。升级时，解开 `erhai-device-packages-版本.tar`，按[升级已有安装](#升级已有安装)安装其中的包。
 
 ## 首次准备 Linux 分区
 
@@ -157,7 +158,7 @@ fastboot -s "$device_serial" reboot
 清除 Android 数据会重置这项授权；仅开启 USB 调试还不够。从电脑把模块传到平板：
 
 ```sh
-adb -s "$device_serial" push out/erhai-switch-v0.3.0.zip /sdcard/Download/
+adb -s "$device_serial" push out/erhai-switch-*.zip /sdcard/Download/
 ```
 
 在 KernelSU 中选择“下载”目录里的 ZIP 安装，重启 Android，随后执行下面的 Linux 安装步骤。
@@ -229,7 +230,7 @@ sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 ```
 
 也可以直接用 Release 里的 `erhai-device-packages-版本.tar`：其中除上述包外还有 `erhai-mesa`，均不含 USB 调试通道，
-装上后调试安装也会变成普通安装（`tar xf erhai-device-packages-v0.3.0.tar && sudo apt install ./erhai-device-packages-v0.3.0/*.deb`）。
+装上后调试安装也会变成普通安装（`tar xf erhai-device-packages-*.tar && sudo apt install ./erhai-device-packages-*/*.deb`）。
 
 安装时内核包会把新的启动镜像写入活动槽，旧内核包仍保留；安装时导入的传感器注册表保持不变。
 新内核起不来时，按下文的恢复步骤处理。

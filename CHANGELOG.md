@@ -1,5 +1,47 @@
 # Changelog
 
+## v0.4.0
+
+Device packages are numbered 0.4.0 and install over v0.3.x with APT; see
+"Upgrading an existing installation" in
+[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation).
+
+- Kernel `erhai-v0.4.0`, now based on Linux 7.2.10:
+  - Storage uses the UFS multi-circular queue and lazy IOMMU invalidation:
+    4K random reads rose from about 231,000 to 302,000 IOPS. Long sequential
+    reads, which could freeze the tablet with the previous kernel, now run at
+    about 4.1 GB/s.
+  - The Iris video decoder allows larger capture buffer pools and offers
+    decode-order output on HFI gen2, which hardware-decoding players need.
+  - GPU management fixes for the GMU firmware start and its power votes.
+  - The ADSP no longer loses its first message after boot, which could leave
+    a boot without audio, charging information or sensors.
+  - USB keeps working after its PHY powers up again, and touch stays in sync
+    across system sleep.
+  - The keyboard cover stays connected while idle and after system sleep:
+    the driver completes the wake exchange the keyboard expects. Its touchpad
+    key gives F4 with the magnifier key on every press.
+  - The kernel detects hard lockups; debug sessions reboot on one.
+- Vulkan works through Turnip in `erhai-mesa` revision 6, with project
+  patches for the Adreno 830; vkcube and vkmark run. The
+  package now builds with GCC 14, as GCC 13 miscompiles a GLSL compiler
+  function at -O3 on arm64. OpenGL scored 9078 in glmark2, up from 8473.
+- Hardware video decoding: Showtime and Firefox decode H.264, H.265 and VP9
+  on the Iris decoder. The new `erhai-iris-vaapi` package provides the VA-API
+  driver, based on code002-2's
+  [sm8750-video-accel](https://github.com/code002-2/sm8750-video-accel), and
+  `erhai-video-defaults` makes hardware decoding the default for GStreamer
+  and Firefox.
+
+Tested on the tablet: an installed v0.3.0 system upgraded to these packages
+with APT, with the boot images read back intact and v0.3.0 kept as the
+fallback. Wi-Fi, Bluetooth and the ADSP services came up; after three system
+sleeps the keyboard, touch and USB still worked. glmark2 and vkmark completed;
+H.264, H.265 and VP9 played and seeked in Showtime and Firefox with hardware
+decoding; two 30-second sequential reads completed without errors. With the
+keyboard cover, detaching and reattaching it, typing, and the touchpad key's
+F4 with the magnifier key all worked.
+
 ## v0.3.0
 
 Device and sensor packages are numbered 0.3.0 and install over v0.2.x with
