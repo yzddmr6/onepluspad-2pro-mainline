@@ -1,0 +1,761 @@
+From 2ff684d2d1e94aa4df2a812a8858a3707ec4e27d Mon Sep 17 00:00:00 2001
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Date: Mon, 26 Oct 2026 09:31:24 +0800
+Subject: [PATCH] nir/ir3: partially unroll bounded runtime loops on A8xx
+ compute
+
+Build a four-iteration body and a scalar tail for eligible runtime loops,
+with overflow guards for the expanded induction range. Reject side effects,
+barriers and subgroup operations, and bound loop cost and register demand.
+
+Enable the pass for A8xx compute shaders and vectorize adjacent reads.
+Adjust read scheduling and register headroom to keep the expanded loop
+within the occupancy budget.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+---
+ src/compiler/nir/nir.h                       |   1 +
+ src/compiler/nir/nir_opt_loop_unroll.c       | 261 +++++++++++++++++++
+ src/compiler/nir/nir_serialize.c             |   2 +
+ src/compiler/nir/tests/loop_unroll_tests.cpp | 245 +++++++++++++++++
+ src/freedreno/ir3/ir3_compiler_nir.c         |  11 +-
+ src/freedreno/ir3/ir3_context.c              |   2 +-
+ src/freedreno/ir3/ir3_nir.c                  |  26 ++
+ src/freedreno/ir3/ir3_ra.c                   |  25 ++
+ src/freedreno/ir3/ir3_rpt.c                  |  16 ++
+ src/freedreno/ir3/ir3_sched.c                |  16 +-
+ 10 files changed, 602 insertions(+), 3 deletions(-)
+
+diff --git a/src/compiler/nir/nir.h b/src/compiler/nir/nir.h
+index 584cf3e..318d059 100644
+--- a/src/compiler/nir/nir.h
++++ b/src/compiler/nir/nir.h
+@@ -6909,6 +6909,7 @@ bool nir_opt_licm(nir_shader *shader,
+ bool nir_opt_loop(nir_shader *shader);
+ 
+ bool nir_opt_loop_unroll(nir_shader *shader);
++bool nir_opt_loop_unroll_runtime(nir_shader *shader, unsigned factor, unsigned max_cost);
+ 
+ typedef enum {
+    nir_move_const_undef =              BITFIELD_BIT(0),
+diff --git a/src/compiler/nir/nir_opt_loop_unroll.c b/src/compiler/nir/nir_opt_loop_unroll.c
+index 9b259b5..c71bb81 100644
+--- a/src/compiler/nir/nir_opt_loop_unroll.c
++++ b/src/compiler/nir/nir_opt_loop_unroll.c
+@@ -1205,3 +1205,264 @@ nir_opt_loop_unroll(nir_shader *shader)
+    }
+    return progress;
+ }
++
++/* Return the per-iteration byte stride of a scalar address expression. */
++static bool
++runtime_stride(nir_loop *loop, nir_def *def, unsigned depth, uint32_t *stride)
++{
++   if (def->num_components != 1 || def->bit_size != 32 || depth > 8)
++      return false;
++
++   unsigned first = nir_loop_first_block(loop)->index;
++   unsigned last = nir_loop_last_block(loop)->index;
++   if (nir_def_instr(def)->block->index < first ||
++       nir_def_instr(def)->block->index > last) {
++      *stride = 0;
++      return true;
++   }
++
++   struct hash_entry *entry =
++      _mesa_hash_table_search(loop->info->induction_vars, def);
++   if (entry) {
++      nir_loop_induction_variable *iv = entry->data;
++      if (nir_def_as_alu(iv->def)->op != nir_op_iadd ||
++          !nir_src_is_const(iv->update_src->src))
++         return false;
++      *stride = nir_src_as_uint(iv->update_src->src);
++      return true;
++   }
++
++   if (nir_def_is_const(def)) {
++      *stride = 0;
++      return true;
++   }
++   if (!nir_def_is_alu(def))
++      return false;
++   nir_alu_instr *alu = nir_def_as_alu(def);
++   if (alu->op != nir_op_iadd && alu->op != nir_op_imul &&
++       alu->op != nir_op_ishl)
++      return false;
++
++   uint32_t a, b;
++   if (!runtime_stride(loop, alu->src[0].src.ssa, depth + 1, &a) ||
++       !runtime_stride(loop, alu->src[1].src.ssa, depth + 1, &b))
++      return false;
++   if (alu->op == nir_op_iadd) {
++      *stride = a + b;
++   } else if (alu->op == nir_op_ishl && nir_src_is_const(alu->src[1].src)) {
++      *stride = a << (nir_src_as_uint(alu->src[1].src) & 31);
++   } else if (alu->op == nir_op_imul && nir_src_is_const(alu->src[1].src)) {
++      *stride = a * nir_src_as_uint(alu->src[1].src);
++   } else if (alu->op == nir_op_imul && nir_src_is_const(alu->src[0].src)) {
++      *stride = b * nir_src_as_uint(alu->src[0].src);
++   } else {
++      return false;
++   }
++   return true;
++}
++
++/* Deliberately small initial scope: straight-line, read-only loops with a
++ * unit-step integer induction variable and at least one adjacent memory load.
++ * Stores, atomics, barriers, subgroup operations and nested control flow must
++ * not be speculated or duplicated by this profitability heuristic.
++ */
++static bool
++runtime_unroll_candidate(nir_loop *loop, unsigned max_cost, unsigned *iv_src)
++{
++   if (loop->partially_unrolled || loop->control == nir_loop_control_dont_unroll ||
++       loop->info->complex_loop || loop->info->limiting_terminator ||
++       !list_is_singular(&loop->info->loop_terminator_list) ||
++       loop->info->instr_cost > max_cost)
++      return false;
++
++   nir_loop_terminator *term = list_first_entry(&loop->info->loop_terminator_list,
++                                               nir_loop_terminator,
++                                               loop_terminator_link);
++   if (!nir_is_trivial_loop_if(term->nif, term->break_block) ||
++       nir_if_first_then_block(term->nif) != nir_if_last_then_block(term->nif) ||
++       nir_if_first_else_block(term->nif) != nir_if_last_else_block(term->nif) ||
++       nir_block_first_instr(term->break_block) != nir_block_last_instr(term->break_block) ||
++       !exec_list_is_empty(&term->continue_from_block->instr_list) ||
++       !nir_def_is_alu(term->nif->condition.ssa))
++      return false;
++   nir_alu_instr *cmp = nir_def_as_alu(term->nif->condition.ssa);
++   if (cmp->op != nir_op_ilt && cmp->op != nir_op_ige &&
++       cmp->op != nir_op_ult && cmp->op != nir_op_uge)
++      return false;
++
++   bool found = false;
++   for (unsigned i = 0; i < 2; i++) {
++      struct hash_entry *entry =
++         _mesa_hash_table_search(loop->info->induction_vars, cmp->src[i].src.ssa);
++      if (!entry)
++         continue;
++      nir_loop_induction_variable *iv = entry->data;
++      nir_def *limit = cmp->src[1 - i].src.ssa;
++      if (iv->basis != cmp->src[i].src.ssa || iv->basis->bit_size != 32 ||
++          iv->basis->num_components != 1 || nir_def_as_alu(iv->def)->op != nir_op_iadd ||
++          !nir_src_is_const(iv->update_src->src) ||
++          nir_src_as_uint(iv->update_src->src) != 1 ||
++          nir_def_instr(limit)->block->index >= nir_loop_first_block(loop)->index)
++         continue;
++      /* Accept i <[=] limit, not loops continuing while i >[=] limit. */
++      bool is_ge = cmp->op == nir_op_ige || cmp->op == nir_op_uge;
++      if ((is_ge ^ (i == 1)) == term->continue_from_then)
++         continue;
++      *iv_src = i;
++      found = true;
++   }
++   if (!found)
++      return false;
++
++   unsigned phi_components = 0, loads = 0;
++   bool adjacent = false;
++   foreach_list_typed(nir_cf_node, node, node, &loop->body) {
++      if (node == &term->nif->cf_node)
++         continue;
++      if (node->type != nir_cf_node_block)
++         return false;
++      nir_block *block = nir_cf_node_as_block(node);
++      nir_foreach_instr(instr, block) {
++         switch (instr->type) {
++         case nir_instr_type_phi:
++            phi_components += nir_instr_as_phi(instr)->def.num_components;
++            break;
++         case nir_instr_type_alu:
++         case nir_instr_type_load_const:
++            break;
++         case nir_instr_type_intrinsic: {
++            nir_intrinsic_instr *load = nir_instr_as_intrinsic(instr);
++            /* Immutable driver constants and descriptor handles are pure
++             * address-building operations, not loop memory effects.
++             */
++            if (load->intrinsic == nir_intrinsic_load_const_ir3 ||
++                load->intrinsic == nir_intrinsic_bindless_resource_ir3)
++               break;
++            if (block == nir_loop_first_block(loop) ||
++                (load->intrinsic != nir_intrinsic_load_ssbo &&
++                 load->intrinsic != nir_intrinsic_load_ubo) ||
++                load->def.bit_size != 32 || load->def.num_components != 1 ||
++                (nir_intrinsic_access(load) & (ACCESS_VOLATILE | ACCESS_COHERENT)) ||
++                (load->intrinsic == nir_intrinsic_load_ssbo &&
++                 !(nir_intrinsic_access(load) & ACCESS_CAN_REORDER)))
++               return false;
++            uint32_t stride;
++            unsigned shift = nir_intrinsic_has_offset_shift(load) ?
++               nir_intrinsic_offset_shift(load) : 0;
++            if (runtime_stride(loop, load->src[1].ssa, 0, &stride) &&
++                shift <= 2 && stride == (4u >> shift))
++               adjacent = true;
++            loads++;
++            break;
++         }
++         default:
++            return false;
++         }
++      }
++   }
++   return adjacent && loads <= 4 && phi_components <= 12;
++}
++
++/* Share the existing unroller's LCSSA/temporary-register and CF cloning
++ * machinery. All loop-carried values, including floating point accumulators,
++ * flow through each cloned iteration in the original order.
++ */
++static void
++runtime_unroll(nir_loop *loop, unsigned factor, unsigned iv_src)
++{
++   nir_function_impl *impl = nir_cf_node_get_function(&loop->cf_node);
++   nir_loop_terminator *term = list_first_entry(&loop->info->loop_terminator_list,
++                                               nir_loop_terminator,
++                                               loop_terminator_link);
++   loop_prepare_for_unroll(loop);
++   loop->partially_unrolled = true;
++
++   nir_cf_node *parent = loop->cf_node.parent;
++   nir_cursor before = nir_before_cf_node(&loop->cf_node);
++   nir_cf_list original, bulk;
++   struct hash_table *map = _mesa_pointer_hash_table_create(NULL);
++   before = nir_cf_extract(&original, before, nir_after_cf_node(&loop->cf_node));
++   nir_cf_list_clone(&bulk, &original, parent, map);
++   nir_cf_node *first = exec_node_data(nir_cf_node, exec_list_get_head(&bulk.list), node);
++   nir_loop *main = nir_cf_node_as_loop(nir_cf_node_next(first));
++   nir_if *main_if = nir_cf_node_as_if(nir_cf_node_next(&nir_loop_first_block(main)->cf_node));
++   nir_cf_reinsert(&original, before);
++   nir_cf_reinsert(&bulk, nir_before_cf_node(&loop->cf_node));
++   main->partially_unrolled = true;
++
++   nir_builder b = nir_builder_create(impl);
++   b.cursor = nir_before_cf_node(&main_if->cf_node);
++   nir_alu_instr *cmp = nir_def_as_alu(main_if->condition.ssa);
++   nir_def *i = nir_ssa_for_alu_src(&b, cmp, iv_src);
++   nir_def *limit = nir_ssa_for_alu_src(&b, cmp, 1 - iv_src);
++   bool signed_cmp = cmp->op == nir_op_ilt || cmp->op == nir_op_ige;
++   nir_def *last = nir_iadd_imm(&b, i, factor - 1);
++   nir_def *wrap = signed_cmp ? nir_ilt(&b, last, i) : nir_ult(&b, last, i);
++   nir_def *end_cond = nir_build_alu(&b, cmp->op,
++                                    iv_src ? limit : last,
++                                    iv_src ? last : limit, NULL, NULL);
++   /* A wrapping last index must always enter the original scalar loop. */
++   nir_def *cond = term->continue_from_then ?
++      nir_iand(&b, nir_inot(&b, wrap), end_cond) : nir_ior(&b, wrap, end_cond);
++   nir_src_rewrite(&main_if->condition, cond);
++
++   nir_cf_list header, body;
++   nir_cf_extract(&header, nir_before_block(nir_loop_first_block(main)),
++                  nir_before_cf_node(&main_if->cf_node));
++   nir_cf_extract(&body, nir_after_cf_node(&main_if->cf_node),
++                  nir_after_block(nir_loop_last_block(main)));
++   _mesa_hash_table_clear(map, NULL);
++   for (unsigned n = 1; n < factor; n++) {
++      nir_cf_list_clone_and_reinsert(&header, &main->cf_node,
++                                     nir_after_cf_list(&main->body), map);
++      nir_cf_list_clone_and_reinsert(&body, &main->cf_node,
++                                     nir_after_cf_list(&main->body), map);
++   }
++   nir_cf_reinsert(&body, nir_after_cf_node(&main_if->cf_node));
++   nir_cf_reinsert(&header, nir_before_cf_node(&main_if->cf_node));
++   _mesa_hash_table_destroy(map, NULL);
++}
++
++static bool
++runtime_unroll_list(struct exec_list *list, unsigned factor, unsigned max_cost)
++{
++   foreach_list_typed(nir_cf_node, node, node, list) {
++      if (node->type == nir_cf_node_if) {
++         nir_if *nif = nir_cf_node_as_if(node);
++         if (runtime_unroll_list(&nif->then_list, factor, max_cost) ||
++             runtime_unroll_list(&nif->else_list, factor, max_cost))
++            return true;
++      } else if (node->type == nir_cf_node_loop) {
++         nir_loop *loop = nir_cf_node_as_loop(node);
++         unsigned iv_src = 0;
++         if (runtime_unroll_candidate(loop, max_cost, &iv_src)) {
++            runtime_unroll(loop, factor, iv_src);
++            return true;
++         }
++         if (runtime_unroll_list(&loop->body, factor, max_cost))
++            return true;
++      }
++   }
++   return false;
++}
++
++bool
++nir_opt_loop_unroll_runtime(nir_shader *shader, unsigned factor, unsigned max_cost)
++{
++   assert(factor >= 2 && factor <= 4);
++   bool progress = false;
++   nir_foreach_function_impl(impl, shader) {
++      while (true) {
++         nir_metadata_require(impl, nir_metadata_loop_analysis,
++                              shader->options->force_indirect_unrolling,
++                              (int)shader->options->force_indirect_unrolling_sampler);
++         nir_metadata_require(impl, nir_metadata_block_index);
++         if (!runtime_unroll_list(&impl->body, factor, max_cost))
++            break;
++         nir_progress(true, impl, nir_metadata_none);
++         nir_lower_reg_intrinsics_to_ssa_impl(impl);
++         progress = true;
++      }
++   }
++   return progress;
++}
+diff --git a/src/compiler/nir/nir_serialize.c b/src/compiler/nir/nir_serialize.c
+index 2095a2a..b5fd9b6 100644
+--- a/src/compiler/nir/nir_serialize.c
++++ b/src/compiler/nir/nir_serialize.c
+@@ -1892,6 +1892,7 @@ write_loop(write_ctx *ctx, nir_loop *loop)
+    bool has_continue_construct = nir_loop_has_continue_construct(loop);
+    blob_write_uint8(ctx->blob, has_continue_construct);
+    blob_write_uint8(ctx->blob, loop->do_while);
++   blob_write_uint8(ctx->blob, loop->partially_unrolled);
+ 
+    write_cf_list(ctx, &loop->body);
+    if (has_continue_construct) {
+@@ -1909,6 +1910,7 @@ read_loop(read_ctx *ctx, struct exec_list *cf_list)
+    loop->control = blob_read_uint8(ctx->blob);
+    bool has_continue_construct = blob_read_uint8(ctx->blob);
+    loop->do_while = blob_read_uint8(ctx->blob);
++   loop->partially_unrolled = blob_read_uint8(ctx->blob);
+ 
+    read_cf_list(ctx, &loop->body);
+    if (has_continue_construct) {
+diff --git a/src/compiler/nir/tests/loop_unroll_tests.cpp b/src/compiler/nir/tests/loop_unroll_tests.cpp
+index 28d1f33..bcd041a 100644
+--- a/src/compiler/nir/tests/loop_unroll_tests.cpp
++++ b/src/compiler/nir/tests/loop_unroll_tests.cpp
+@@ -310,3 +310,248 @@ TEST_F(nir_loop_unroll_test, partial_unroll_oob_load_zero_init)
+    EXPECT_EQ(4, count_used_instr(nir_op_flt));
+    EXPECT_EQ(1, count_unused_instr(nir_op_flt));
+ }
++
++// Exercise the transformed NIR, not a second implementation of the guard.
++#include "nir_constant_expressions.h"
++#include "nir_serialize.h"
++#include <array>
++#include <unordered_map>
++#include <vector>
++
++class nir_runtime_unroll_test : public nir_loop_unroll_test {
++protected:
++   void build(bool unsign = false, bool inclusive = false,
++              bool continue_then = false, unsigned step = 1, bool store = false, unsigned shift = 0, bool constant_start = false)
++   {
++      nir_def *zero = nir_imm_int(&bld, 0);
++      nir_def *init = nir_load_ubo(&bld, 1, 32, zero, zero,
++                                  (gl_access_qualifier)0, 4, 0, 0, 4);
++      nir_def *limit = nir_load_ubo(&bld, 1, 32, zero, nir_imm_int(&bld, 4),
++                                   (gl_access_qualifier)0, 4, 0, 0, 4);
++      if (constant_start) init = zero;
++      nir_def *acc_init = nir_imm_float(&bld, 0.0f);
++      nir_loop *loop = nir_push_loop(&bld);
++      nir_block *pre = nir_cf_node_as_block(nir_cf_node_prev(&loop->cf_node));
++      nir_block *head = nir_loop_first_block(loop);
++      nir_phi_instr *index = nir_phi_instr_create(bld.shader);
++      nir_phi_instr *acc = nir_phi_instr_create(bld.shader);
++      nir_def_init(&index->instr, &index->def, 1, 32);
++      nir_def_init(&acc->instr, &acc->def, 1, 32);
++      nir_phi_instr_add_src(index, pre, init);
++      nir_phi_instr_add_src(acc, pre, acc_init);
++      nir_def *cond = inclusive ?
++         (unsign ? nir_ult(&bld, limit, &index->def) : nir_ilt(&bld, limit, &index->def)) :
++         (unsign ? nir_uge(&bld, &index->def, limit) : nir_ige(&bld, &index->def, limit));
++      if (continue_then) {
++         nir_if *nif = nir_push_if(&bld, nir_inot(&bld, cond));
++         nir_push_else(&bld, nif);
++         nir_jump(&bld, nir_jump_break);
++         nir_pop_if(&bld, nif);
++      } else {
++         nir_break_if(&bld, cond);
++      }
++      nir_def *offset = nir_imul_imm(&bld, &index->def, 4u >> shift);
++      nir_def *value = nir_load_ssbo(&bld, 1, 32, zero, offset,
++         (gl_access_qualifier)(ACCESS_NON_WRITEABLE | ACCESS_CAN_REORDER), 4, 0, shift);
++      bld.fp_math_ctrl = nir_fp_no_fast_math;
++      nir_def *sum = nir_ffma(&bld, value, nir_imm_float(&bld, 1.0), &acc->def);
++      if (store)
++         nir_store_ssbo(&bld, value, zero, offset, 1, (gl_access_qualifier)0, 4, 0, 0);
++      nir_def *next = nir_iadd_imm(&bld, &index->def, step);
++      nir_block *back = nir_cursor_current_block(bld.cursor);
++      nir_phi_instr_add_src(index, back, next);
++      nir_phi_instr_add_src(acc, back, sum);
++      nir_pop_loop(&bld, loop);
++      nir_store_ssbo(&bld, &acc->def, zero, zero, 1, (gl_access_qualifier)0, 4, 0, 0);
++      bld.cursor = nir_after_phis(head);
++      nir_builder_instr_insert(&bld, &index->instr);
++      nir_builder_instr_insert(&bld, &acc->instr);
++      nir_opt_algebraic(bld.shader);
++      nir_opt_constant_folding(bld.shader);
++      nir_validate_shader(bld.shader, "runtime test input");
++   }
++
++   struct result {
++      std::vector<uint64_t> reads;
++      uint32_t sum = 0;
++      bool operator==(const result &o) const { return reads == o.reads && sum == o.sum; }
++   };
++   result run(nir_shader *s, uint32_t start, uint32_t limit)
++   {
++      using value = std::array<nir_const_value, NIR_MAX_VEC_COMPONENTS>;
++      std::unordered_map<nir_def *, value> values;
++      result res;
++      nir_function_impl *impl = nir_shader_get_entrypoint(s);
++      nir_block *block = nir_start_block(impl), *previous = nullptr;
++      unsigned budget = 10000;
++      while (block != impl->end_block && budget > 0) {
++         budget--;
++         std::vector<std::pair<nir_def *, value>> phis;
++         nir_foreach_instr(instr, block) {
++            if (instr->type == nir_instr_type_phi) {
++               nir_phi_instr *phi = nir_instr_as_phi(instr);
++               nir_foreach_phi_src(src, phi) {
++                  if (src->pred == previous)
++                     phis.push_back({&phi->def, values.at(src->src.ssa)});
++               }
++            }
++         }
++         for (auto &p : phis) values[p.first] = p.second;
++         nir_foreach_instr(instr, block) {
++            if (instr->type == nir_instr_type_load_const) {
++               auto *lc = nir_instr_as_load_const(instr);
++               for (unsigned c = 0; c < lc->def.num_components; c++)
++                  values[&lc->def][c] = lc->value[c];
++            } else if (instr->type == nir_instr_type_alu) {
++               auto *alu = nir_instr_as_alu(instr);
++               value args[4] = {};
++               nir_const_value *ptrs[4] = {args[0].data(), args[1].data(), args[2].data(), args[3].data()};
++               for (unsigned a = 0; a < nir_op_infos[alu->op].num_inputs; a++)
++                  for (unsigned c = 0; c < NIR_MAX_VEC_COMPONENTS; c++)
++                     args[a][c] = values.at(alu->src[a].src.ssa)[alu->src[a].swizzle[c]];
++               nir_eval_const_opcode(alu->op, values[&alu->def].data(), nullptr,
++                                     alu->def.num_components, alu->def.bit_size, ptrs, 0);
++            } else if (instr->type == nir_instr_type_intrinsic) {
++               auto *in = nir_instr_as_intrinsic(instr);
++               if (in->intrinsic == nir_intrinsic_load_ubo) {
++                  values[&in->def][0].u32 = values.at(in->src[1].ssa)[0].u32 ? limit : start;
++               } else if (in->intrinsic == nir_intrinsic_load_ssbo) {
++                  uint64_t offset = uint64_t(values.at(in->src[1].ssa)[0].u32)
++                                    << nir_intrinsic_offset_shift(in);
++                  static const float data[] = {1e20f, 1.0f, -1e20f, 3.0f, -0.5f, 0.25f, 2.0f, -2.0f};
++                  for (unsigned c = 0; c < in->def.num_components; c++) {
++                     res.reads.push_back(offset + 4 * c);
++                     values[&in->def][c].f32 = data[(offset / 4 + c) % 8];
++                     // Compare finite read prefixes of non-terminating loops too.
++                     if (res.reads.size() == 64) return res;
++                  }
++               } else if (in->intrinsic == nir_intrinsic_store_ssbo) {
++                  res.sum = values.at(in->src[0].ssa)[0].u32;
++               } else {
++                  ADD_FAILURE() << "unexpected intrinsic " << in->intrinsic;
++                  return res;
++               }
++            }
++         }
++         nir_if *nif = nir_block_get_following_if(block);
++         nir_block *next = block->successors[nif && !values.at(nif->condition.ssa)[0].b];
++         previous = block;
++         block = next;
++      }
++      EXPECT_GT(budget, 0u);
++      return res;
++   }
++   void compare(bool unsign, bool inclusive, bool continue_then, bool vectorize = false, unsigned shift = 0, bool constant_start = false)
++   {
++      build(unsign, inclusive, continue_then, 1, false, shift, constant_start);
++      nir_shader *original = nir_shader_clone(nullptr, bld.shader);
++      ASSERT_TRUE(nir_opt_loop_unroll_runtime(bld.shader, 4, 64));
++      nir_validate_shader(bld.shader, "runtime unrolled");
++      EXPECT_EQ(count_loops(), 2);
++      EXPECT_FALSE(nir_opt_loop_unroll_runtime(bld.shader, 4, 64));
++      if (vectorize) {
++         bool progress;
++         do {
++            progress = nir_opt_copy_prop(bld.shader);
++            progress |= nir_opt_constant_folding(bld.shader);
++            progress |= nir_opt_algebraic(bld.shader);
++            progress |= nir_opt_dce(bld.shader);
++         } while (progress);
++         nir_load_store_vectorize_options opts = {};
++         opts.modes = nir_var_mem_ssbo;
++         opts.robust_modes = nir_var_mem_ssbo;
++         opts.callback = [](unsigned mul, unsigned offset, unsigned bits,
++                            unsigned components, int64_t hole,
++                            nir_intrinsic_instr *, nir_intrinsic_instr *, void *) {
++            return bits == 32 && components <= 4 && hole == 0 && mul >= 4 && !(offset % 4);
++         };
++         bool merged = nir_opt_load_store_vectorize(bld.shader, &opts);
++         if (constant_start) {
++            EXPECT_TRUE(merged);
++         }
++         nir_validate_shader(bld.shader, "runtime unroll plus vectorization");
++      }
++      for (uint32_t start : {0u, 1u, 3u, 0x3ffffff8u, 0x3fffffffu, 0xfffffff8u, 0x7ffffff8u, 0x80000000u})
++         for (uint32_t count = 0; count <= 12; count++) {
++            auto a = run(original, start, start + count);
++            auto b = run(bld.shader, start, start + count);
++            EXPECT_TRUE(a == b) << "start=" << start << " count=" << count;
++         }
++      EXPECT_TRUE(run(original, 5, 3) == run(bld.shader, 5, 3));
++      ralloc_free(original);
++   }
++};
++TEST_F(nir_runtime_unroll_test, signed_exclusive) { compare(false, false, false); }
++TEST_F(nir_runtime_unroll_test, signed_inclusive) { compare(false, true, false); }
++TEST_F(nir_runtime_unroll_test, unsigned_exclusive) { compare(true, false, false); }
++TEST_F(nir_runtime_unroll_test, unsigned_inclusive) { compare(true, true, false); }
++TEST_F(nir_runtime_unroll_test, continue_then) { compare(false, false, true); }
++TEST_F(nir_runtime_unroll_test, reject_store) { build(false, false, false, 1, true); EXPECT_FALSE(nir_opt_loop_unroll_runtime(bld.shader, 4, 64)); }
++TEST_F(nir_runtime_unroll_test, reject_step) { build(false, false, false, 2); EXPECT_FALSE(nir_opt_loop_unroll_runtime(bld.shader, 4, 64)); }
++TEST_F(nir_runtime_unroll_test, reject_cost) { build(); EXPECT_FALSE(nir_opt_loop_unroll_runtime(bld.shader, 4, 0)); }
++
++TEST_F(nir_runtime_unroll_test, vectorized_byte_offsets) { compare(false, true, false, true); }
++TEST_F(nir_runtime_unroll_test, vectorized_word_offsets) { compare(false, true, false, true, 2); }
++TEST_F(nir_runtime_unroll_test, vectorized_unsigned_word_offsets) { compare(true, false, false, true, 2); }
++TEST_F(nir_runtime_unroll_test, reject_volatile) {
++   build();
++   nir_foreach_block(block, bld.impl) {
++      nir_foreach_instr(instr, block) {
++         if (instr->type == nir_instr_type_intrinsic) {
++            auto *in = nir_instr_as_intrinsic(instr);
++            if (in->intrinsic == nir_intrinsic_load_ssbo)
++               nir_intrinsic_set_access(in, (gl_access_qualifier)(nir_intrinsic_access(in) | ACCESS_VOLATILE));
++         }
++      }
++   }
++   EXPECT_FALSE(nir_opt_loop_unroll_runtime(bld.shader, 4, 64));
++}
++
++TEST_F(nir_runtime_unroll_test, serialized_marker) {
++   build();
++   ASSERT_TRUE(nir_opt_loop_unroll_runtime(bld.shader, 4, 64));
++   struct blob blob;
++   struct blob_reader reader;
++   blob_init(&blob);
++   nir_serialize(&blob, bld.shader, false);
++   blob_reader_init(&reader, blob.data, blob.size);
++   nir_shader *copy = nir_deserialize(nullptr, bld.shader->options, &reader);
++   EXPECT_FALSE(nir_opt_loop_unroll_runtime(copy, 4, 64));
++   nir_validate_shader(copy, "runtime unroll round trip");
++   EXPECT_TRUE(run(bld.shader, 1, 13) == run(copy, 1, 13));
++   blob_finish(&blob);
++   ralloc_free(copy);
++}
++
++TEST_F(nir_runtime_unroll_test, reject_subgroup) {
++   build();
++   nir_foreach_block(block, bld.impl) {
++      nir_foreach_instr(instr, block) {
++         if (instr->type == nir_instr_type_intrinsic &&
++             nir_instr_as_intrinsic(instr)->intrinsic == nir_intrinsic_load_ssbo) {
++            bld.cursor = nir_before_instr(instr);
++            nir_load_subgroup_invocation(&bld);
++            EXPECT_FALSE(nir_opt_loop_unroll_runtime(bld.shader, 4, 64));
++            return;
++         }
++      }
++   }
++   FAIL();
++}
++
++TEST_F(nir_runtime_unroll_test, merged_four_tap_reads) { compare(false, false, false, true, 2, true); }
++
++TEST_F(nir_runtime_unroll_test, reject_exit_effects) {
++   build();
++   nir_foreach_block(block, bld.impl) {
++      if (nir_block_ends_in_break(block)) {
++         bld.cursor = nir_before_instr(nir_block_last_instr(block));
++         nir_def *zero = nir_imm_int(&bld, 0);
++         nir_store_ssbo(&bld, zero, zero, zero, 1, (gl_access_qualifier)0, 4, 0, 0);
++         nir_validate_shader(bld.shader, "exit side effect");
++         EXPECT_FALSE(nir_opt_loop_unroll_runtime(bld.shader, 4, 64));
++         return;
++      }
++   }
++   FAIL();
++}
+diff --git a/src/freedreno/ir3/ir3_compiler_nir.c b/src/freedreno/ir3/ir3_compiler_nir.c
+index d3b7e31..16ad700 100644
+--- a/src/freedreno/ir3/ir3_compiler_nir.c
++++ b/src/freedreno/ir3/ir3_compiler_nir.c
+@@ -2039,7 +2039,16 @@ emit_intrinsic_load_ssbo(struct ir3_context *ctx,
+     * available.
+     * Note: isam also can't handle 8-bit loads.
+     */
+-   if (!(nir_intrinsic_access(intr) & ACCESS_CAN_REORDER) ||
++   /* A wave-uniform vector read benefits from the UAV path, leaving the
++    * texture pipeline available for varying reads. Keep ISAM for offsets
++    * outside LDIB's immediate range and for scalar loads.
++    */
++   bool uniform_vector = ctx->compiler->gen == 8 &&
++      ctx->so->type == MESA_SHADER_COMPUTE && intr->def.bit_size == 32 &&
++      intr->def.num_components == 4 && !intr->src[0].ssa->divergent &&
++      !intr->src[2].ssa->divergent && nir_intrinsic_base(intr) < 128;
++
++   if (uniform_vector || !(nir_intrinsic_access(intr) & ACCESS_CAN_REORDER) ||
+        (intr->def.num_components > 1 && !ctx->compiler->info->props.has_isam_v) ||
+        (ctx->compiler->options.storage_8bit && intr->def.bit_size == 8) ||
+        !ctx->compiler->has_isam_ssbo) {
+diff --git a/src/freedreno/ir3/ir3_context.c b/src/freedreno/ir3/ir3_context.c
+index 1d6acf2..0be0695 100644
+--- a/src/freedreno/ir3/ir3_context.c
++++ b/src/freedreno/ir3/ir3_context.c
+@@ -133,7 +133,7 @@ ir3_context_init(struct ir3_compiler *compiler, struct ir3_shader *shader,
+ 
+    bool vectorized = false;
+    NIR_PASS(vectorized, ctx->s, nir_opt_vectorize, ir3_nir_vectorize_filter,
+-            NULL);
++            compiler);
+ 
+    if (vectorized) {
+       NIR_PASS(_, ctx->s, nir_opt_undef);
+diff --git a/src/freedreno/ir3/ir3_nir.c b/src/freedreno/ir3/ir3_nir.c
+index 55503cf..1a44494 100644
+--- a/src/freedreno/ir3/ir3_nir.c
++++ b/src/freedreno/ir3/ir3_nir.c
+@@ -138,6 +138,22 @@ ir3_load_driver_ubo_indirect(nir_builder *b, unsigned components,
+                         (range - 1) * 16);
+ }
+ 
++/* Hoist only pure address calculations/constants out of loops we expanded. */
++static bool
++ir3_runtime_unroll_licm_filter(nir_instr *instr, nir_loop *loop,
++                               bool dominates_exit)
++{
++   if (!loop->partially_unrolled)
++      return false;
++   if (instr->type == nir_instr_type_alu)
++      return true;
++   if (instr->type != nir_instr_type_intrinsic)
++      return false;
++   nir_intrinsic_op op = nir_instr_as_intrinsic(instr)->intrinsic;
++   return op == nir_intrinsic_load_const_ir3 ||
++          op == nir_intrinsic_bindless_resource_ir3;
++}
++
+ static bool
+ ir3_nir_should_scalarize_mem(const nir_intrinsic_instr *intrin, const void *data)
+ {
+@@ -806,6 +822,16 @@ ir3_finalize_nir(struct ir3_compiler *compiler,
+    bool idiv_progress = OPT(s, nir_opt_idiv_const, 8);
+    idiv_progress |= OPT(s, nir_lower_idiv, &idiv_options);
+ 
++   /* Expose adjacent reads in small runtime compute loops to the existing
++    * vectorizer. Four iterations match the maximum memory vector width;
++    * the NIR pass bounds body cost and loop-carried state.
++    */
++   if (compiler->gen == 8 && s->info.stage == MESA_SHADER_COMPUTE &&
++       OPT(s, nir_opt_loop_unroll_runtime, 4, 64)) {
++      OPT(s, nir_opt_licm, ir3_runtime_unroll_licm_filter);
++      ir3_optimize_loop(compiler, &optimize_options, s);
++   }
++
+    /* Do load/store vectorization after the first opt loop to give us a chance
+     * to optimize lowered SSBO pointers. Without the first opt loop every
+     * SSBO load/store with a different pointer looks like it has a different
+diff --git a/src/freedreno/ir3/ir3_ra.c b/src/freedreno/ir3/ir3_ra.c
+index aea9217..7ec525f 100644
+--- a/src/freedreno/ir3/ir3_ra.c
++++ b/src/freedreno/ir3/ir3_ra.c
+@@ -2539,6 +2539,24 @@ handle_block(struct ra_ctx *ctx, struct ir3_block *block)
+    ctx->blocks[block->index].visited = true;
+ }
+ 
++static bool
++has_expanded_compute_loop(struct ir3_shader_variant *v)
++{
++   if (v->compiler->gen != 8 || v->type != MESA_SHADER_COMPUTE)
++      return false;
++   nir_foreach_function_impl(impl, v->shader->nir) {
++      nir_foreach_block(block, impl) {
++         for (nir_cf_node *node = block->cf_node.parent;
++              node && node->type != nir_cf_node_function; node = node->parent) {
++            if (node->type == nir_cf_node_loop &&
++                nir_cf_node_as_loop(node)->partially_unrolled)
++               return true;
++         }
++      }
++   }
++   return false;
++}
++
+ static unsigned
+ calc_target_full_pressure(struct ir3_shader_variant *v, unsigned pressure)
+ {
+@@ -2563,6 +2581,13 @@ calc_target_full_pressure(struct ir3_shader_variant *v, unsigned pressure)
+                                           double_threadsize) >= target_waves)
+       target++;
+ 
++   /* The round-robin allocator otherwise spreads short-lived values from
++    * all expanded iterations and the tail over the entire occupancy bucket.
++    * Keep one vec4 of slack above measured peak pressure for fragmentation.
++    */
++   if (has_expanded_compute_loop(v))
++      target = MIN2(target, reg_count + 2);
++
+    return (target - 1) * 2 * 4;
+ }
+ 
+diff --git a/src/freedreno/ir3/ir3_rpt.c b/src/freedreno/ir3/ir3_rpt.c
+index 2e3eb07..a0b2fb2 100644
+--- a/src/freedreno/ir3/ir3_rpt.c
++++ b/src/freedreno/ir3/ir3_rpt.c
+@@ -34,6 +34,22 @@ ir3_supports_vectorized_nir_op(nir_op op)
+ uint8_t
+ ir3_nir_vectorize_filter(const nir_instr *instr, const void *data)
+ {
++   const struct ir3_compiler *compiler = data;
++   if (compiler && compiler->gen == 8 &&
++       nir_cf_node_get_function(&instr->block->cf_node)->function->shader->info.stage ==
++          MESA_SHADER_COMPUTE) {
++      /* Cross-iteration repeat groups reserve registers for all components
++       * until the last component dies. Keep ALU scheduling scalar in expanded
++       * loops; memory vectorization is independent and has already run.
++       */
++      for (nir_cf_node *node = instr->block->cf_node.parent;
++           node && node->type != nir_cf_node_function; node = node->parent) {
++         if (node->type == nir_cf_node_loop &&
++             nir_cf_node_as_loop(node)->partially_unrolled)
++            return 0;
++      }
++   }
++
+    if (instr->type == nir_instr_type_phi)
+       return 4;
+    if (instr->type != nir_instr_type_alu)
+diff --git a/src/freedreno/ir3/ir3_sched.c b/src/freedreno/ir3/ir3_sched.c
+index 1fb88bf..5e51cc8 100644
+--- a/src/freedreno/ir3/ir3_sched.c
++++ b/src/freedreno/ir3/ir3_sched.c
+@@ -176,7 +176,21 @@ sched_check_src_cond(struct ir3_instruction *instr,
+                                   struct ir3_sched_ctx *),
+                      struct ir3_sched_ctx *ctx)
+ {
+-   foreach_ssa_src (src, instr) {
++   foreach_ssa_src_n (src, n, instr) {
++      /* Read ordering edges are not data dependencies. They constrain issue
++       * order in the DAG, but waiting for the first read before issuing the
++       * next one defeats latency hiding and keeps its converted results live.
++       * Do not ignore write/barrier dependencies.
++       */
++      if (ctx->compiler->gen == 8 &&
++          instr->block->shader->type == MESA_SHADER_COMPUTE &&
++          __is_false_dep(instr, n) &&
++          instr->barrier_class == IR3_BARRIER_BUFFER_R &&
++          src->barrier_class == IR3_BARRIER_BUFFER_R &&
++          instr->barrier_conflict == IR3_BARRIER_BUFFER_W &&
++          src->barrier_conflict == IR3_BARRIER_BUFFER_W)
++         continue;
++
+       /* meta:split/collect aren't real instructions, the thing that
+        * we actually care about is *their* srcs
+        */
+-- 
+2.43.0
+

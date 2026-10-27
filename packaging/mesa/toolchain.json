@@ -1,0 +1,42 @@
+{
+  "compiler": "GCC",
+  "version": "14.2.0",
+  "packages": [
+    {
+      "file": "cpp-14-aarch64-linux-gnu_14.2.0-4ubuntu2~24.04.1cross1_amd64.deb",
+      "version": "Version: 14.2.0-4ubuntu2~24.04.1cross1",
+      "url": "https://mirrors.ustc.edu.cn/ubuntu/pool/universe/g/gcc-14-cross/cpp-14-aarch64-linux-gnu_14.2.0-4ubuntu2~24.04.1cross1_amd64.deb",
+      "sha256": "0d441295a01b857e66d27ce329f8b9db7120276566d7720b44b8837aa26afb0c"
+    },
+    {
+      "file": "g++-14-aarch64-linux-gnu_14.2.0-4ubuntu2~24.04.1cross1_amd64.deb",
+      "version": "Version: 14.2.0-4ubuntu2~24.04.1cross1",
+      "url": "https://mirrors.ustc.edu.cn/ubuntu/pool/universe/g/gcc-14-cross/g++-14-aarch64-linux-gnu_14.2.0-4ubuntu2~24.04.1cross1_amd64.deb",
+      "sha256": "e902f69436026c1a2bab808e95537133add28cf65e89eac1974ef55556ccb9d9"
+    },
+    {
+      "file": "gcc-14-aarch64-linux-gnu_14.2.0-4ubuntu2~24.04.1cross1_amd64.deb",
+      "version": "Version: 14.2.0-4ubuntu2~24.04.1cross1",
+      "url": "https://mirrors.ustc.edu.cn/ubuntu/pool/universe/g/gcc-14-cross/gcc-14-aarch64-linux-gnu_14.2.0-4ubuntu2~24.04.1cross1_amd64.deb",
+      "sha256": "b57833ca982b703e2b40d286d6cc227c4f2dfe1b33df2eea58b25a0376978918"
+    },
+    {
+      "file": "gcc-14-cross-base_14.2.0-4ubuntu2~24.04.1cross1_all.deb",
+      "version": "Version: 14.2.0-4ubuntu2~24.04.1cross1",
+      "url": "https://mirrors.ustc.edu.cn/ubuntu/pool/main/g/gcc-14-cross/gcc-14-cross-base_14.2.0-4ubuntu2~24.04.1cross1_all.deb",
+      "sha256": "ed29eff7b53f6c6b10c42bb9539487d1867f119e84f5f678c02411a34b5c09f3"
+    },
+    {
+      "file": "libgcc-14-dev-arm64-cross_14.2.0-4ubuntu2~24.04.1cross1_all.deb",
+      "version": "Version: 14.2.0-4ubuntu2~24.04.1cross1",
+      "url": "https://mirrors.ustc.edu.cn/ubuntu/pool/universe/g/gcc-14-cross/libgcc-14-dev-arm64-cross_14.2.0-4ubuntu2~24.04.1cross1_all.deb",
+      "sha256": "1b5b098b877eddc9351851d475b90f54656bb84bb689d18def39edd970920889"
+    },
+    {
+      "file": "libstdc++-14-dev-arm64-cross_14.2.0-4ubuntu2~24.04.1cross1_all.deb",
+      "version": "Version: 14.2.0-4ubuntu2~24.04.1cross1",
+      "url": "https://mirrors.ustc.edu.cn/ubuntu/pool/universe/g/gcc-14-cross/libstdc++-14-dev-arm64-cross_14.2.0-4ubuntu2~24.04.1cross1_all.deb",
+      "sha256": "868c24a9a3abadca54e335c9185b1a0f59ffed81f8074fb2def581d114aee2da"
+    }
+  ]
+}

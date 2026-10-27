@@ -1,0 +1,10 @@
+Package: erhai-video-defaults
+Version: @VERSION@
+Architecture: all
+Maintainer: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Section: video
+Priority: optional
+Depends: erhai-iris-vaapi (>= 0.4.0~rc1), gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav
+Description: Iris video defaults for GStreamer and native Firefox
+ Prefer Iris-backed VA decoders in GStreamer and enable Firefox VA-API.
+ Firefox snap and Flatpak require separate runtime integration.

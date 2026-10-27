@@ -1,0 +1,42 @@
+From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Subject: [PATCH] mesa: publish shared contexts after state tracker initialization
+
+Extract the generic shared-context fix from piano-fixes.patch; the A830v1
+speedbin match is already supplied by the existing upstream patch.
+Source: https://github.com/yzddmr6/xiaomipad-8pro-mainline/commit/21d2db452c909745d3dabc6e64034bb002223a79
+License: MIT
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
+
+--- a/src/mesa/main/context.c
++++ b/src/mesa/main/context.c
+@@ -1062,9 +1062,10 @@
+ 
+    ctx->FirstTimeCurrent = GL_TRUE;
+ 
+-   simple_mtx_lock(&ctx->Shared->Mutex);
+-   list_addtail(&ctx->SharedLink, &ctx->Shared->Contexts);
+-   simple_mtx_unlock(&ctx->Shared->Mutex);
++   /* Publish only after the state tracker is fully initialized.  Keep an
++    * empty link so context creation failures can use normal teardown.
++    */
++   list_inithead(&ctx->SharedLink);
+    ctx->ReleaseResources = UTIL_DYNARRAY_INIT;
+ 
+    return GL_TRUE;
+--- a/src/mesa/state_tracker/st_context.c
++++ b/src/mesa/state_tracker/st_context.c
+@@ -805,6 +805,13 @@
+    if (!st) {
+       _mesa_free_context_data(ctx, true);
+       align_free(ctx);
++   } else {
++      /* Other contexts walk this list while releasing shared buffers and
++       * access ctx->st->pipe and ReleaseResources under Shared->Mutex.
++       */
++      simple_mtx_lock(&ctx->Shared->Mutex);
++      list_addtail(&ctx->SharedLink, &ctx->Shared->Contexts);
++      simple_mtx_unlock(&ctx->Shared->Mutex);
+    }
+ 
+    return st;

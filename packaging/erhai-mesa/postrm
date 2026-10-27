@@ -1,15 +1,13 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-only
 set -e
-
-# Retire the experimental Turnip diversion after its package-owned ICD has
-# been removed by dpkg. Fresh OpenGL-only installs create no diversion.
-ICD=/usr/share/vulkan/icd.d/freedreno_icd.aarch64.json
 case "$1" in
-remove | disappear)
-    if [ "$(dpkg-divert --listpackage "$ICD")" = erhai-mesa ]; then
-        dpkg-divert --package erhai-mesa --remove --rename --divert "$ICD.distrib" "$ICD"
-    fi
+remove | disappear | abort-install)
+    for ICD in /usr/share/vulkan/icd.d/freedreno_icd.json \
+               /usr/share/vulkan/icd.d/freedreno_icd.aarch64.json; do
+        if [ "$(dpkg-divert --listpackage "$ICD")" = erhai-mesa ]; then
+            dpkg-divert --package erhai-mesa --remove --rename --divert "$ICD.distrib" "$ICD"
+        fi
+    done
     ;;
 esac
-exit 0
