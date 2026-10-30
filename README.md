@@ -3,6 +3,33 @@
 Run Ubuntu Desktop 26.04 with GNOME on the OnePlus Pad 2 Pro, using a device-adapted
 kernel based on upstream Linux. [中文](README.zh-CN.md)
 
+## 🧭 Our Approach
+
+There are roughly two ways to bring a Linux desktop to an Android tablet.
+
+One is **make it work first, then adapt**: keep the vendor's downstream drivers and patch the desktop and applications wherever they do not cooperate. Features arrive quickly, but the device's quirks end up spread across the kernel, the desktop and the applications, tied together, and every system upgrade means reworking those changes.
+
+The other is **stay close to upstream, in clean layers**: solve hardware problems in the kernel and drivers the way mainline does, keep Ubuntu, GNOME and the rest unmodified, and let the system recognise the device through standard interfaces. It is slower and harder; many problems can only be fixed once their root cause is found.
+
+We chose the second.
+
+| | Make it work, then adapt | Stay close to upstream (this project) |
+|---|---|---|
+| Kernel and drivers | Vendor downstream drivers plus temporary workarounds | Mainline kernel and upstream drivers (for example the upstream ath12k driver for Wi-Fi); missing pieces added the upstream way, with device tree bindings |
+| Desktop and apps | Desktop components modified to suit this device | Official Ubuntu Desktop packages installed unchanged; device support lives in a few separate `erhai-*` packages |
+| When something breaks | Add delays, retries and compatibility layers until it works | Find the root cause and fix it in the layer where it lives |
+| System upgrades | Every change has to be reworked, upgrades can get stuck | Normal upgrades with the upstream kernel and Ubuntu |
+| Reuse by others | Depends on this whole set of specific changes | Low cost to move to another distribution or a device with the same SoC |
+
+**Why:**
+
+- **Decoupling.** Differences in the display, touch and charging hardware are described by the kernel and the device tree; the desktop just sees a standard display, touchscreen and battery and does not need to know which tablet it runs on.
+- **Upgrades are not held hostage.** The fewer the changes, the smoother the upgrades: the kernel can follow new upstream releases and Ubuntu updates install as usual. The few components that must be changed, such as the Mesa graphics driver, ship as separate packages that track upstream and are dropped once upstream supports the feature.
+- **Fix once, everyone benefits.** A problem solved the upstream way helps other devices with the same SoC and other distributions; upstream fixes, in turn, apply here directly.
+- **Reproducible and maintainable.** Every release is assembled only from inputs whose source and checksum are recorded, so it can be rebuilt from source; few changes with clear boundaries make problems easy to locate instead of piling up.
+
+The price is that features arrive more slowly, and some problems take a long time to trace to their root cause. When the default video player occasionally crashed, for example, we did not fall back to software rendering for it; we traced the crash to unsynchronised texture numbering in the graphics driver and fixed it in Mesa. We accept that price, because this is the route that holds up over time.
+
 ## 📮 Follow & Discuss
 
 Project updates, usage notes and discussion are available through these channels,
