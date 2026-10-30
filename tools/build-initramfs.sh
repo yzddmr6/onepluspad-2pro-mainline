@@ -170,6 +170,11 @@ trap 'rm -rf -- "$stage"' EXIT
 			[[ -f $seg ]] || continue
 			printf 'file %s/%s %s 0644 0 0\n' "$adsp_dst" "$(basename -- "$seg")" "$seg"
 		done
+		# The SoCCP starts early through PAS so that it can drop the boot bus
+		# vote it inherits from the bootloader; that happens before the root
+		# is mounted.
+		[[ -f $adsp_src/soccp.mbn ]] || { echo "SoCCP firmware not found: $adsp_src/soccp.mbn" >&2; exit 1; }
+		printf 'file %s/soccp.mbn %s 0644 0 0\n' "$adsp_dst" "$adsp_src/soccp.mbn"
 	fi
 	for app in $apps; do
 		printf 'slink /bin/%s busybox 0777 0 0\n' "$app"

@@ -634,6 +634,13 @@
       "size": 4044
     },
     {
+      "install": "qcom/sm8750/erhai/soccp.mbn",
+      "from": "stock-modem",
+      "member": "::/image/soccp.mbn",
+      "sha256": "5e7dc01e9098c782ff33373f69726d7d65a060d53d38096cf55309abd7dbbe6b",
+      "size": 565924
+    },
+    {
       "install": "awinic/erhai/aw88261_acf.bin",
       "from": "stock-odm",
       "member": "firmware/aw882xx_acf.bin",

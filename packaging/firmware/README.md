@@ -21,6 +21,7 @@ source versions; the project release is **v0.3.0**.
 | Files | From | What |
 |---|---|---|
 | 59 | the OnePlus Pad 2 Pro official ColorOS OTA `OPD2413_11.C.34_1340_202607031844`: 58 out of `modem.img`, one out of `dtbo.img` | the ADSP PIL set under `qcom/sm8750/erhai/`, and the NT36536 touch application firmware, which the vendor keeps as an overlay property rather than as a file |
+| 1 | the same OTA, `modem.img:/image/soccp.mbn` | the SoCCP image at `qcom/sm8750/erhai/soccp.mbn`; the kernel starts it early so that it parks in D3 and drops the bus vote it inherits from the bootloader |
 | 1 | the same OTA, `odm.img:/firmware/aw882xx_acf.bin` | the unmodified AW88261 amplifier profile at `awinic/erhai/aw88261_acf.bin`; this is ROM content, not per-unit calibration |
 | 1 | the same OTA, `vendor.img:/firmware/vpu35_4v.mbn` | the vendor-signed Iris (VPU 3.5) video core image at `qcom/sm8750/erhai/vpu35_4v.mbn`; linux-firmware carries no SM8750 Iris image, and this unit's TZ authenticates only the vendor-signed one |
 | 1 | the same OTA, `vendor.img:/firmware/gen80000_zap.mbn` | the Adreno 830 zap shader signed for this product, at `qcom/sm8750/erhai/gen80000_zap.mbn`; see below |
