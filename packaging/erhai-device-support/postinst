@@ -7,6 +7,7 @@ BT_UNITS='erhai-bt-address-generate.service erhai-bt-address.service'
 WIFI_UNITS='erhai-wifi-address-generate.service'
 CHASSIS_UNIT=erhai-chassis.service
 IDENTITY_UNIT=erhai-physical-platform.service
+COVER_UNIT=erhai-cover.service
 ASIDE=/var/lib/erhai/switch/pre-deb
 
 if command -v dpkg-maintscript-helper >/dev/null 2>&1; then
@@ -52,13 +53,13 @@ configure)
 	# ahead of NetworkManager.
 	if command -v deb-systemd-helper >/dev/null 2>&1; then
 		deb-systemd-helper unmask erhai-power-key@.service >/dev/null 2>&1 || true
-		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT; do
+		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT; do
 			deb-systemd-helper unmask "$unit" >/dev/null 2>&1 || true
 			deb-systemd-helper enable "$unit" >/dev/null 2>&1 || true
 		done
 	elif command -v systemctl >/dev/null 2>&1; then
 		# shellcheck disable=SC2086
-		systemctl enable --quiet $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT || true
+		systemctl enable --quiet $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT || true
 	fi
 
 	# udevd watches the rule directories and reloads on its own, but an
@@ -104,6 +105,8 @@ configure)
 	if [ -d /run/systemd/system ] && command -v systemctl >/dev/null 2>&1; then
 		# shellcheck disable=SC2086
 		systemctl start $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT || true
+		# The cover follower holds no state worth keeping across a version.
+		systemctl restart $COVER_UNIT || true
 		for path in /sys/class/input/event*/device/name; do
 			[ -f "$path" ] || continue
 			[ "$(cat "$path")" = pmic_pwrkey ] || continue

@@ -6,6 +6,7 @@ BT_UNITS='erhai-bt-address-generate.service erhai-bt-address.service'
 WIFI_UNITS='erhai-wifi-address-generate.service'
 CHASSIS_UNIT=erhai-chassis.service
 IDENTITY_UNIT=erhai-physical-platform.service
+COVER_UNIT=erhai-cover.service
 
 if command -v dpkg-maintscript-helper >/dev/null 2>&1; then
 	for file in /etc/dconf/profile/gdm \
@@ -53,7 +54,7 @@ case "$1" in
 remove)
 	if command -v deb-systemd-helper >/dev/null 2>&1; then
 		deb-systemd-helper mask erhai-power-key@.service >/dev/null 2>&1 || true
-		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT; do
+		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT; do
 			deb-systemd-helper mask "$unit" >/dev/null 2>&1 || true
 		done
 	fi
@@ -65,13 +66,13 @@ purge)
 	if command -v deb-systemd-helper >/dev/null 2>&1; then
 		deb-systemd-helper purge erhai-power-key@.service >/dev/null 2>&1 || true
 		deb-systemd-helper unmask erhai-power-key@.service >/dev/null 2>&1 || true
-		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT; do
+		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT; do
 			deb-systemd-helper purge "$unit" >/dev/null 2>&1 || true
 			deb-systemd-helper unmask "$unit" >/dev/null 2>&1 || true
 		done
 	elif command -v systemctl >/dev/null 2>&1; then
 		# shellcheck disable=SC2086
-		systemctl disable --quiet $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT || true
+		systemctl disable --quiet $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT || true
 	fi
 	;;
 esac

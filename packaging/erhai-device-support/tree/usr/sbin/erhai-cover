@@ -1,0 +1,77 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: GPL-2.0-only
+"""Ignore the touchscreen and pen while the cover is closed.
+
+A cover closing over the panel touches it. Those touches reach the desktop
+while it is locking the screen for the suspend that logind starts on the lid
+switch, interrupt the lock, and GNOME Shell then keeps its sleep delay lock
+until logind gives up after InhibitDelayMaxSec. The stock firmware ignores
+touch while the hall switch reports the cover closed; this does the same with
+the kernel's input inhibit interface, which drops the events in the input core.
+
+  erhai-cover            follow the lid switch
+  erhai-cover --release  allow touch input again (service stop)
+"""
+import fcntl
+import os
+import select
+import signal
+import struct
+import sys
+from pathlib import Path
+
+INPUT = Path('/sys/class/input')
+TOUCH = ('NVTCapacitiveTouchScreen', 'NVTCapacitivePen')
+EVENT = struct.Struct('llHHi')
+EV_SW, SW_LID = 0x05, 0x00
+EVIOCGSW = 0x8008451b  # _IOC(_IOC_READ, 'E', 0x1b, 8)
+
+
+def inhibit_touch(closed):
+    for device in INPUT.glob('input*'):
+        try:
+            if (device / 'name').read_text().strip() in TOUCH:
+                (device / 'inhibited').write_text('1' if closed else '0')
+        except OSError as error:
+            print(f'cover: {device.name}: {error}', flush=True)
+
+
+def lid_switch():
+    for event in sorted(INPUT.glob('event*')):
+        try:
+            if int((event / 'device/capabilities/sw').read_text().split()[-1], 16) & (1 << SW_LID):
+                return Path('/dev/input') / event.name
+        except (OSError, ValueError):
+            pass
+    return None
+
+
+def main():
+    if sys.argv[1:] == ['--release']:
+        inhibit_touch(False)
+        return
+    node = lid_switch()
+    if node is None:
+        print('cover: no lid switch', flush=True)
+        return
+    fd = os.open(node, os.O_RDONLY | os.O_NONBLOCK)
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+    try:
+        state = bytearray(8)
+        fcntl.ioctl(fd, EVIOCGSW, state)
+        closed = bool(state[0] & (1 << SW_LID))
+        inhibit_touch(closed)
+        print(f'cover: following {node}, cover {"closed" if closed else "open"}', flush=True)
+        while True:
+            select.select([fd], [], [])
+            for _sec, _usec, kind, code, value in EVENT.iter_unpack(os.read(fd, EVENT.size * 64)):
+                if kind == EV_SW and code == SW_LID and bool(value) != closed:
+                    closed = bool(value)
+                    inhibit_touch(closed)
+    finally:
+        inhibit_touch(False)
+        os.close(fd)
+
+
+if __name__ == '__main__':
+    main()
