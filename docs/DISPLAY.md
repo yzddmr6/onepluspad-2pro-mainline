@@ -61,6 +61,6 @@ stays on screen either way — what is at stake is whether its writes reach the 
 
 ## Related
 
-* Idle dimming is off in this port because the panel is never blanked; see the power settings
-  in `90_erhai-power.gschema.override` and the note there.
+* Idle dimming and blanking follow Ubuntu defaults; see [System suspend](SUSPEND.md)
+  for timings, automatic suspend and user settings.
 * Blanking and `bl_power` are handled by `erhai-display-power`; nothing here changes them.

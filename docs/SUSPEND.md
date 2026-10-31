@@ -17,7 +17,7 @@ how to measure a suspend yourself.
 | CPU idle | two states: `WFI` and `cpu-sleep-0` (retention) |
 | Suspend cycles | `success: 4`, `fail: 0` over RTC-timed and power-button cycles |
 | Wake from s2idle by RTC | works — `pm_wakeup_irq 174` (`c400000.spmi:pmic@0:rtc@6100`) |
-| Wake from s2idle by the power button | works — `pm_wakeup_irq 21` (`pmic_pwrkey`) |
+| Earlier power-button wake observation | `pm_wakeup_irq 21` (`pmic_pwrkey`); power-button wake from s2idle with the current kernel still needs verification |
 | Installed v0.2.0, RTC alarm 300 s | compat and standard display modes: `PM: suspend entry (s2idle)`, slept 293 s, woken by IRQ 174, debug channel back 3 s after the alarm, Wi-Fi 28 s; display, touch and sensors recovered |
 | Timekeeping in s2idle | `Timekeeping suspended for 292.961 seconds` on the installed v0.2.0 system |
 | Deepest power states | Installed v0.5.0 candidate, USB connected, 26 consecutive 9-minute RTC-timed suspends: about 100 CX collapses and about 532 s of CX collapse per suspend, about 98 % of the time asleep; DDR entered self-refresh as well; every suspend was woken by the RTC, and Wi-Fi, Bluetooth, the keyboard and touch recovered |
@@ -40,39 +40,84 @@ full resume, which caused early wakes. s2idle handles such interrupts without le
 
 ## Power button
 
-By default the button locks and blanks the display; it does not suspend. That is
-deliberate: the device package's `erhai-power-key` service grabs the key's evdev node so
-that waking restores the display without clearing the lockscreen or the greeter, and the
-desktop's own power-button action is kept inert while it runs.
+When the display is on, the button now locks the screen, confirms that the lock is
+active, blanks the display and requests system suspend (`s2idle` by default). A lock
+failure prevents the blank and suspend request. At the login screen, authentication is
+already required, so the service blanks and requests suspend without changing the login
+screen. The device service owns the key; GNOME's action remains `nothing` and logind's
+`HandlePowerKey` remains `ignore`.
 
-System suspend is opt-in, one file:
+To keep the previous lock-and-blank behavior, run as an administrator:
 
 ```sh
-echo suspend > /etc/erhai/power-key-action      # takes effect on the next press
-rm /etc/erhai/power-key-action                  # back to lock-and-blank only
+sudo mkdir -p /etc/erhai
+printf 'blank\n' | sudo tee /etc/erhai/power-key-action
 ```
 
-With the marker present, a press locks and blanks as before and then requests `systemctl
-suspend`. Waking is again a single press: the resume path has already restored the display, so
-the press that resumes the tablet must not be read as "the display is on, blank it again".
-`erhai-suspend-cycle.sh` marks the cycle in its pre phase, before the tablet suspends, and the
-service treats the next press as display restore only if it arrives within 15 s of the resume,
-clearing the flag as it consumes it. The pre phase is what makes it reliable: a flag written on
-resume is racy, because userspace is thawed before that hook runs, so the service can read the
-resuming press first and suspend again — measured on hardware, 5 of 12 presses were handled
-correctly with a post-phase marker. The flag does not rely on clocks: an early RAM-image
-measurement saw `CLOCK_MONOTONIC` keep running across s2idle, while the installed v0.2.0
-system logs `Timekeeping suspended for 293 seconds`, so clock behaviour is no dependable signal.
+The file is read on every press; no service restart is needed. Remove it to restore the
+default, or write `suspend` explicitly. `/run/erhai/power-key-action` supports the same
+values for the current boot and takes precedence over `/etc`; the first valid value
+wins, and missing, unreadable or unrecognized values are skipped. With no valid value,
+the action is suspend. To remove both overrides:
 
-`/run/erhai/power-key-action` is read too and takes precedence, so an image or a test can
-enable it for one boot.
+```sh
+sudo rm -f /run/erhai/power-key-action /etc/erhai/power-key-action
+```
+
+The `blank` opt-out changes only the power button; idle and cover suspend policies still
+apply. The default display backend remains the compatibility backlight service: a blank
+alone turns off the backlight while the system and display pipeline remain running.
+
+If the display is already blank but the system is awake, a press only restores the display.
+A press delivered on resume also only restores the display and resets desktop idle state;
+it must not immediately suspend again. The existing suspend-cycle marker is set before
+suspend and consumed once, with a 15-second window after resume to distinguish a wake
+press from a later press. Neither path deactivates the lock screen or bypasses authentication.
+**Power-button wake from s2idle and password re-entry with the current kernel still need
+hardware verification**; earlier wake observations do not establish this for the current kernel.
+
+## Idle policy
+
+Idle dimming, blanking and automatic suspend inherit the distribution's defaults. The
+Ubuntu 26.04 desktop image used by this project supplies these values for an unchanged
+user profile:
+
+| Condition | Default behavior |
+|---|---|
+| Idle dimming | Enabled (`idle-dim=true`), timed by GNOME before blanking |
+| 5 minutes idle | Blank and lock the screen (`idle-delay=300`, locking enabled) |
+| 15 minutes idle on battery | Request suspend (`sleep-inactive-battery-type='suspend'`, timeout `900`) |
+| Idle on external power | Blank normally; no automatic suspend (Ubuntu sets `sleep-inactive-ac-timeout=0`) |
+
+These are idle deadlines, not delays added after blanking. GNOME respects application
+inhibitors and user settings; the power source is the one reported by UPower. See the
+[GNOME power defaults](https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/blob/50.0/data/org.gnome.settings-daemon.plugins.power.gschema.xml.in)
+and [Ubuntu overrides](https://git.launchpad.net/ubuntu/+source/ubuntu-settings/tree/debian/ubuntu-settings.gsettings-override?h=ubuntu/resolute).
+The device package does not replace those idle defaults or erase personal settings.
+
+Use **Settings → Power** to choose different times. If an existing account explicitly
+saved the previous never-blank or never-suspend settings, reset just these keys from a
+terminal in that user's desktop session (without `sudo`) to inherit the defaults:
+
+```sh
+gsettings reset org.gnome.desktop.session idle-delay
+for key in idle-dim sleep-inactive-ac-type sleep-inactive-ac-timeout \
+           sleep-inactive-battery-type sleep-inactive-battery-timeout; do
+    gsettings reset org.gnome.settings-daemon.plugins.power "$key"
+done
+```
+
+After upgrading the device package, log out and back in before checking the policy.
 
 ## The cover
 
 The magnet of the keyboard cover or a case sits over a hall switch, which the kernel reports as
 a lid switch (`SW_LID`). Closing the cover makes logind suspend the system (`HandleLidSwitch=suspend`
 in `/etc/systemd/logind.conf.d/90-erhai-power.conf`); opening it wakes the system through the same
-switch, and the desktop lights up the lock screen.
+switch, and the desktop lights up the lock screen. With an external display connected,
+the normal desktop/logind policy inhibits cover-triggered suspend. Connecting an external
+display does not disable the explicit power-button suspend request or the idle policy
+above; display recovery in that configuration still needs hardware verification.
 
 * Touch and pen input are ignored while the cover is closed: the `erhai-cover` service sets the
   kernel's input inhibit on them. A cover landing on the panel touches it, and without the
@@ -81,8 +126,8 @@ switch, and the desktop lights up the lock screen.
 * The wake on opening is only armed when the system suspends with the cover closed. With the
   cover open the GPIO is high, and the wake-up controller reports an edge on it after CX power
   collapse; armed, that edge would wake the system at once. After suspending with the power
-  button, closing and then opening the cover therefore does not wake the tablet; press the power
-  button.
+  button or idle policy with the cover open, closing and then opening the cover therefore
+  does not wake the tablet. Power-button wake with the current kernel must be verified.
 
 ## Measuring a suspend
 

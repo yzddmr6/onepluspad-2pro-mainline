@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-only
 """Authentication boundaries of the tablet's power-key policy."""
+import configparser
 import importlib.machinery
 import importlib.util
 import os
@@ -20,7 +21,8 @@ loader.exec_module(key)
 class PowerKeyTest(unittest.TestCase):
     standard = False
 
-    def run_action(self, mode, session_class='user', locked='no', failure=None):
+    def run_action(self, mode, session_class='user', locked='no', failure=None,
+                   resumed=False, action=None, active='(true,)'):
         calls = []
         info = {'User': '1000', 'Class': session_class, 'LockedHint': locked}
 
@@ -28,7 +30,7 @@ class PowerKeyTest(unittest.TestCase):
             calls.append((method, *args))
             if failure and method == 'Lock':
                 raise RuntimeError(failure)
-            return '(true,)'
+            return active
 
         def power(_info, value=None):
             if value is not None:
@@ -45,26 +47,35 @@ class PowerKeyTest(unittest.TestCase):
                 patch.object(key, 'standard_path', return_value=self.standard), \
                 patch.object(key, 'screensaver', side_effect=screen), \
                 patch.object(key, used, side_effect=power), \
-                patch.object(key, other, side_effect=unused):
-            if failure:
+                patch.object(key, other, side_effect=unused), \
+                patch.object(key, 'SUSPEND_MARKERS', () if action is None else (
+                    Mock(read_text=Mock(return_value=action)),)), \
+                patch.object(key, 'command', side_effect=lambda argv: calls.append(tuple(argv))), \
+                patch.object(key.time, 'monotonic', side_effect=(0, 4)):
+            if failure or active != '(true,)':
                 with self.assertRaises(RuntimeError):
-                    key.toggle(wake)
+                    key.toggle(wake, resumed=resumed)
             else:
-                key.toggle(wake)
+                key.toggle(wake, resumed=resumed)
         return calls, wake
 
-    def test_user_is_locked_before_display_is_blanked(self):
+    def test_default_locks_and_blanks_before_suspend(self):
         calls, wake = self.run_action(0)
-        self.assertLess(calls.index(('Lock',)), calls.index(('power', 3)))
+        self.assertEqual(calls, [('Lock',), ('GetActive',), ('power', 3),
+                                 ('systemctl', '--no-block', 'suspend')])
         wake.wake.assert_not_called()
 
     def test_lock_failure_does_not_hide_an_unlocked_desktop(self):
         calls, _ = self.run_action(0, failure='lock denied')
-        self.assertNotIn(('power', 3), calls)
+        self.assertEqual(calls, [('Lock',)])
+
+    def test_inactive_lock_does_not_blank_or_suspend(self):
+        calls, _ = self.run_action(0, active='(false,)')
+        self.assertEqual(calls, [('Lock',), ('GetActive',)])
 
     def test_greeter_keeps_its_login_policy(self):
         calls, _ = self.run_action(0, session_class='greeter')
-        self.assertEqual(calls, [('power', 3)])
+        self.assertEqual(calls, [('power', 3), ('systemctl', '--no-block', 'suspend')])
 
     def test_greeter_wake_does_not_hide_the_login_dialog(self):
         calls, wake = self.run_action(3, session_class='greeter')
@@ -75,6 +86,19 @@ class PowerKeyTest(unittest.TestCase):
         calls, _ = self.run_action(0, locked='yes')
         self.assertNotIn(('Lock',), calls)
         self.assertIn(('power', 3), calls)
+        self.assertEqual(calls[-1], ('systemctl', '--no-block', 'suspend'))
+
+    def test_blank_opt_out_still_locks(self):
+        calls, wake = self.run_action(0, action='blank')
+        self.assertEqual(calls, [('Lock',), ('GetActive',), ('power', 3)])
+        wake.wake.assert_not_called()
+
+    def test_resume_press_only_restores_display(self):
+        for session_class in ('user', 'greeter'):
+            with self.subTest(session_class=session_class):
+                calls, wake = self.run_action(0, session_class=session_class, resumed=True)
+                self.assertEqual(calls, [('power', 0)])
+                wake.wake.assert_called_once_with()
 
     def test_wake_never_deactivates_the_lock_screen(self):
         for mode in (1, 2, 3):
@@ -92,6 +116,38 @@ class PowerKeyTest(unittest.TestCase):
 class StandardPathTest(PowerKeyTest):
     """The same boundaries when the key drives Mutter's PowerSaveMode."""
     standard = True
+
+
+class SuspendPolicyTest(unittest.TestCase):
+    def test_default_opt_out_and_marker_precedence(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            run, etc = Path(tmp) / 'run-marker', Path(tmp) / 'etc-marker'
+            for runtime, persistent, expected in (
+                    (None, None, True), (None, 'suspend\n', True),
+                    (None, 'blank\n', False), ('blank', 'suspend', False),
+                    ('suspend', 'blank', True), ('invalid', 'blank', False),
+                    ('blank', None, False), ('', '', True), (None, 'invalid', True)):
+                with self.subTest(runtime=runtime, persistent=persistent):
+                    for marker, value in ((run, runtime), (etc, persistent)):
+                        if value is None:
+                            marker.unlink(missing_ok=True)
+                        else:
+                            marker.write_text(value)
+                    with patch.object(key, 'SUSPEND_MARKERS', (run, etc)):
+                        self.assertEqual(key.suspend_requested(), expected)
+
+    def test_desktop_inherits_idle_policy_and_keeps_lock_and_key_ownership(self):
+        tree = SOURCE.parents[2]
+        settings = configparser.ConfigParser()
+        settings.read(tree / 'usr/share/glib-2.0/schemas/90_erhai-power.gschema.override')
+        self.assertEqual({section: dict(settings[section]) for section in settings.sections()}, {
+            'org.gnome.settings-daemon.plugins.power': {'power-button-action': "'nothing'"},
+            'org.gnome.desktop.screensaver': {'lock-enabled': 'true'},
+        })
+        logind = configparser.ConfigParser()
+        logind.read(tree / 'etc/systemd/logind.conf.d/90-erhai-power.conf')
+        self.assertEqual(logind['Login']['HandlePowerKey'], 'ignore')
+        self.assertEqual(logind['Login']['HandleLidSwitch'], 'suspend')
 
 
 class MutterBackendTest(unittest.TestCase):
@@ -135,6 +191,17 @@ class MutterBackendTest(unittest.TestCase):
 
 
 class SuspendCycleTest(unittest.TestCase):
+    def test_recent_resume_is_consumed_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            flag, stamp = Path(tmp) / 'cycle', Path(tmp) / 'resumed'
+            flag.touch()
+            stamp.touch()
+            with patch.object(key, 'RESUME_FLAG', flag), \
+                    patch.object(key, 'RESUMED_STAMP', stamp):
+                self.assertTrue(key.suspended_since_last_press())
+                self.assertFalse(key.suspended_since_last_press())
+            self.assertFalse(stamp.exists())
+
     def test_no_resume_flag(self):
         with tempfile.TemporaryDirectory() as tmp:
             flag, stamp = Path(tmp) / 'cycle', Path(tmp) / 'resumed'

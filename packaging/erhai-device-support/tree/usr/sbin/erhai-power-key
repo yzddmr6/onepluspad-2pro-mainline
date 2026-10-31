@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # SPDX-License-Identifier: GPL-2.0-only
-"""Route the tablet's physical power key to GNOME lock/blank and wake.
+"""Route the tablet's physical power key to GNOME lock, suspend and wake.
 
 Only the selected input device is grabbed. Authentication remains with GNOME;
 waking never calls ScreenSaver.SetActive(false), including in the greeter.
@@ -101,24 +101,25 @@ def screensaver(info, method, *args):
 # no restart of this service.
 MODE_MARKERS = (Path('/run/erhai/display-power-mode'), Path('/etc/erhai/display-power-mode'))
 
-# Opt-in system suspend. Written by whoever enables it (an image default or the
-# user); read at every press for the same reason as the display mode. When it is
-# absent the service only locks and blanks, which is the shipped behaviour.
+# Suspend by default; "blank" opts out to lock-and-blank only. Read at every
+# press, with the first valid value taking precedence (/run before /etc).
+# "suspend" remains supported for explicit selection of the default action.
 SUSPEND_MARKERS = (Path('/run/erhai/power-key-action'), Path('/etc/erhai/power-key-action'))
 
 
 def suspend_requested():
     for marker in SUSPEND_MARKERS:
         try:
-            if marker.read_text().strip() == 'suspend':
-                return True
+            action = marker.read_text().strip()
+            if action in ('suspend', 'blank'):
+                return action == 'suspend'
         except OSError:
             pass
-    return False
+    return True
 
 
 def suspend():
-    """Enter system suspend when opted in, and do nothing otherwise.
+    """Request system suspend unless lock-and-blank only was selected.
 
     The lock is already active at this point, so the resume path keeps the
     authentication boundary: waking restores the display only.

@@ -56,6 +56,6 @@ if (s->seat->active != s)
 
 ## 相关
 
-* 本移植关闭了静置变暗（idle dim），因为面板永不熄屏；见
-  `90_erhai-power.gschema.override` 及其说明。
+* 静置变暗与熄屏跟随 Ubuntu 默认值；时限、自动挂起与用户设置见
+  [系统休眠](SUSPEND.zh-CN.md)。
 * 熄屏与 `bl_power` 由 `erhai-display-power` 处理，与本文无关。
