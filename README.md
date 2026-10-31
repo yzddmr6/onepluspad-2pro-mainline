@@ -49,14 +49,15 @@ primarily in Chinese.
   and reinstallation are provided for the 512 GB model. First-time partitioning
   erases Android data. See the [installation and recovery guide](docs/FLASHING.md)
   for firmware and layout requirements.
-- **Power:** Linux net-charges the battery from a USB PD charger: a 5 V, 2 A
-  contract charged it at about 1.6 A with the screen on, and capacity rose. On a computer's USB port with the
-  screen on, the tablet uses more than the port supplies and the battery still
-  drains slowly. The stock fast-charging protocols are not available under Linux,
-  and the optional PPS charging does not take effect yet. Fastboot is not a
+- **Power:** Linux net-charges the battery from a USB PD charger and requests its
+  9 V contract (up to 18 W input). On a computer's USB port with the screen on, the
+  tablet uses more than the port supplies and the battery still drains slowly. The
+  stock SUPERVOOC fast charging is not available under Linux. Fastboot is not a
   charging fallback.
-  Backlight-only screen blanking also consumes more power than normal standby;
-  system suspend on the power button is opt-in, see [System suspend](docs/SUSPEND.md).
+  Closing the keyboard cover or a case suspends the tablet, and in suspend the SoC
+  reaches its deepest power states. Blanking the screen with the power button only
+  turns off the backlight and uses more power than suspend; system suspend on the
+  power button is opt-in, see [System suspend](docs/SUSPEND.md).
 - **Data and recovery:** unlocking the bootloader erases user data. Back up
   personal files and obtain matching stock firmware before changing the device.
   Keep factory calibration and device addresses specific to each tablet.
@@ -148,23 +149,24 @@ development are not included in the supported feature set.
 | USB-C analog audio | WCD939x headset path | ❌ | Analog adapters and headset detection are not implemented. Digital USB audio is tracked above. |
 | Video playback in desktop players | Ubuntu GStreamer packages / Iris | 🟡 | Showtime, the default player, plays H.264, H.265 and VP9 with hardware decoding and keeps playing after seeking. Other players and long playback are untested. |
 | Hardware video codecs | Qualcomm Iris | 🟡 | H.264, H.265 and VP9 hardware decoding works in the default player through GStreamer and in Firefox through VA-API. Hardware encoding is untested. |
-| Front and rear cameras | SC820CS / SC1300CS | ❌ | Camera capture and video calls are not implemented. |
-| Automatic rotation | SSC / iio-sensor-proxy | 🟡 | Orientation reaches the desktop and the screen rotates in the initial-setup session, but not yet in a normal session even with the switch on. The mount matrix is a candidate and unmeasured. |
+| Front and rear cameras | SC820CS / SC1300CS | 🔧 | The kernel drivers are in place: the rear camera delivers raw images and the front camera passes its test pattern. The picture in camera applications is not tuned yet, so photos and video calls are not usable. |
+| Automatic rotation | SSC / iio-sensor-proxy | ✅ | With the keyboard detached, the screen follows the orientation in all four directions, each the right way up. With the keyboard attached it stays fixed, as on a laptop. |
 | Automatic brightness | SSC ambient light / GNOME | 🟡 | The light sensor reaches GNOME, and with automatic brightness enabled the backlight level adjusted on hardware (1500 → 1805 of 2047). GNOME idle dimming is off because the panel is never blanked automatically. |
 | Compass and gyroscope | SSC / iio-sensor-proxy | 🟡 | Heading and angular velocity are read over D-Bus on the installed v0.2.0 system and keep updating after suspend. No desktop application uses them yet. |
-| Proximity and Hall | SSC | ❌ | The DSP does not publish the proximity sensor on this unit, and `libssc` has no Hall or SAR implementation. |
+| Proximity | SSC | ❌ | The DSP does not publish the proximity sensor on this unit, and `libssc` has no SAR implementation. |
 
 ### Power, Time and Applications
 
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
+| Cover | Hall switch / logind | ✅ | Closing the keyboard cover or a case suspends the tablet within about a second; opening it wakes the tablet and lights up the screen. Touch input is ignored while the cover is closed. After suspending with the power button, opening the cover does not wake the tablet; press the power button. |
 | Power button | Linux input / GNOME | 🟡 | Locks and blanks the display. With `/etc/erhai/power-key-action` set to `suspend`, a press also enters system suspend, and the same button wakes the tablet. Password re-entry after locking needs testing. |
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up reports `KEY_VOLUMEUP` (115); all 10 physical presses passed. Volume down remains mapped to `KEY_VOLUMEDOWN`. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management remain incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
-| Charging in Linux | USB power / vendor firmware | 🟡 | A USB PD charger net-charges the battery: a 5 V, 2 A contract charged it at about 1.6 A with the screen on, and capacity rose. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock fast-charging protocols are not available under Linux; the optional PPS charging (`qcom_battmgr.pps_enable=1`) did not start a PPS contract on the tested charger. |
-| Suspend and resume | Linux power management | 🟡 | Defaults to s2idle. On the installed v0.2.0 system, 300-second RTC-timed suspends in both display modes resumed the display, touch, Wi-Fi and sensors; power-button wake was verified by a contributor. Unplugged standby life and the deepest SoC power states remain open; the firmware-advertised `deep` state is not used by default. |
-| RTC | Qualcomm PMIC RTC | 🟡 | Time read/write verified. Clock rollback was observed after restarting and requires time synchronization. |
+| Charging in Linux | USB power / vendor firmware | 🟡 | With a USB PD charger the tablet requests the 9 V contract (previously 5 V), up to 18 W input; the 9 V contract was established on hardware. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock SUPERVOOC fast charging is not available under Linux; PPS fast charging through the charge pumps is implemented but off by default while it is being verified. |
+| Suspend and resume | Linux power management | ✅ | Defaults to s2idle. In suspend the SoC reaches its deepest power states (CX power collapse, DDR self-refresh): about 98 % of the time in 26 consecutive 9-minute suspends, with Wi-Fi, Bluetooth, the keyboard and touch recovering each time. The cover, the power button (opt-in) or a timer can wake it. Unplugged standby drain has not been measured yet; the firmware-advertised `deep` state is not used by default. See [System suspend](docs/SUSPEND.md). |
+| RTC | Qualcomm PMIC RTC | ✅ | Time read/write verified. After the tablet loses its time (for example after a forced restart), network time synchronization no longer fails on the certificate time check; the synchronized time is written back to the RTC and survives a restart. |
 | Snap applications | AppArmor / snapd / graphics runtime | ❌ | Full confinement and graphical Snap apps are unsupported in this release. The selected kernel does not enable AppArmor. |
 | Android applications | Android runtime | ❌ | Waydroid is not integrated. |
 

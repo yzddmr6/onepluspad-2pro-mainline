@@ -1,11 +1,11 @@
-# System suspend: s2idle and the power button
+# System suspend: s2idle, the power button and the cover
 
 [中文](SUSPEND.zh-CN.md) · [Project overview](../README.md)
 
 This project defaults to `s2idle` (suspend to idle). The firmware also offers `deep` (PSCI
 SYSTEM_SUSPEND); the Defaults section explains why it is not the default. This page records
-what has been measured on the tablet, how the power button is wired to it, and how to measure a
-suspend yourself.
+what has been measured on the tablet, how the power button and the cover are wired to it, and
+how to measure a suspend yourself.
 
 ## Measured on hardware
 
@@ -20,6 +20,8 @@ suspend yourself.
 | Wake from s2idle by the power button | works — `pm_wakeup_irq 21` (`pmic_pwrkey`) |
 | Installed v0.2.0, RTC alarm 300 s | compat and standard display modes: `PM: suspend entry (s2idle)`, slept 293 s, woken by IRQ 174, debug channel back 3 s after the alarm, Wi-Fi 28 s; display, touch and sensors recovered |
 | Timekeeping in s2idle | `Timekeeping suspended for 292.961 seconds` on the installed v0.2.0 system |
+| Deepest power states | Installed v0.5.0 candidate, USB connected, 26 consecutive 9-minute RTC-timed suspends: about 100 CX collapses and about 532 s of CX collapse per suspend, about 98 % of the time asleep; DDR entered self-refresh as well; every suspend was woken by the RTC, and Wi-Fi, Bluetooth, the keyboard and touch recovered |
+| Wake by opening the cover | works — `pm_wakeup_irq` is the lid switch (`msmgpio 97 Cover`); the tablet suspends about one second after the cover closes |
 
 The power button is a wake source without any devicetree change:
 `pm8941-pwrkey.c` reads `wakeup-source` *or* takes the per-compatible default, and
@@ -65,6 +67,23 @@ system logs `Timekeeping suspended for 293 seconds`, so clock behaviour is no de
 `/run/erhai/power-key-action` is read too and takes precedence, so an image or a test can
 enable it for one boot.
 
+## The cover
+
+The magnet of the keyboard cover or a case sits over a hall switch, which the kernel reports as
+a lid switch (`SW_LID`). Closing the cover makes logind suspend the system (`HandleLidSwitch=suspend`
+in `/etc/systemd/logind.conf.d/90-erhai-power.conf`); opening it wakes the system through the same
+switch, and the desktop lights up the lock screen.
+
+* Touch and pen input are ignored while the cover is closed: the `erhai-cover` service sets the
+  kernel's input inhibit on them. A cover landing on the panel touches it, and without the
+  inhibit those touches interrupt the screen lock before suspend, so the system only suspends
+  once logind's delay limit (about 30 seconds) runs out.
+* The wake on opening is only armed when the system suspends with the cover closed. With the
+  cover open the GPIO is high, and the wake-up controller reports an edge on it after CX power
+  collapse; armed, that edge would wake the system at once. After suspending with the power
+  button, closing and then opening the cover therefore does not wake the tablet; press the power
+  button.
+
 ## Measuring a suspend
 
 ```sh
@@ -79,13 +98,13 @@ done
 
 `/sys/kernel/debug/qcom_stats` (driver built as `CONFIG_QCOM_STATS`, node already present
 in `sm8750.dtsi`) reports per-subsystem sleep counters and is the way to tell how deep a
-suspend actually went:
+suspend actually went. These are the increments across one 9-minute suspend on v0.5.0
+(`Accumulated Duration` counts at 19.2 MHz; divide by 19200000 for seconds):
 
 ```
-apss  Count: 37928        ← APSS low-power states are entered
-cxsd  Count: 0            ← CX collapse never happens
-aosd  Count: 0            ← AOSS sleep never happens
-ddr   Count: 0
+cxsd  Count: +103   Accumulated Duration: +532 s   ← CX collapse
+ddr   Count: +103   Accumulated Duration: +532 s   ← DDR self-refresh
+aosd  Count: +0                                     ← no AOSS sleep with USB connected
 ```
 
 To measure battery drain across a suspend, use a `systemd-sleep` hook under
@@ -99,16 +118,14 @@ whose `wakeup_count` does not move did not wake the system, even if its IRQ fire
 
 ## Limits
 
-* No CX or AOSS collapse in s2idle (see the counters above), so expect the tablet to get
-  through a day, not days at a time. This is a platform property shared with the
-  Snapdragon X Elite laptops.
+* No AOSS sleep with USB connected (see above); unplugged standby drain has not been measured
+  yet.
 * `deep` (PSCI SYSTEM_SUSPEND) is not used by default. Earlier tracing on this board found deep
   suspends ending early with no armed wake-up IRQ: the IPCC summary interrupt is
   `IRQF_NO_SUSPEND` and its irqchip sets `IRQCHIP_SKIP_SET_WAKE`, so a signal from a remote
   processor can bypass `pm_system_irq_wakeup()` entirely.
-* Peripheral recovery after a long suspend (Wi-Fi, USB, audio, sensors), unplugged standby
-  life, and the deepest SoC states still need work.
-* Proximity, Hall and SAR are unrelated to suspend and remain unavailable on this board.
+* Unplugged standby life has not been measured yet.
+* The proximity and SAR sensors remain unavailable on this board.
 
 ## References
 
@@ -116,7 +133,6 @@ whose `wakeup_count` does not move did not wake the system, even if its IRQ fire
   have a real suspend mode"; wakeirqs and `IRQF_NO_SUSPEND` semantics; waking by
   `wakeup_count`.
 * Snapdragon X Elite suspend notes (Lenovo Yoga Slim 7x) — `deep` present but resume
-  broken, hibernation not built, `qcom_stats` counters as the depth measurement, and the
-  same "platform never reaches its deepest state" conclusion.
+  broken, hibernation not built, and `qcom_stats` counters as the depth measurement.
 * linux-surface issue 2078 — how to tell "the IRQ fires" from "the IRQ wakes the system"
   (`wakeup_count` stays at 0 while `event_count` moves).

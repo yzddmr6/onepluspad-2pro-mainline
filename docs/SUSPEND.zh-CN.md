@@ -1,10 +1,10 @@
-# 系统休眠：s2idle 与电源键
+# 系统休眠：s2idle、电源键与合盖
 
 [English](SUSPEND.md) · [项目首页](../README.zh-CN.md)
 
 本项目默认使用 `s2idle`（suspend to idle）。固件也提供 `deep`
 （PSCI SYSTEM_SUSPEND），不作默认的原因见“默认值”一节。
-本页记录真机实测结果、电源键如何接到休眠，以及你自己怎么测。
+本页记录真机实测结果、电源键与合盖如何接到休眠，以及你自己怎么测。
 
 ## 真机实测
 
@@ -19,6 +19,8 @@
 | 电源键唤醒 | 可用 —— `pm_wakeup_irq 21`（`pmic_pwrkey`） |
 | v0.2.0 已装系统，RTC 闹钟 300 秒 | compat 与 standard 两种显示模式：`PM: suspend entry (s2idle)`，睡 293 秒，由 IRQ 174 唤醒，闹钟后 3 秒调试通道恢复，Wi-Fi 28 秒重连；显示、触控与传感器均恢复 |
 | s2idle 中的计时 | v0.2.0 已装系统：`Timekeeping suspended for 292.961 seconds` |
+| 最深电源态 | v0.5.0 候选已装系统，插着 USB 连续 26 次、每次 9 分钟的 RTC 定时挂起：每次 CX 塌陷约 100 次、累计约 532 秒，即约 98% 的挂起时间；DDR 同样进入自刷新；全部由 RTC 唤醒，Wi-Fi、蓝牙、键盘与触控均恢复 |
+| 合盖唤醒 | 可用 —— `pm_wakeup_irq` 为合盖开关（`msmgpio 97 Cover`）；合上约 1 秒后进入挂起 |
 
 电源键无需改设备树即为唤醒源：`pm8941-pwrkey.c` 读取 `wakeup-source` **或**采用按
 compatible 的默认值，而 `qcom,pmk8350-pwrkey` 对应
@@ -60,6 +62,19 @@ rm /etc/erhai/power-key-action                  # 回到仅锁屏+熄屏
 
 `/run/erhai/power-key-action` 同样会被读取且优先，便于镜像或测试在单次启动内启用它。
 
+## 合盖
+
+键盘套或保护套的磁铁正对一颗霍尔开关，内核把它报成合盖开关（`SW_LID`）。合上时 logind
+让系统挂起（`/etc/systemd/logind.conf.d/90-erhai-power.conf` 里的 `HandleLidSwitch=suspend`），
+打开时由同一开关唤醒，桌面随即点亮锁屏。
+
+* 合盖期间触摸屏与手写笔的输入被忽略（`erhai-cover` 服务对它们设内核的输入屏蔽）。盖板落到
+  屏幕上会产生触摸，若不屏蔽，这些触摸会打断挂起前的锁屏，系统要等 logind 的延迟上限
+  （约 30 秒）才挂起。
+* 开盖唤醒只在**合着盖子挂起**时才武装：开着盖子时这根 GPIO 是高电平，CX 塌陷恢复后唤醒控制器
+  会把它记成一个边沿，若此时也武装，系统会被这个假边沿立刻叫醒。因此用电源键挂起后再合盖、
+  再开盖，不会唤醒，需要按电源键。
+
 ## 如何测量一次挂起
 
 ```sh
@@ -73,13 +88,13 @@ done
 ```
 
 `/sys/kernel/debug/qcom_stats`（驱动以 `CONFIG_QCOM_STATS` 构建，节点已在 `sm8750.dtsi` 中）
-按子系统给出休眠计数，是判断"到底睡多深"的依据：
+按子系统给出休眠计数，是判断"到底睡多深"的依据。下面是 v0.5.0 一次 9 分钟挂起前后的增量
+（`Accumulated Duration` 以 19.2 MHz 计数，除以 19200000 得秒）：
 
 ```
-apss  Count: 37928        ← APSS 低功耗态确实进入了
-cxsd  Count: 0            ← CX 塌陷从未发生
-aosd  Count: 0            ← AOSS sleep 从未发生
-ddr   Count: 0
+cxsd  Count: +103   Accumulated Duration: +532 秒   ← CX 塌陷
+ddr   Count: +103   Accumulated Duration: +532 秒   ← DDR 自刷新
+aosd  Count: +0                                      ← 插着 USB 时 AOSS sleep 未发生
 ```
 
 若要测挂起期间的耗电，请在 `/usr/lib/systemd/system-sleep/` 下放钩子，记录挂起前后电量。
@@ -91,19 +106,18 @@ ddr   Count: 0
 
 ## 限制
 
-* s2idle 下没有 CX/AOSS 塌陷（见上），因此预期是"能撑过一天"，不是"数天"。属于平台性质，
-  与骁龙 X Elite 笔记本相同。
+* 插着 USB 时 AOSS sleep 不发生（见上）；拔线待机的实际耗电尚未实测。
 * `deep`（PSCI SYSTEM_SUSPEND）默认不用。此前在本板的跟踪发现 deep 会提前结束
   且没有武装的唤醒中断：IPCC 汇总中断是 `IRQF_NO_SUSPEND`，其 irqchip 置了
   `IRQCHIP_SKIP_SET_WAKE`，于是远程处理器的信号可以完全绕过 `pm_system_irq_wakeup()`。
-* 长挂起后的外设恢复（Wi-Fi、USB、音频、传感器）、拔线待机续航、以及 SoC 最深电源态仍待完善。
-* 接近、霍尔与 SAR 与休眠无关，在本板上仍不可用。
+* 拔线待机续航尚未实测。
+* 接近与 SAR 传感器在本板上仍不可用。
 
 ## 参考
 
 * postmarketOS wiki《Qualcomm Snapdragon 845/850》——“高通平台目前没有真正的 suspend 模式”；
   wakeirq 与 `IRQF_NO_SUSPEND` 语义；用 `wakeup_count` 反查唤醒源。
 * 骁龙 X Elite 挂起笔记（Lenovo Yoga Slim 7x）——`deep` 存在但 resume 是坏的、hibernation 未编入、
-  用 `qcom_stats` 量化深度，以及"平台到不了最深态"的同一结论。
+  用 `qcom_stats` 量化深度。
 * linux-surface issue 2078 —— 如何区分"中断触发了"与"中断唤醒了系统"
   （`wakeup_count` 恒 0 而 `event_count` 在动）。

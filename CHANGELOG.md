@@ -1,5 +1,52 @@
 # Changelog
 
+## v0.5.0
+
+Device packages are numbered 0.5.0 and install over v0.4.x with APT; see
+"Upgrading an existing installation" in
+[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation).
+
+- Kernel `erhai-v0.5.0`, now based on Linux 7.2.14:
+  - In system suspend the SoC reaches its deepest power states, CX power
+    collapse and DDR self-refresh. The LLCC table reserves its island ways,
+    which makes releasing the audio subsystem's clock votes safe; the crypto
+    engine no longer holds a permanent bandwidth vote; the GPU management unit
+    gets a driver, so the clock controllers finish their setup; PCIe can enter
+    D3 and power its domains down; UFS, the serial ports and the Wi-Fi and
+    Bluetooth power unit release their votes in suspend.
+  - The hall switch behind the cover magnet is a lid switch that wakes the
+    system when the cover opens. A GPIO wake-up for a switch that wakes on
+    release is armed only while the switch is pressed, because the SoC's
+    wake-up controller reports an edge on a GPIO that stays high through CX
+    power collapse.
+  - With a USB PD charger the battery manager requests the 9 V fixed contract,
+    with up to 18 W input, and decodes the charger notifications it used to
+    discard.
+  - Drivers for the two SC8547A charge pumps and a PPS charging controller
+    with the stock limits are included; PPS is off by default.
+  - The Iris video decoder no longer deadlocks while it powers off, unplugging
+    USB during suspend no longer resets the tablet, and unbinding the battery
+    manager no longer uses freed memory.
+  - The front and rear camera sensors report the Bayer order they read out.
+- `erhai-device-support`:
+  - Closing the cover suspends the system through logind, and touch and pen
+    input are ignored while the cover is closed, so a cover landing on the
+    panel no longer delays the suspend.
+  - chrony can set a clock that starts months in the past: after the tablet
+    loses its time, NTS no longer fails on server certificates that are not
+    valid yet at that time.
+- `erhai-firmware` carries the SoCCP image, which the kernel now starts so
+  that it parks in D3 and drops the bus vote it inherits from the bootloader.
+
+Tested on the tablet: the v0.5.0 packages installed over v0.4.0 with APT, with
+the boot images read back intact and v0.4.0 kept as the fallback. Across 26
+consecutive 9-minute suspends the SoC spent about 98 % of the time in CX power
+collapse, every suspend ended on the RTC alarm, and Wi-Fi, Bluetooth, the
+keyboard and touch recovered each time. Closing the cover suspended the tablet
+within about a second and opening it woke the tablet; with the keyboard
+detached, the screen rotated correctly in all four directions; a USB PD charger
+established the 9 V contract.
+
 ## v0.4.0
 
 Device packages are numbered 0.4.0 and install over v0.3.x with APT; see
