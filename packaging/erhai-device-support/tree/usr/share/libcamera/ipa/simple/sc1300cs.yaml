@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: CC0-1.0
+# Software ISP tuning for the rear SmartSens SC1300CS of the OnePlus Pad 2 Pro.
+%YAML 1.1
+---
+version: 1
+algorithms:
+  - BlackLevel:
+      # 64 at 10 bits, on the 16-bit scale used here.
+      blackLevel: 4096
+  - Awb:
+  - Adjust:
+  - Agc:
+...
