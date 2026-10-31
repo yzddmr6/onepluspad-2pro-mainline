@@ -2,9 +2,9 @@
   "kernel": {
     "repository_layout": "Separate Git checkout at kernel/linux under ERHAI_WORKSPACE (the integration checkout by default)",
     "upstream": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git",
-    "baseline_tag": "v7.2.10",
-    "branch": "erhai/v0.4",
-    "commit": "147558188897c27a1e50eb2ffe950a04435ac45f",
+    "baseline_tag": "v7.2.14",
+    "branch": "erhai/v0.5",
+    "commit": "2693a61eee1622611c8024d095eb7f476df48881",
     "board_dts": "arch/arm64/boot/dts/qcom/sm8750-erhai.dts",
     "config_fragment": "arch/arm64/configs/erhai-firstboot.config",
     "toolchain": "aarch64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1)",
