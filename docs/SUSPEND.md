@@ -20,7 +20,7 @@ how to measure a suspend yourself.
 | Power-button wake | Works — on the installed v0.6.0 system, three of three presses locked and suspended the tablet and the next press woke it: `pm_wakeup_irq 22` (`pmic_pwrkey`), back to the desktop after unlocking |
 | Installed v0.2.0, RTC alarm 300 s | compat and standard display modes: `PM: suspend entry (s2idle)`, slept 293 s, woken by IRQ 174, debug channel back 3 s after the alarm, Wi-Fi 28 s; display, touch and sensors recovered |
 | Timekeeping in s2idle | `Timekeeping suspended for 292.961 seconds` on the installed v0.2.0 system |
-| Deepest power states | Installed v0.6.0 candidate, USB connected, 23 consecutive 10-minute RTC-timed suspends, each preceded by a one-minute full CPU load and repeated GPU wake-ups: 98.0–98.9 % of the time in CX collapse; DDR entered self-refresh as well; every suspend was woken by the RTC, and Wi-Fi, the keyboard and the cameras recovered (v0.5.0: 26 × 9 minutes, about 98 %) |
+| Deepest power states | Installed v0.6.0 candidate, USB connected, 23 consecutive 10-minute RTC-timed suspends, each preceded by a one-minute full CPU load and repeated GPU wake-ups: 98.0–98.9 % of the time in CX collapse; DDR entered self-refresh as well; every suspend was woken by the RTC, Wi-Fi and the keyboard recovered each time, and both cameras streamed after every fifth suspend (v0.5.0: 26 × 9 minutes, about 98 %) |
 | Wake by opening the cover | works — `pm_wakeup_irq` is the lid switch (`msmgpio 97 Cover`); the tablet suspends about one second after the cover closes |
 
 The power button is a wake source without any devicetree change:

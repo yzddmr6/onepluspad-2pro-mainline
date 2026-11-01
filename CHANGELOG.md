@@ -1,5 +1,59 @@
 # Changelog
 
+## v0.6.0
+
+Device packages are numbered 0.6.0 and install over v0.5.x with APT; see
+"Upgrading an existing installation" in
+[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation).
+
+- Kernel `erhai-v0.6.0`, still based on Linux 7.2.14:
+  - Both cameras work in camera applications. The sensors run from the 24 MHz
+    clock their register sequences are designed for, which raises the frame
+    rate from 24 to about 30 frames per second; 2×2 binned modes (2104×1560
+    rear, 1632×1224 front) serve streams up to that size; flip controls and
+    the 180° mounting described in the device tree let libcamera turn the
+    picture upright; and the camera subsystem reports frame starts, so
+    libcamera applies exposure and gain to the frames they were meant for.
+  - The GPU drops its boot-time memory bandwidth vote once its management
+    unit votes for itself. With a light OpenGL client the peak DDR bandwidth
+    requested fell from 5.29 to 2.5 GB/s.
+  - The GPU management unit's interrupt handler no longer clears replies the
+    driver is still waiting for, its interrupt stays masked while the unit
+    boots, and a GPU fault during recovery can no longer deadlock against the
+    crash dump. Each of these could time out a GPU wake-up and leave the
+    display frozen.
+  - GPU submission queue priorities apply in the order applications request
+    them, so a Vulkan application keeping the GPU busy no longer starves
+    OpenGL clients on the same ring.
+  - Suspending while the SoC is warm no longer fails or wakes at once on the
+    thermal sensors' falling-temperature interrupts, and charger updates from
+    the battery firmware no longer wake the system.
+  - Pressure stall information is enabled, so systemd-oomd can act on memory
+    pressure.
+- `erhai-device-support`:
+  - The power button locks the screen and suspends, and the next press wakes
+    the tablet. Set `/etc/erhai/power-key-action` to `blank` to lock and blank
+    the screen only.
+  - Idle dimming, blanking and automatic suspend on battery follow the Ubuntu
+    defaults again.
+  - Software ISP tuning files give both cameras their black level; exposure
+    and white balance are automatic.
+  - chrony falls back to the network's own time server when a network passes
+    the NTS key exchange but blocks authenticated time, so the clock is set
+    again after a forced reset has cleared the RTC time.
+
+Tested on the tablet: the v0.6.0 kernel and packages (debug build) installed
+over v0.5 with APT, with the previous kernel kept as the fallback. Overnight,
+23 consecutive 10-minute suspends, each after a minute of full CPU load and 20
+GPU wake-ups, spent 98–99 % of the time in CX power collapse and all ended on
+the RTC alarm; none of the 460 GPU wake-ups logged a management unit error,
+Wi-Fi and the keyboard recovered each time, and both cameras streamed after
+every fifth suspend. The power button
+suspended and woke the tablet three times out of three, and closing the cover
+suspended it within about a second. Snapshot previewed and took photos upright
+with both cameras. On a network that blocks authenticated time, the clock was
+set within 6 seconds.
+
 ## v0.5.0
 
 Device packages are numbered 0.5.0 and install over v0.4.x with APT; see
