@@ -15,6 +15,7 @@ is a package, and each package owns exactly what it installs:
                           so a kernel update is an apt upgrade
     erhai-firmware        the firmware closure the mainline drivers ask for
     erhai-audio           the board AudioReach topology and audio configuration
+    erhai-settings        GNOME Settings with the port author on the About page
     erhai-firefox         Mozilla's APT repository and signing key for the
                           Firefox deb, in place of the Firefox snap
     erhai-device          a metapackage depending on the required device layer
@@ -115,7 +116,7 @@ VERSION_FILE = PACKAGING / 'VERSION'
 MAINTAINER = 'yzddmr6 <46088090+yzddmr6@users.noreply.github.com>'
 DEBIAN_SCRIPTS = ('preinst', 'postinst', 'prerm', 'postrm')
 PACKAGES = ('erhai-display-power', 'erhai-device-support', 'erhai-firmware', 'erhai-audio',
-            'erhai-firefox', 'erhai-kernel', 'erhai-debug', 'erhai-device')
+            'erhai-firefox', 'erhai-settings', 'erhai-kernel', 'erhai-debug', 'erhai-device')
 PARTS = ('boot', 'init_boot', 'vendor_boot')
 SWITCHER_PROGRAMS = ('erhai-switch', 'erhai-switch-install-ubuntu-images')
 
@@ -739,6 +740,29 @@ def describe_chmixer(params):
     return names
 
 
+def stage_settings(root, build):
+    """Accept only the ARM64 program built from the current locked inputs."""
+    inputs = PACKAGING / 'gnome-control-center'
+    lock = json.loads((inputs / 'source.json').read_text())
+    info_path = build / 'build-info.json'
+    binary = build / 'gnome-control-center'
+    if not info_path.is_file() or not binary.is_file() or binary.is_symlink():
+        die('build GNOME Settings with tools/build-settings.py first; use --settings-build')
+    info = json.loads(info_path.read_text())
+    if info['source'] != lock or info['build_root'] != json.loads((inputs / 'build-root.json').read_text()):
+        die('Settings build uses different source or build-root inputs')
+    for patch in lock['patches']:
+        if sha256_file(REPO / patch['path']) != patch['sha256']:
+            die('Settings patch differs from source.json: ' + patch['path'])
+    if sha256_file(binary) != info['binary_sha256']:
+        die('Settings binary identity mismatch')
+    with binary.open('rb') as stream:
+        header = stream.read(20)
+    if header[:6] != b'\x7fELF\x02\x01' or header[18:20] != b'\xb7\x00':
+        die('Settings binary is not an AArch64 ELF executable')
+    install_file(binary, root / 'usr/bin/gnome-control-center', 0o755)
+
+
 def stage_audio(root, archive):
     inputs = PACKAGING / 'audio'
     source = json.loads((inputs / 'source.json').read_text())
@@ -1060,6 +1084,8 @@ def main():
     parser.add_argument('--debug', action='store_true',
                         help='Enable the debug channel in the packaged kernel command '
                              'line and mark the version ~dbg')
+    parser.add_argument('--settings-build', type=Path, default=WS / 'out/gnome-control-center',
+                        help='Output of tools/build-settings.py, including build-info.json')
     parser.add_argument('--audio-source', type=Path,
                         help='Pinned audioreach-topology source archive (defaults to the cache)')
     parser.add_argument('--refresh-from-rom', action='store_true',
@@ -1117,6 +1143,8 @@ def main():
                 copy_tree(PACKAGING / package / 'tree', root)
             elif package == 'erhai-firmware':
                 stage_firmware(root, manifest)
+            elif package == 'erhai-settings':
+                stage_settings(root, args.settings_build)
             elif package == 'erhai-audio':
                 stage_audio(root, args.audio_source)
             elif package == 'erhai-kernel':
@@ -1151,7 +1179,7 @@ def main():
         epoch = source_date_epoch(args.kernel_out if kernel_meta else None)
         built = []
         for package in roots:
-            architecture = 'arm64' if package in ('erhai-kernel', 'erhai-device', 'erhai-display-power', image_package) else 'all'
+            architecture = 'arm64' if package in ('erhai-kernel', 'erhai-device', 'erhai-display-power', 'erhai-settings', image_package) else 'all'
             write_control(roots[package], package, version, substitutions)
             built.append(pack(roots[package], package, version, architecture, out_dir, epoch))
 

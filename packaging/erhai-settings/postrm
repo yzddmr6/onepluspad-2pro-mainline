@@ -1,0 +1,11 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+set -e
+case "$1" in
+remove | disappear | abort-install)
+    if [ "$(dpkg-divert --listpackage /usr/bin/gnome-control-center)" = erhai-settings ]; then
+        dpkg-divert --package erhai-settings --remove --rename \
+            --divert /usr/bin/gnome-control-center.distrib /usr/bin/gnome-control-center
+    fi
+    ;;
+esac
