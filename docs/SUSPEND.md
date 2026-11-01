@@ -17,10 +17,10 @@ how to measure a suspend yourself.
 | CPU idle | two states: `WFI` and `cpu-sleep-0` (retention) |
 | Suspend cycles | `success: 4`, `fail: 0` over RTC-timed and power-button cycles |
 | Wake from s2idle by RTC | works — `pm_wakeup_irq 174` (`c400000.spmi:pmic@0:rtc@6100`) |
-| Earlier power-button wake observation | `pm_wakeup_irq 21` (`pmic_pwrkey`); power-button wake from s2idle with the current kernel still needs verification |
+| Power-button wake | Works — on the installed v0.6.0 system, three of three presses locked and suspended the tablet and the next press woke it: `pm_wakeup_irq 22` (`pmic_pwrkey`), back to the desktop after unlocking |
 | Installed v0.2.0, RTC alarm 300 s | compat and standard display modes: `PM: suspend entry (s2idle)`, slept 293 s, woken by IRQ 174, debug channel back 3 s after the alarm, Wi-Fi 28 s; display, touch and sensors recovered |
 | Timekeeping in s2idle | `Timekeeping suspended for 292.961 seconds` on the installed v0.2.0 system |
-| Deepest power states | Installed v0.5.0 candidate, USB connected, 26 consecutive 9-minute RTC-timed suspends: about 100 CX collapses and about 532 s of CX collapse per suspend, about 98 % of the time asleep; DDR entered self-refresh as well; every suspend was woken by the RTC, and Wi-Fi, Bluetooth, the keyboard and touch recovered |
+| Deepest power states | Installed v0.6.0 candidate, USB connected, 23 consecutive 10-minute RTC-timed suspends, each preceded by a one-minute full CPU load and repeated GPU wake-ups: 98.0–98.9 % of the time in CX collapse; DDR entered self-refresh as well; every suspend was woken by the RTC, and Wi-Fi, the keyboard and the cameras recovered (v0.5.0: 26 × 9 minutes, about 98 %) |
 | Wake by opening the cover | works — `pm_wakeup_irq` is the lid switch (`msmgpio 97 Cover`); the tablet suspends about one second after the cover closes |
 
 The power button is a wake source without any devicetree change:
@@ -73,8 +73,8 @@ A press delivered on resume also only restores the display and resets desktop id
 it must not immediately suspend again. The existing suspend-cycle marker is set before
 suspend and consumed once, with a 15-second window after resume to distinguish a wake
 press from a later press. Neither path deactivates the lock screen or bypasses authentication.
-**Power-button wake from s2idle and password re-entry with the current kernel still need
-hardware verification**; earlier wake observations do not establish this for the current kernel.
+On the installed v0.6.0 system, all three attempts woke from s2idle on the power button and
+returned to the lock screen, which asked for the password again.
 
 ## Idle policy
 
@@ -127,7 +127,7 @@ above; display recovery in that configuration still needs hardware verification.
   cover open the GPIO is high, and the wake-up controller reports an edge on it after CX power
   collapse; armed, that edge would wake the system at once. After suspending with the power
   button or idle policy with the cover open, closing and then opening the cover therefore
-  does not wake the tablet. Power-button wake with the current kernel must be verified.
+  does not wake the tablet; press the power button instead.
 
 ## Measuring a suspend
 

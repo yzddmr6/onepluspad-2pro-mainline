@@ -54,11 +54,10 @@ primarily in Chinese.
   tablet uses more than the port supplies and the battery still drains slowly. The
   stock SUPERVOOC fast charging is not available under Linux. Fastboot is not a
   charging fallback.
-  Closing the keyboard cover or a case suspends the tablet, and in suspend the SoC
-  reaches its deepest power states. The power button now locks the screen and requests
-  suspend by default. Power-button wake from s2idle and password re-entry still need
-  verification with the current kernel. Idle dimming, blanking and automatic suspend
-  follow Ubuntu defaults; unplugged standby drain remains unmeasured.
+  Closing the keyboard cover or a case suspends the tablet; the power button locks the
+  screen and suspends, and the next press wakes it. In suspend the SoC reaches its deepest
+  power states. When idle, the screen dims and blanks with Ubuntu's defaults and the tablet
+  suspends on battery; unplugged standby drain has not been measured yet.
   See [System suspend](docs/SUSPEND.md) for timings and the blank-only opt-out.
 - **Data and recovery:** unlocking the bootloader erases user data. Back up
   personal files and obtain matching stock firmware before changing the device.
@@ -151,7 +150,7 @@ development are not included in the supported feature set.
 | USB-C analog audio | WCD939x headset path | ❌ | Analog adapters and headset detection are not implemented. Digital USB audio is tracked above. |
 | Video playback in desktop players | Ubuntu GStreamer packages / Iris | 🟡 | Showtime, the default player, plays H.264, H.265 and VP9 with hardware decoding and keeps playing after seeking. Other players and long playback are untested. |
 | Hardware video codecs | Qualcomm Iris | 🟡 | H.264, H.265 and VP9 hardware decoding works in the default player through GStreamer and in Firefox through VA-API. Hardware encoding is untested. |
-| Front and rear cameras | SC820CS / SC1300CS | 🔧 | The kernel drivers are in place: the rear camera delivers raw images and the front camera passes its test pattern. The picture in camera applications is not tuned yet, so photos and video calls are not usable. |
+| Front and rear cameras | SC820CS / SC1300CS | 🟡 | The default Camera app (Snapshot) previews and takes photos with both cameras, at about 28 fps for a 1080p preview. White balance is automatic (grey world), so a scene dominated by one colour gets an overall tint; there is no lens-shading correction, so the corners are darker; focus is fixed at a distance, so close objects are soft; dim scenes are noisy. Video calls are untested. |
 | Automatic rotation | SSC / iio-sensor-proxy | ✅ | With the keyboard detached, the screen follows the orientation in all four directions, each the right way up. With the keyboard attached it stays fixed, as on a laptop. |
 | Automatic brightness | SSC ambient light / GNOME | 🟡 | The light sensor reaches GNOME, and with automatic brightness enabled the backlight level adjusted on hardware (1500 → 1805 of 2047). Idle dimming and blanking follow Ubuntu defaults; their interaction with automatic brightness needs hardware verification. |
 | Compass and gyroscope | SSC / iio-sensor-proxy | 🟡 | Heading and angular velocity are read over D-Bus on the installed v0.2.0 system and keep updating after suspend. No desktop application uses them yet. |
@@ -161,14 +160,14 @@ development are not included in the supported feature set.
 
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
-| Cover | Hall switch / logind | ✅ | Closing the keyboard cover or a case suspends the tablet within about a second; opening it wakes the tablet and lights up the screen. Touch input is ignored while the cover is closed. Opening the cover does not wake a suspend entered with the cover open; power-button wake with the current kernel still needs verification. |
-| Power button | Linux input / GNOME | 🟡 | Defaults to locking the screen before requesting s2idle suspend. Set `/etc/erhai/power-key-action` to `blank` for lock-and-blank only. Power-button wake and password re-entry with the current kernel need testing. |
+| Cover | Hall switch / logind | ✅ | Closing the keyboard cover or a case suspends the tablet within about a second; opening it wakes the tablet and lights up the screen. Touch input is ignored while the cover is closed. Closing and opening the cover does not wake a suspend entered with the cover open (for example with the power button); press the power button instead. |
+| Power button | Linux input / GNOME | ✅ | A press locks the screen and enters s2idle suspend; the next press wakes the tablet to the lock screen, verified in three of three attempts. Set `/etc/erhai/power-key-action` to `blank` for lock-and-blank only. |
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up reports `KEY_VOLUMEUP` (115); all 10 physical presses passed. Volume down remains mapped to `KEY_VOLUMEDOWN`. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management remain incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
 | Charging in Linux | USB power / vendor firmware | 🟡 | With a USB PD charger the tablet requests the 9 V contract (previously 5 V), up to 18 W input; the 9 V contract was established on hardware. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock SUPERVOOC fast charging is not available under Linux; PPS fast charging through the charge pumps is implemented but off by default while it is being verified. |
-| Suspend and resume | Linux power management | ✅ | Defaults to s2idle. In suspend the SoC reaches its deepest power states (CX power collapse, DDR self-refresh): about 98 % of the time in 26 consecutive 9-minute suspends, with Wi-Fi, Bluetooth, the keyboard and touch recovering each time. Cover and RTC wake are supported; power-button wake with the current kernel needs verification. Unplugged standby drain has not been measured yet; the firmware-advertised `deep` state is not used by default. See [System suspend](docs/SUSPEND.md). |
-| RTC | Qualcomm PMIC RTC | ✅ | Time read/write verified. After the tablet loses its time (for example after a forced restart), network time synchronization no longer fails on the certificate time check; the synchronized time is written back to the RTC and survives a restart. |
+| Suspend and resume | Linux power management | ✅ | Defaults to s2idle. In suspend the SoC reaches its deepest power states (CX power collapse, DDR self-refresh): 98–99 % of the time in 23 consecutive 10-minute suspends, each preceded by a full CPU load and repeated GPU wake-ups, with Wi-Fi, the keyboard and the cameras recovering each time. Cover, power-button and RTC wake are supported. Unplugged standby drain has not been measured yet; the firmware-advertised `deep` state is not used by default. See [System suspend](docs/SUSPEND.md). |
+| RTC | Qualcomm PMIC RTC | ✅ | Time read/write verified. A forced reset loses the RTC time; it is set again once the tablet is online: the certificate time check no longer blocks the first synchronization, and on networks that block authenticated time (NTS) the network's own time server is used. The synchronized time is written back to the RTC and survives a normal restart. |
 | Snap applications | AppArmor / snapd / graphics runtime | ❌ | Full confinement and graphical Snap apps are unsupported in this release. The selected kernel does not enable AppArmor. |
 | Android applications | Android runtime | ❌ | Waydroid is not integrated. |
 
