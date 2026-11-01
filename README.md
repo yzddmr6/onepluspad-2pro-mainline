@@ -3,6 +3,8 @@
 Run Ubuntu Desktop 26.04 with GNOME on the OnePlus Pad 2 Pro, using a device-adapted
 kernel based on upstream Linux. [中文](README.zh-CN.md)
 
+Official builds are published only in this repository's [Releases](https://github.com/yzddmr6/onepluspad-2pro-mainline/releases), free of charge.
+
 ## 🧭 Our Approach
 
 There are roughly two ways to bring a Linux desktop to an Android tablet.
