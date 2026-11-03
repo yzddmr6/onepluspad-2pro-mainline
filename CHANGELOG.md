@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.6.1
+
+Device packages are numbered 0.6.1 and install over v0.6.0 with APT; see
+"Upgrading an existing installation" in
+[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation).
+
+- Kernel `erhai-v0.6.1`, still based on Linux 7.2.14:
+  - 12 GB units boot. The crash-log (ramoops) region now lies in RAM that
+    both memory variants have; on 12 GB units it pointed past the end of RAM
+    and reset the tablet back to Android
+    ([#14](https://github.com/yzddmr6/onepluspad-2pro-mainline/issues/14)).
+  - The internal display works on ColorOS C.35. The DSI PHY programs its PLL
+    muxes every time the PLL bias is enabled; before, depending on the probe
+    order, the panel stayed dark or its right half was garbled and touch
+    reports failed their checksum
+    ([#13](https://github.com/yzddmr6/onepluspad-2pro-mainline/issues/13),
+    [#14](https://github.com/yzddmr6/onepluspad-2pro-mainline/issues/14)).
+  - PPS chargers fast-charge through the SC8547A charge pump at up to about
+    39 W, below 80 % charge and with the battery between 12 and 44 °C; other
+    USB PD chargers keep the 9 V contract. Charge limits and USB-C power
+    output stay with the battery manager.
+  - The CPS8601 charger charges a pen attached to the back wirelessly.
+- The installer accepts ColorOS C.35.
+- `erhai-settings`: Settings → About shows the project author and repository.
+- The kernel names yzddmr6 as its builder, and NOTICE names the copyright
+  holder of the integration code.
+
+Thanks to @zczyh0922 and @zhangrongbin876-tech for the reports and the display
+fix, and to @BUSHIGEMENNI for the fast-charging and pen-charging drivers
+([linux-sm8750-erhai#6](https://github.com/yzddmr6/linux-sm8750-erhai/pull/6)).
+
 ## v0.6.0
 
 Device packages are numbered 0.6.0 and install over v0.5.x with APT; see

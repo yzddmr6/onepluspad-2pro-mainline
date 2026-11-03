@@ -9,7 +9,7 @@
 
 已测设备为 OnePlus Pad 2 Pro（OPD2413 / erhai），16 GB + 512 GB，Bootloader 已解锁。
 既有安装使用独立 Linux 根分区，在活动槽轮换 Android 与 Ubuntu 的
-`boot`、`init_boot`、`vendor_boot` 三件套。其他容量、固件、分区布局和 Pad 3 未验证。
+`boot`、`init_boot`、`vendor_boot` 三件套。安装器接受 ColorOS C.34 与 C.35；其他存储容量、分区布局、B 槽和 Pad 3 未验证。
 
 ## RAM 试用
 

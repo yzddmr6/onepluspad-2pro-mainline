@@ -45,16 +45,18 @@ primarily in Chinese.
 ## ⚠️ Read Before Installing
 
 - **Device scope:** OnePlus Pad 2 Pro, **OPD2413 / erhai / SM8750P**. Testing has
-  used a **16 GB RAM / 512 GB storage** unit. OnePlus Pad 3, other capacities and
-  other firmware or partition layouts have not been validated.
+  used a **16 GB RAM / 512 GB storage** unit; 12 GB units are supported as well.
+  ColorOS C.34 and C.35 are supported, and installation needs active slot A.
+  OnePlus Pad 3, other storage capacities and partition layouts have not been validated.
 - **Installation scope:** first-time partition preparation, Linux installation
   and reinstallation are provided for the 512 GB model. First-time partitioning
   erases Android data. See the [installation and recovery guide](docs/FLASHING.md)
   for firmware and layout requirements.
-- **Power:** Linux net-charges the battery from a USB PD charger and requests its
-  9 V contract (up to 18 W input). On a computer's USB port with the screen on, the
-  tablet uses more than the port supplies and the battery still drains slowly. The
-  stock SUPERVOOC fast charging is not available under Linux. Fastboot is not a
+- **Power:** A PPS charger fast-charges the battery through the charge pump at up to
+  about 39 W (below 80 % charge, battery between 12 and 44 °C); other USB PD chargers
+  get the 9 V contract (up to 18 W input). On a computer's USB port with the screen on,
+  the tablet uses more than the port supplies and the battery still drains slowly. The
+  stock SUPERVOOC protocol is not available under Linux. Fastboot is not a
   charging fallback.
   Closing the keyboard cover or a case suspends the tablet; the power button locks the
   screen and suspends, and the next press wakes it. In suspend the SoC reaches its deepest
@@ -129,7 +131,7 @@ development are not included in the supported feature set.
 | Brightness | Dual KTZ8868 / one backlight interface | 🟡 | Unified brightness control and blanking are integrated; the slider’s usable brightness range needs physical testing. |
 | Magnetic keyboard | Pogo keyboard / touchpad | 🟡 | Keyboard input works and the keyboard stays connected while idle and after system sleep. The on-screen keyboard appears for touch input while the keyboard is detached and hides when it is attached. Holding the magnifier key turns the top row into F1 to F12. Touchpad gestures need testing. |
 | Active pen | NT36536 pen input | 🔧 | Pen input code is available; position, pressure and buttons await physical testing. |
-| Pen charging | CPS8601 | ❌ | Charging, battery reporting and automatic scan control are not implemented. |
+| Pen charging | CPS8601 | ✅ | A pen attached to the back charges wirelessly. |
 
 ### Wireless and USB
 
@@ -167,7 +169,7 @@ development are not included in the supported feature set.
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up reports `KEY_VOLUMEUP` (115); all 10 physical presses passed. Volume down remains mapped to `KEY_VOLUMEDOWN`. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management remain incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
-| Charging in Linux | USB power / vendor firmware | 🟡 | With a USB PD charger the tablet requests the 9 V contract (previously 5 V), up to 18 W input; the 9 V contract was established on hardware. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock SUPERVOOC fast charging is not available under Linux; PPS fast charging through the charge pumps is implemented but off by default while it is being verified. |
+| Charging in Linux | USB power / vendor firmware / SC8547A charge pump | ✅ | A PPS charger fast-charges through the charge pump at up to about 39 W (below 80 % charge, battery between 12 and 44 °C); other PD chargers get the 9 V contract, up to 18 W input. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock SUPERVOOC protocol is not available. |
 | Suspend and resume | Linux power management | ✅ | Defaults to s2idle. In suspend the SoC reaches its deepest power states (CX power collapse, DDR self-refresh): 98–99 % of the time in 23 consecutive 10-minute suspends, each preceded by a full CPU load and repeated GPU wake-ups, with Wi-Fi and the keyboard recovering each time and both cameras streaming after every fifth suspend. Cover, power-button and RTC wake are supported. Unplugged standby drain has not been measured yet; the firmware-advertised `deep` state is not used by default. See [System suspend](docs/SUSPEND.md). |
 | RTC | Qualcomm PMIC RTC | ✅ | Time read/write verified. A forced reset loses the RTC time; it is set again once the tablet is online: the certificate time check no longer blocks the first synchronization, and on networks that block authenticated time (NTS) the network's own time server is used. The synchronized time is written back to the RTC and survives a normal restart. |
 | Snap applications | AppArmor / snapd / graphics runtime | ❌ | Full confinement and graphical Snap apps are unsupported in this release. The selected kernel does not enable AppArmor. |

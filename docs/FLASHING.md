@@ -11,7 +11,7 @@ first-time preparation and reinstallation are stated separately below.
 Testing uses a bootloader-unlocked OnePlus Pad 2 Pro (OPD2413 / erhai), with
 16 GB RAM and 512 GB storage. Its existing installation has a separate Linux root
 partition and rotates Android/Ubuntu `boot`, `init_boot` and `vendor_boot` images
-through the active slot. Other capacities, firmware, layouts and Pad 3 are untested.
+through the active slot. The installer accepts ColorOS C.34 and C.35; other storage capacities, layouts, slot B and Pad 3 are untested.
 
 ## RAM testing
 
