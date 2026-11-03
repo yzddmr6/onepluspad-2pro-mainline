@@ -1,7 +1,8 @@
 {
   "device": "OnePlus Pad 2 Pro (OPD2413)",
   "tested_firmware_fingerprints": [
-    "OnePlus/OPD2413/OP615EL1:16/AP3A.240617.008/V.54cdc84-304c441-307540c:user/release-keys"
+    "OnePlus/OPD2413/OP615EL1:16/AP3A.240617.008/V.54cdc84-304c441-307540c:user/release-keys",
+    "OnePlus/OPD2413/OP615EL1:16/AP3A.240617.008/V.55b3cb5-2fe3128-2fe3127:user/release-keys"
   ],
   "layout": "Existing linux_rootfs and linux_data partitions, active slot A"
 }
