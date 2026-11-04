@@ -1,7 +1,7 @@
 # Ubuntu for OnePlus Pad 2 Pro
 
 在一加平板 2 Pro 上运行 Ubuntu Desktop 26.04，采用 GNOME 桌面与基于上游 Linux
-的设备适配内核。[English](README.md)
+的设备适配内核。[English](README.en.md)
 
 官方发布只在本仓库 [Releases](https://github.com/yzddmr6/onepluspad-2pro-mainline/releases)，免费提供。
 

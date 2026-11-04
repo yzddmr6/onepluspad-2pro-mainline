@@ -50,7 +50,7 @@ primarily in Chinese.
   OnePlus Pad 3, other storage capacities and partition layouts have not been validated.
 - **Installation scope:** first-time partition preparation, Linux installation
   and reinstallation are provided for the 512 GB model. First-time partitioning
-  erases Android data. See the [installation and recovery guide](docs/FLASHING.md)
+  erases Android data. See the [installation and recovery guide](docs/FLASHING.en.md)
   for firmware and layout requirements.
 - **Power:** A PPS charger fast-charges the battery through the charge pump at up to
   about 39 W (below 80 % charge, battery between 12 and 44 °C); other USB PD chargers
@@ -62,7 +62,7 @@ primarily in Chinese.
   screen and suspends, and the next press wakes it. In suspend the SoC reaches its deepest
   power states. When idle, the screen dims and blanks with Ubuntu's defaults and the tablet
   suspends on battery; unplugged standby drain has not been measured yet.
-  See [System suspend](docs/SUSPEND.md) for timings and the blank-only opt-out.
+  See [System suspend](docs/SUSPEND.en.md) for timings and the blank-only opt-out.
 - **Data and recovery:** unlocking the bootloader erases user data. Back up
   personal files and obtain matching stock firmware before changing the device.
   Keep factory calibration and device addresses specific to each tablet.
@@ -80,13 +80,13 @@ other firmware sources are listed in the [firmware notes](packaging/firmware/REA
 |---|---|
 | Check whether the tablet meets my needs | [Hardware support](#hardware-support) |
 | Switch between Android and Ubuntu | [Dual boot](#dual-boot) |
-| Build the kernel and device components | [Build guide](docs/BUILD.md) |
-| Check installation requirements and recovery | [Installation and recovery](docs/FLASHING.md) |
-| Install from the release images without building | [Prebuilt release images](docs/FLASHING.md#prebuilt-release-images) |
+| Build the kernel and device components | [Build guide](docs/BUILD.en.md) |
+| Check installation requirements and recovery | [Installation and recovery](docs/FLASHING.en.md) |
+| Install from the release images without building | [Prebuilt release images](docs/FLASHING.en.md#prebuilt-release-images) |
 | Work on the graphics stack | [Graphics integration](docs/GRAPHICS.md) |
-| Check suspend and the power button | [System suspend](docs/SUSPEND.md) |
-| Check the panel backlight and brightness | [Display and backlight](docs/DISPLAY.md) |
-| Bring up or check the sensors | [SSC sensors](docs/SENSORS.md) |
+| Check suspend and the power button | [System suspend](docs/SUSPEND.en.md) |
+| Check the panel backlight and brightness | [Display and backlight](docs/DISPLAY.en.md) |
+| Bring up or check the sensors | [SSC sensors](docs/SENSORS.en.md) |
 | Contribute code or report a problem | [Contributing](CONTRIBUTING.md) |
 | Read release history | [Changelog](CHANGELOG.md) |
 
@@ -108,7 +108,7 @@ system's images remain in the switcher storage on the Linux partition.
 Routine switching does not change the active slot.
 
 Switching writes the boot partitions. Do not interrupt power or force a restart
-during the operation. See [installation and recovery](docs/FLASHING.md) for
+during the operation. See [installation and recovery](docs/FLASHING.en.md) for
 requirements and recovery, and the [switcher reference](switch/README.md) for
 implementation details.
 
@@ -170,7 +170,7 @@ development are not included in the supported feature set.
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management remain incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
 | Charging in Linux | USB power / vendor firmware / SC8547A charge pump | ✅ | A PPS charger fast-charges through the charge pump at up to about 39 W (below 80 % charge, battery between 12 and 44 °C); other PD chargers get the 9 V contract, up to 18 W input. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock SUPERVOOC protocol is not available. |
-| Suspend and resume | Linux power management | ✅ | Defaults to s2idle. In suspend the SoC reaches its deepest power states (CX power collapse, DDR self-refresh): 98–99 % of the time in 23 consecutive 10-minute suspends, each preceded by a full CPU load and repeated GPU wake-ups, with Wi-Fi and the keyboard recovering each time and both cameras streaming after every fifth suspend. Cover, power-button and RTC wake are supported. Unplugged standby drain has not been measured yet; the firmware-advertised `deep` state is not used by default. See [System suspend](docs/SUSPEND.md). |
+| Suspend and resume | Linux power management | ✅ | Defaults to s2idle. In suspend the SoC reaches its deepest power states (CX power collapse, DDR self-refresh): 98–99 % of the time in 23 consecutive 10-minute suspends, each preceded by a full CPU load and repeated GPU wake-ups, with Wi-Fi and the keyboard recovering each time and both cameras streaming after every fifth suspend. Cover, power-button and RTC wake are supported. Unplugged standby drain has not been measured yet; the firmware-advertised `deep` state is not used by default. See [System suspend](docs/SUSPEND.en.md). |
 | RTC | Qualcomm PMIC RTC | ✅ | Time read/write verified. A forced reset loses the RTC time; it is set again once the tablet is online: the certificate time check no longer blocks the first synchronization, and on networks that block authenticated time (NTS) the network's own time server is used. The synchronized time is written back to the RTC and survives a normal restart. |
 | Snap applications | AppArmor / snapd / graphics runtime | ❌ | Full confinement and graphical Snap apps are unsupported in this release. The selected kernel does not enable AppArmor. |
 | Android applications | Android runtime | ❌ | Waydroid is not integrated. |
@@ -196,7 +196,7 @@ personal information before sharing. Use the channels above for discussion.
 | [linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai) | Linux kernel source, drivers, device trees and kernel configuration |
 
 The kernel revision used for builds is recorded in [kernel/source.json](kernel/source.json).
-See the [build guide](docs/BUILD.md) and [contribution guide](CONTRIBUTING.md).
+See the [build guide](docs/BUILD.en.md) and [contribution guide](CONTRIBUTING.md).
 
 ## Acknowledgements and License
 

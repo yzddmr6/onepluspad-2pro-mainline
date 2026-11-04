@@ -1,6 +1,6 @@
 # 系统休眠：s2idle、电源键与合盖
 
-[English](SUSPEND.md) · [项目首页](../README.zh-CN.md)
+[English](SUSPEND.en.md) · [项目首页](../README.zh-CN.md)
 
 本项目默认使用 `s2idle`（suspend to idle）。固件也提供 `deep`
 （PSCI SYSTEM_SUSPEND），不作默认的原因见“默认值”一节。

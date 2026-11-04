@@ -16,7 +16,7 @@ out=${OUT_DIR:-"$ws/out/initramfs-dev"}
 gen_init_cpio=${GEN_INIT_CPIO:-"$ws/out/kernel-firstboot/usr/gen_init_cpio"}
 expected=52151e7f322f926b64049cdaa1410dc3ea6485525e0624b05813791c219ae933
 [[ $(sha256sum "$busybox" | cut -d' ' -f1) == "$expected" ]] || {
-	echo 'Expected the pinned Ubuntu ARM64 static BusyBox; see README.md (inputs).' >&2
+	echo 'Expected the pinned Ubuntu ARM64 static BusyBox; see README.en.md (inputs).' >&2
 	exit 1
 }
 [[ -x $gen_init_cpio ]] || {

@@ -1,6 +1,6 @@
 # 试用、安装与恢复
 
-[English](FLASHING.md) · [项目首页](../README.zh-CN.md)
+[English](FLASHING.en.md) · [项目首页](../README.zh-CN.md)
 
 本指南包含首次分区准备、Linux 安装、双系统切换和 Android 启动恢复。
 支持范围限定为下述机型与布局；首次准备和既有布局重装的验证状态分别注明。

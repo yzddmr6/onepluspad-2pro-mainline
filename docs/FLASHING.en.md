@@ -1,6 +1,6 @@
 # Testing, Installation and Recovery
 
-[中文](FLASHING.zh-CN.md) · [Project overview](../README.md)
+[中文](FLASHING.zh-CN.md) · [Project overview](../README.en.md)
 
 This guide covers first-time partition preparation, Linux installation, system
 switching and Android boot recovery. The device scope and validation status of
@@ -95,7 +95,7 @@ specified above. The allocation is 200 GiB Android, 60 GiB Linux root and the
 remaining space for Linux home. It leaves the active slot, stock boot images
 and other UFS partitions unchanged.
 
-Follow the [build guide](BUILD.md) to assemble `out/desktop-root/rootfs.squashfs`;
+Follow the [build guide](BUILD.en.md) to assemble `out/desktop-root/rootfs.squashfs`;
 the installation below uses the same file. Preparation runs it as a temporary
 RAM desktop. The boot image of that desktop carries the separately built
 `erhai-debug` package and installs it in RAM for the USB diagnostic channel;
@@ -255,7 +255,7 @@ The unauthenticated USB root shell and file service of first-time preparation
 exist only in the RAM session of the setup boot image. The root filesystem and
 an installation made from it have no diagnostic channel. To keep the channel
 for development with a trusted host, assemble the root filesystem from device
-packages built with `--debug` (see the [build guide](BUILD.md#device-packages))
+packages built with `--debug` (see the [build guide](BUILD.en.md#device-packages))
 and install that root instead: their kernel package adds `erhai.debug=1` to the
 boot images and requires `erhai-debug`.
 
@@ -272,7 +272,7 @@ disable the early-boot channels in a diagnostic image.
 A newer release installs over an existing installation with APT. It does not
 repartition the tablet, reinstall Ubuntu or touch Android. Build the release's
 device packages and sensor package (`tools/build-debs.py` and `tools/build-sensors.py`,
-see the [build guide](BUILD.md#device-packages)), each into a new empty output
+see the [build guide](BUILD.en.md#device-packages)), each into a new empty output
 directory, with the same choice of `--debug` as the installed packages. Transfer
 both directories to the tablet, then run in its terminal:
 

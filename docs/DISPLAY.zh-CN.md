@@ -1,6 +1,6 @@
 # 面板背光与桌面亮度两条路径
 
-[English](DISPLAY.md) · [项目主页](../README.zh-CN.md)
+[English](DISPLAY.en.md) · [项目主页](../README.zh-CN.md)
 
 面板由单个 `led-backlight` 设备驱动（两颗 KTZ8868 合成一个背光），`erhai-display-power`
 通过切换它的 `bl_power` 在不拆显示链路的情况下熄灭屏幕。本文记录它周边两条容易被混

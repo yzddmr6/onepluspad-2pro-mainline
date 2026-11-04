@@ -1,10 +1,10 @@
 # Building the kernel and device components
 
-[中文](BUILD.zh-CN.md) · [Project overview](../README.md)
+[中文](BUILD.zh-CN.md) · [Project overview](../README.en.md)
 
 Build the kernel, device packages and Ubuntu root filesystem on a Linux host.
 Use the project source revisions and original inputs recorded in the manifests.
-Before using a resulting image, read the [installation and recovery notes](FLASHING.md).
+Before using a resulting image, read the [installation and recovery notes](FLASHING.en.md).
 
 
 ## Host and source checkout
@@ -116,7 +116,7 @@ and record the selected layout in their manifests.
 The NCM profile provides a USB link (device `192.168.77.2`, telnet 2323,
 HTTP evidence on 8080) with a bounded recovery timer. Its recovery destination
 depends on the installed boot images; the host controller must also verify the
-return to Android. See [testing and recovery](FLASHING.md). Optional kernel cmdline flags: `erhai.watchdog=NN` (session length),
+return to Android. See [testing and recovery](FLASHING.en.md). Optional kernel cmdline flags: `erhai.watchdog=NN` (session length),
 `erhai.rootfs=<url>` with `erhai.rootfs.sha256=<digest>` (fetch and verify a
 squashfs over NCM before mounting its RAM overlay),
 `erhai.switchroot=1` (hand PID1 to systemd with a matching expiry timer),
@@ -316,7 +316,7 @@ pin a current one.
 
 The output includes `rootfs.squashfs`, the selected package list and build inputs. Machine identifiers, radio addresses, sensor
 calibration and the Android rollback set must be supplied on installation.
-Use the [installation guide](FLASHING.md) for the supported layout and device
+Use the [installation guide](FLASHING.en.md) for the supported layout and device
 checks. Building alone does not verify hardware support. Local commands and build logs stay
 separate from the image and its portable input manifest.
 
@@ -324,7 +324,7 @@ separate from the image and its portable input manifest.
 
 The switcher uses the established active-slot layout and replaces the three
 boot images as a set. It is intended for existing installations with matching
-partition layouts and complete rollback images; see [testing and recovery](FLASHING.md).
+partition layouts and complete rollback images; see [testing and recovery](FLASHING.en.md).
 Every image written into `boot`/`init_boot`/`vendor_boot` must carry an AVB
 hash footer (`tools/sign-boot-triplet.py`), self-signed included — `vbmeta`
 lists `boot` as a chain partition, so a missing footer is malformed metadata

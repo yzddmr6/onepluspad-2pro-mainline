@@ -1,6 +1,6 @@
 # System suspend: s2idle, the power button and the cover
 
-[中文](SUSPEND.zh-CN.md) · [Project overview](../README.md)
+[中文](SUSPEND.zh-CN.md) · [Project overview](../README.en.md)
 
 This project defaults to `s2idle` (suspend to idle). The firmware also offers `deep` (PSCI
 SYSTEM_SUSPEND); the Defaults section explains why it is not the default. This page records

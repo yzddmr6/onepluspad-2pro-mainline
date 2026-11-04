@@ -1,6 +1,6 @@
 # 构建指南
 
-[English](BUILD.md) · [项目首页](../README.zh-CN.md)
+[English](BUILD.en.md) · [项目首页](../README.zh-CN.md)
 
 在 Linux 主机上构建内核、设备包与 Ubuntu 根系统。内核源码由
 [linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai) 单独维护，
@@ -99,7 +99,7 @@ python3 tools/build-mainline-boot.py --output out/mainline-boot \
 
 Mesa 的构建、安装和回退见[图形专项](GRAPHICS.md)。传感器入口为
 `tools/build-sensors.py --help`。组件构建的输入、依赖与包行为详见
-[英文构建参考](BUILD.md#device-packages)。
+[英文构建参考](BUILD.en.md#device-packages)。
 
 沿用上面的内核、DTB 和 initramfs 输出，完整设备包的构建示例为：
 

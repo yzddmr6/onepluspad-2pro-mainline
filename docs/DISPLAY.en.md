@@ -1,6 +1,6 @@
 # Panel backlight and the desktop brightness paths
 
-[中文](DISPLAY.zh-CN.md) · [Project overview](../README.md)
+[中文](DISPLAY.zh-CN.md) · [Project overview](../README.en.md)
 
 The panel is driven by a single `led-backlight` device (both KTZ8868 chips behind one
 backlight), and `erhai-display-power` switches that device's `bl_power` to blank the screen
@@ -61,6 +61,6 @@ stays on screen either way — what is at stake is whether its writes reach the 
 
 ## Related
 
-* Idle dimming and blanking follow Ubuntu defaults; see [System suspend](SUSPEND.md)
+* Idle dimming and blanking follow Ubuntu defaults; see [System suspend](SUSPEND.en.md)
   for timings, automatic suspend and user settings.
 * Blanking and `bl_power` are handled by `erhai-display-power`; nothing here changes them.

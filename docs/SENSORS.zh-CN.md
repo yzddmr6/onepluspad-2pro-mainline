@@ -1,6 +1,6 @@
 # SSC 传感器：实测支持情况与点亮前提
 
-[English](SENSORS.md) · [项目首页](../README.zh-CN.md)
+[English](SENSORS.en.md) · [项目首页](../README.zh-CN.md)
 
 `erhai` 的传感器挂在 ADSP 所拥有的总线上，只能经由 Qualcomm Sensor Core 访问：
 FastRPC 文件服务（`hexagonrpcd`）、`libssc`，以及一份带 SSC 支持的

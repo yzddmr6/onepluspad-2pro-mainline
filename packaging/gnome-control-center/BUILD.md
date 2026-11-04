@@ -27,4 +27,4 @@ A normal `tools/build-debs.py` invocation includes `erhai-settings`; pass
 `--settings-build` if its build output is elsewhere. `erhai-device` depends on
 it. Include the resulting `out/device-packages/*.deb` with the other component
 packages in the root filesystem's `--device-deb` arguments and in the upgrade
-package archive, as described in [the build guide](../../docs/BUILD.md).
+package archive, as described in [the build guide](../../docs/BUILD.en.md).
