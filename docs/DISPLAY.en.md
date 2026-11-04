@@ -1,6 +1,6 @@
 # Panel backlight and the desktop brightness paths
 
-[中文](DISPLAY.zh-CN.md) · [Project overview](../README.en.md)
+[中文](DISPLAY.md) · [Project overview](../README.en.md)
 
 The panel is driven by a single `led-backlight` device (both KTZ8868 chips behind one
 backlight), and `erhai-display-power` switches that device's `bl_power` to blank the screen

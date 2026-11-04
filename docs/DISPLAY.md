@@ -1,6 +1,6 @@
 # 面板背光与桌面亮度两条路径
 
-[English](DISPLAY.en.md) · [项目主页](../README.zh-CN.md)
+[English](DISPLAY.en.md) · [项目主页](../README.md)
 
 面板由单个 `led-backlight` 设备驱动（两颗 KTZ8868 合成一个背光），`erhai-display-power`
 通过切换它的 `bl_power` 在不拆显示链路的情况下熄灭屏幕。本文记录它周边两条容易被混
@@ -57,5 +57,5 @@ if (s->seat->active != s)
 ## 相关
 
 * 静置变暗与熄屏跟随 Ubuntu 默认值；时限、自动挂起与用户设置见
-  [系统休眠](SUSPEND.zh-CN.md)。
+  [系统休眠](SUSPEND.md)。
 * 熄屏与 `bl_power` 由 `erhai-display-power` 处理，与本文无关。

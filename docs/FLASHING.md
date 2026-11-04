@@ -1,6 +1,6 @@
 # 试用、安装与恢复
 
-[English](FLASHING.en.md) · [项目首页](../README.zh-CN.md)
+[English](FLASHING.en.md) · [项目首页](../README.md)
 
 本指南包含首次分区准备、Linux 安装、双系统切换和 Android 启动恢复。
 支持范围限定为下述机型与布局；首次准备和既有布局重装的验证状态分别注明。
@@ -76,7 +76,7 @@ KernelSU root 和 USB 调试权限。活动槽必须为 **A**，原厂固件须�
 分区方案为 Android 200 GiB、Linux 根分区 60 GiB，其余为 Linux 数据。
 它不改变活动槽、原厂启动镜像或其他 UFS 分区。
 
-按[构建指南](BUILD.zh-CN.md)装配 `out/desktop-root/rootfs.squashfs`，后面的安装使用同一文件。
+按[构建指南](BUILD.md)装配 `out/desktop-root/rootfs.squashfs`，后面的安装使用同一文件。
 首次准备时它作为临时 RAM 桌面运行：该桌面的启动镜像携带单独构建的 `erhai-debug` 包，在内存中安装以提供
 USB 调试通道；根文件系统本身不含该包。沿用构建指南中的 `kernel_out`、DTB 与 initramfs，
 生成该包、限时 RAM 启动镜像和切换模块：
@@ -211,7 +211,7 @@ python3 tools/install.py --serial "$device_serial" --work "$install_work" --phas
 
 首次准备时使用的免认证 USB root shell 和文件服务只存在于 setup 启动镜像的 RAM 会话中；
 根文件系统以及由它安装的系统都不含调试通道。需要在可信电脑上继续开发时，可按
-[构建指南](BUILD.zh-CN.md#设备包与图形组件)用 `--debug` 构建设备包，以此装配根文件系统后再安装：
+[构建指南](BUILD.md#设备包与图形组件)用 `--debug` 构建设备包，以此装配根文件系统后再安装：
 其内核包在启动镜像中加入 `erhai.debug=1`，并依赖 `erhai-debug`。
 
 在这样的安装上换装普通设备包（不带 `--debug` 构建到新的空输出目录，或取自 Release 的
@@ -221,7 +221,7 @@ python3 tools/install.py --serial "$device_serial" --work "$install_work" --phas
 ## 升级已有安装
 
 新版本用 APT 直接装在已有安装之上，不重新分区、不重装 Ubuntu，也不碰 Android。
-按[构建指南](BUILD.zh-CN.md#设备包与图形组件)用 `tools/build-debs.py` 和 `tools/build-sensors.py`
+按[构建指南](BUILD.md#设备包与图形组件)用 `tools/build-debs.py` 和 `tools/build-sensors.py`
 分别把新版本的设备包和传感器包构建到新的空输出目录，
 `--debug` 的选择与已装的包保持一致。把两个目录传到平板，在平板终端执行：
 

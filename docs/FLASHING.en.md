@@ -1,6 +1,6 @@
 # Testing, Installation and Recovery
 
-[中文](FLASHING.zh-CN.md) · [Project overview](../README.en.md)
+[中文](FLASHING.md) · [Project overview](../README.en.md)
 
 This guide covers first-time partition preparation, Linux installation, system
 switching and Android boot recovery. The device scope and validation status of

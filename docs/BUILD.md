@@ -1,6 +1,6 @@
 # 构建指南
 
-[English](BUILD.en.md) · [项目首页](../README.zh-CN.md)
+[English](BUILD.en.md) · [项目首页](../README.md)
 
 在 Linux 主机上构建内核、设备包与 Ubuntu 根系统。内核源码由
 [linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai) 单独维护，
@@ -85,7 +85,7 @@ python3 tools/build-mainline-boot.py --output out/mainline-boot \
 
 原厂输入必须匹配目标固件。当前封装逻辑根据已核对的 ColorOS C.34 输入选择原厂
 身份条目，不能假定其他版本相同。这些命令只生成开发镜像，不能据此认定已经可以
-刷写或得到 Ubuntu 桌面；设备使用范围见[试用与恢复](FLASHING.zh-CN.md)。
+刷写或得到 Ubuntu 桌面；设备使用范围见[试用与恢复](FLASHING.md)。
 
 ## 设备包与图形组件
 
@@ -161,5 +161,5 @@ Ubuntu 的过渡包 `firefox`，设备包中的 `erhai-firefox` 配置 Mozilla A
 Mozilla 不再提供已钉住的版本时，改钉当前版本。
 账户、校准、无线地址与 Android 回退镜像需要在后续安装阶段处理，不进入通用根树。
 
-安装范围与操作见[试用、安装与恢复](FLASHING.zh-CN.md)。
+安装范围与操作见[试用、安装与恢复](FLASHING.md)。
 构建清单记录本次选定的输入；请将启动镜像、根系统与校验和作为一套使用。

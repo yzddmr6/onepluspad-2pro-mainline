@@ -1,6 +1,6 @@
 # SSC sensors: measured support and bring-up requirements
 
-[中文](SENSORS.zh-CN.md) · [Project overview](../README.en.md)
+[中文](SENSORS.md) · [Project overview](../README.en.md)
 
 `erhai` sensors sit on an ADSP-owned bus and are reached only through the Qualcomm
 Sensor Core: the FastRPC file server (`hexagonrpcd`), `libssc` and a build of

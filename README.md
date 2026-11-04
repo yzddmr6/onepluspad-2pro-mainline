@@ -47,14 +47,14 @@
   **16 GB 内存、512 GB 存储**，12 GB 内存机型同样支持；固件支持 ColorOS C.34 与 C.35，
   安装要求活动槽为 A。OnePlus Pad 3、其他存储容量及分区布局尚未验证。
 - **安装范围**：提供 512 GB 机型的首次分区、Linux 安装及既有布局重装流程。
-  首次分区会清除 Android 数据；固件与布局要求见[安装与恢复说明](docs/FLASHING.zh-CN.md)。
+  首次分区会清除 Android 数据；固件与布局要求见[安装与恢复说明](docs/FLASHING.md)。
 - **充电与续航**：接支持 PPS 的充电器时经电荷泵快充，最高约 39 W（电量 80% 以下、电池 12–44 °C）；
   其他 USB PD 充电器请求 9 V 档（输入上限 18 W）。插电脑 USB 口亮屏时，输入少于整机耗电，电量仍缓慢下降；
   原厂 SUPERVOOC 私有快充协议在 Linux 下不可用。
   Fastboot 不能作为充电方案。
   合上键盘套或保护套会进入休眠，按电源键会先锁屏再休眠，再按即唤醒；休眠时芯片进入最深的省电状态。
   空闲时按 Ubuntu 默认值变暗、熄屏，用电池时自动休眠；拔线待机耗电尚未实测。具体时限和只熄屏的
-  开关见[系统休眠](docs/SUSPEND.zh-CN.md)。
+  开关见[系统休眠](docs/SUSPEND.md)。
 - **数据与恢复**：解锁 Bootloader 会清除用户数据。操作前请备份个人文件，准备
   匹配的原厂固件；出厂校准与设备地址必须来自本机，不可跨设备复制。
 - **调试访问**：USB 调试通道仅供开发使用，启用后提供免认证 root shell 和 HTTP
@@ -70,13 +70,13 @@
 |---|---|
 | 了解目前能用哪些功能 | [硬件支持](#硬件支持) |
 | 了解 Android 与 Ubuntu 如何切换 | [双系统切换](#双系统切换) |
-| 编译内核与设备组件 | [构建指南](docs/BUILD.zh-CN.md) |
-| 查看安装条件与恢复方式 | [安装与恢复说明](docs/FLASHING.zh-CN.md) |
-| 不自己构建、直接用发布镜像安装 | [发布版预构建镜像](docs/FLASHING.zh-CN.md#发布版预构建镜像) |
+| 编译内核与设备组件 | [构建指南](docs/BUILD.md) |
+| 查看安装条件与恢复方式 | [安装与恢复说明](docs/FLASHING.md) |
+| 不自己构建、直接用发布镜像安装 | [发布版预构建镜像](docs/FLASHING.md#发布版预构建镜像) |
 | 开发或调整图形组件 | [图形集成说明](docs/GRAPHICS.md) |
-| 查看休眠与电源键 | [系统休眠](docs/SUSPEND.zh-CN.md) |
-| 查看背光与亮度 | [显示与背光](docs/DISPLAY.zh-CN.md) |
-| 点亮或排查传感器 | [SSC 传感器](docs/SENSORS.zh-CN.md) |
+| 查看休眠与电源键 | [系统休眠](docs/SUSPEND.md) |
+| 查看背光与亮度 | [显示与背光](docs/DISPLAY.md) |
+| 点亮或排查传感器 | [SSC 传感器](docs/SENSORS.md) |
 | 贡献代码或反馈问题 | [参与贡献](CONTRIBUTING.md) |
 | 查看版本记录 | [Changelog](CHANGELOG.md) |
 
@@ -95,7 +95,7 @@
 另一套系统的镜像保存在 Linux 分区的切换存储区中。日常切换不改变活动槽。
 
 切换过程中会写入启动分区，请勿断电或强制重启。操作条件与恢复方式见
-[安装与恢复说明](docs/FLASHING.zh-CN.md)，实现细节见[切换器说明](switch/README.md)。
+[安装与恢复说明](docs/FLASHING.md)，实现细节见[切换器说明](switch/README.md)。
 
 ## 硬件支持
 
@@ -154,7 +154,7 @@
 | 调频与测温 | SCMI / IIO / thermal | 🟡 | 调频和温度读取可用；持续负载下的温控与机身温度管理仍不完整。 |
 | 电池信息 | qcom_battmgr / UPower | ✅ | 可读电量、容量与估计剩余时间；充电能力另列。 |
 | Linux 充电 | USB 供电 / 厂商固件 / SC8547A 电荷泵 | ✅ | 支持 PPS 的充电器经电荷泵快充，最高约 39 W（电量 80% 以下、电池 12–44 °C）；其他 PD 充电器请求 9 V 档，输入上限 18 W。插电脑 USB 口（约 2.5 W）亮屏时，电量仍以每小时约 2–3% 下降。原厂 SUPERVOOC 私有快充协议不可用。 |
-| 挂起与恢复 | Linux 电源管理 | ✅ | 默认 s2idle。休眠时 SoC 进入最深电源态（CX 断电、DDR 自刷新）：连续 23 次、每次 10 分钟的休眠（每次之前先满载 CPU 并让 GPU 反复上下电）中，98–99% 的时间处于最深态，醒来后 Wi-Fi 与键盘每次都恢复，每 5 次检查一次前后摄均能出图。支持开盖、电源键与 RTC 定时唤醒。拔线待机耗电待实测；固件广告的 `deep` 默认不用。详见[系统休眠](docs/SUSPEND.zh-CN.md)。 |
+| 挂起与恢复 | Linux 电源管理 | ✅ | 默认 s2idle。休眠时 SoC 进入最深电源态（CX 断电、DDR 自刷新）：连续 23 次、每次 10 分钟的休眠（每次之前先满载 CPU 并让 GPU 反复上下电）中，98–99% 的时间处于最深态，醒来后 Wi-Fi 与键盘每次都恢复，每 5 次检查一次前后摄均能出图。支持开盖、电源键与 RTC 定时唤醒。拔线待机耗电待实测；固件广告的 `deep` 默认不用。详见[系统休眠](docs/SUSPEND.md)。 |
 | RTC | Qualcomm PMIC RTC | ✅ | 时间读写已验证。强制复位后 RTC 时间会丢失，联网后自动重新校准：证书时间检查不会再阻止校时，网络拦截加密校时（NTS）时改用网络自带的时间源。校准后写回 RTC，普通重启后时间保持正确。 |
 | Snap 应用 | AppArmor / snapd / 图形运行库 | ❌ | 本版不支持完整沙箱与 Snap 图形应用；所选内核未启用 AppArmor。 |
 | Android 应用 | Android 运行时 | ❌ | 尚未集成 Waydroid。 |
@@ -177,7 +177,7 @@
 | [linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai) | Linux 内核源码、驱动、设备树与内核配置 |
 
 构建使用的内核提交记录在 [kernel/source.json](kernel/source.json)。
-构建步骤见[构建指南](docs/BUILD.zh-CN.md)，提交与反馈方式见[参与贡献](CONTRIBUTING.md)。
+构建步骤见[构建指南](docs/BUILD.md)，提交与反馈方式见[参与贡献](CONTRIBUTING.md)。
 
 ## 致谢与许可证
 

@@ -1,6 +1,6 @@
 # Building the kernel and device components
 
-[中文](BUILD.zh-CN.md) · [Project overview](../README.en.md)
+[中文](BUILD.md) · [Project overview](../README.en.md)
 
 Build the kernel, device packages and Ubuntu root filesystem on a Linux host.
 Use the project source revisions and original inputs recorded in the manifests.
