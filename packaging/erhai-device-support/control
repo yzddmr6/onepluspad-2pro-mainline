@@ -5,7 +5,7 @@ Maintainer: @MAINTAINER@
 Installed-Size: @INSTALLED_SIZE@
 Section: admin
 Priority: optional
-Depends: systemd, python3, bluez, libglib2.0-bin, erhai-display-power (>= 0.1.0~)
+Depends: systemd, python3, bluez, libglib2.0-bin, tuned-ppd (>= 2.25.1), systemd-zram-generator, erhai-kernel-zram, erhai-display-power (>= 0.1.0~)
 Pre-Depends: dpkg (>= 1.17.14)
 Description: OnePlus Pad 2 Pro (erhai) device support
  Everything the mainline port needs in the running system that is neither a
@@ -48,5 +48,10 @@ Description: OnePlus Pad 2 Pro (erhai) device support
  recovery from a hard lockup. The optional configuration in
  /usr/share/erhai-device-support/watchdog is for driver development only.
  .
- Nothing here is tied to a particular kernel build. The boot images belong to
+ TuneD provides the three GNOME power modes with board CPU/GPU limits.
+ Compressed swap uses systemd-zram-generator and needs the zstd-enabled zram
+ module from erhai 0.7.0 or later. Reboot after upgrading the kernel and this
+ package together.
+ .
+ No exact kernel build is required. The boot images belong to
  erhai-kernel, which drives this package's installer from its own postinst.
