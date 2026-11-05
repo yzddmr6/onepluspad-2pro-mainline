@@ -7,8 +7,9 @@ device packages. Hardware acceptance of this candidate is still pending.
 ## Speakers
 
 UCM exposes `Speaker` in the `HiFi` verb on each boot. PipeWire can select it
-without a startup helper; UCM reapplies the amplifier and DSP levels whenever
-the route opens, including after resume. Existing user choices of an external
+without a startup helper. The HiFi verb establishes FE-to-BE routes before
+ACP probes the PCMs; Speaker activation then sets amplifier and DSP levels.
+The persistent opt-out disables the playback route while retaining Mic. Existing user choices of an external
 output remain under WirePlumber's normal policy.
 
 `sudo erhai-audio-speaker disable` withdraws the speakers persistently;
@@ -43,24 +44,26 @@ replaces the conflicting `power-profiles-daemon` package. Select the mode in
 GNOME Settings or quick settings. Both mains and battery mappings use the
 same board profile; the default is Balanced.
 
-| GNOME mode | TuneD profile | CPU0–5 max (kHz) | CPU6–7 max (kHz) | GPU max (Hz) |
-|---|---|---:|---:|---:|
-| Power Saver | erhai-power-saver | 1785600 | 1958400 | 342000000 |
-| Balanced | erhai-balanced | 2400000 | 2841600 | 660000000 |
-| Performance | erhai-performance | 3532800 | 4089600 | 1100000000 |
+| GNOME mode | TuneD profile | CPU0–5 max (kHz) | CPU6–7 max (kHz) | GPU max (Hz) | Boost |
+|---|---|---:|---:|---:|---:|
+| Power Saver | erhai-power-saver | 1785600 | 1958400 | 342000000 | 0 |
+| Balanced | erhai-balanced | 3532800 | 4089600 | 1100000000 | 0 |
+| Performance | erhai-performance | 3532800 | 4320000 | 1100000000 | 1 |
 
 All profiles retain `schedutil`, CPU minima 384000/1017600 kHz and GPU minimum
-160000000 Hz. These are board-supported OPPs. Balanced caps both clusters and
-the GPU below their maximum to reduce simultaneous-load heating; Performance
-permits the observed board maximum. No boost control or thermal trip is
-changed. Firmware and thermal limits may lower the effective maximum.
-These policy choices still need device validation; they are not measured
-battery-life or sustained-performance claims.
+160000000 Hz. Balanced permits the highest non-boost CPU/GPU OPPs with
+boost disabled. Performance enables boost before raising policy6 to 4320000
+kHz; the board also exposes 4204800 kHz as a boost frequency. Power Saver
+retains its lower ceilings and disables boost. CPUCP firmware and thermal
+limits still apply; no thermal trip is changed.
 
 The profiles live in `/usr/lib/tuned/profiles/erhai-*`. The separately owned
 `/etc/tuned/erhai-ppd.conf` is a conffile. The `tuned-ppd.service` drop-in binds
 it over Ubuntu's `/etc/tuned/ppd.conf` only inside the service, leaving the
-original distribution file untouched. Administrator overrides belong under
+original distribution file untouched. Once its conffile is configured, the
+package restarts enabled PPD services, including a service that failed during
+dependency installation. Disabled or masked PPD services remain stopped.
+Administrator overrides belong under
 `/etc/tuned/profiles/`. `tuned-adm active` and `sudo tuned-adm verify` inspect
 the running profile; GNOME switching should be tested through its D-Bus API,
 not inferred from a direct `tuned-adm profile` command alone.

@@ -84,6 +84,12 @@ configure)
 		systemctl unmask --quiet $SLEEP_TARGETS || true
 		[ -d /run/systemd/system ] && systemctl daemon-reload || true
 	fi
+	# Dependencies may have started PPD while our conffile was still
+	# .dpkg-new, making BindReadOnlyPaths fail with 226/NAMESPACE. Configure
+	# runs after conffile promotion: restart even an enabled, failed service.
+	if [ -d /run/systemd/system ] && systemctl is-enabled --quiet tuned-ppd.service; then
+		deb-systemd-invoke restart tuned-ppd.service || true
+	fi
 	# logind reads its drop-ins at start, so the power-key setting takes
 	# effect at the next boot; nothing here restarts logind, which would end
 	# the user's session mid-upgrade.
