@@ -7,8 +7,8 @@ Priority: optional
 Depends: @DEPENDS@
 Description: Freedreno OpenGL and Turnip drivers for the OnePlus Pad 2 Pro
  Private Mesa libraries with the upstream Adreno 830v1 device entry.
- GNOME and systemd user sessions select this driver at their next start
- while the GPU is bound to its kernel driver, and Ubuntu's software renderer
- otherwise; distribution libraries remain owned and updated by Ubuntu.
- Includes desktop OpenGL, GLES and experimental Vulkan. Removing this
- package restores distribution driver selection at the next session start.
+ The dynamic linker selects these libraries system-wide, including programs
+ that clear their environment. Softpipe provides software rendering when
+ the GPU is unavailable. Ubuntu retains ownership of its GLVND dispatcher
+ and distribution libraries. Includes desktop OpenGL, GLES and experimental
+ Vulkan. Installation and removal update the library cache for new processes.

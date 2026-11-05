@@ -11,3 +11,8 @@ remove | disappear | abort-install)
     done
     ;;
 esac
+case "$1" in
+remove | purge | disappear | abort-install)
+    ldconfig
+    ;;
+esac

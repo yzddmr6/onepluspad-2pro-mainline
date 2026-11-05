@@ -56,7 +56,7 @@ def main():
         content = args.profile == 'gpu-2404'
         prefix = '/usr' if content else '/usr/lib/erhai/mesa'
         libdir = 'lib/aarch64-linux-gnu' if content else 'lib'
-        drivers = 'freedreno,softpipe' if content else 'freedreno'
+        drivers = 'freedreno,softpipe' if args.profile in ('desktop', 'gpu-2404') else 'freedreno'
         flags = [f'--prefix={prefix}', f'--libdir={libdir}', '--buildtype=release',
                  '--wrap-mode=nofallback', '-Db_ndebug=false',
                  f'-Dgallium-drivers={drivers}', '-Degl=enabled',

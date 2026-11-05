@@ -36,35 +36,37 @@ and an unprivileged user namespace, no root). The build root and its package
 versions are pinned in `packaging/mesa/build-root.json`; the output directory
 receives the package, its manifest and a record of the build root.
 
-The package owns libraries under `/usr/lib/erhai/mesa` and a systemd user
-environment generator. The generator selects them for every user manager (the
-GDM greeter's and each user's, so GNOME Shell and its applications) only while
-the Adreno GPU is bound to its kernel driver; otherwise the session uses
-Ubuntu's Mesa and its software renderer, which this build does not include. It
-decides at session start; a GPU failure later in a session is not caught. EGL is
-selected with `__EGL_VENDOR_LIBRARY_DIRS`, which sandboxed applications with
-their own graphics runtimes extend rather than lose.
+The package owns libraries under `/usr/lib/erhai/mesa` and registers its `lib`
+directory through `/etc/ld.so.conf.d/00-erhai-mesa.conf`. Its maintainer scripts
+run `ldconfig` when configured or removed. New native processes use these
+libraries even when their graphics environment variables are cleared. The
+former `80-erhai-mesa` user environment generator is removed on upgrade.
+Ubuntu keeps ownership of its GLVND dispatcher and SONAME-based Mesa EGL vendor
+entry. If no GPU is available, the desktop build supplies softpipe software
+rendering; its performance differs from Ubuntu's llvmpipe. This does not provide
+recovery from a GPU failure in an already running process.
 
-The desktop package enables OpenGL and GLES. Turnip is excluded after hardware
-validation triggered a GPU timeout. Upgrading from the experimental Vulkan
-package removes its ICD diversion and restores Ubuntu's original loader entry;
-fresh installations do not divert it. The package continues to leave Ubuntu's
-Mesa libraries under APT ownership. Dependencies and source/build hashes are
-recorded in the package manifest.
+The desktop package enables OpenGL, GLES and experimental Turnip Vulkan. It
+retains the paired `dpkg-divert` handling for both distribution Freedreno ICD
+filenames and restores the originals on removal. Ubuntu retains ownership of
+its Mesa libraries. Dependencies and source/build hashes are recorded in the
+package manifest.
 
-Install the resulting deb with `sudo apt install ./out/mesa-debs/erhai-mesa_*.deb`, then cold boot
-to apply the new environment to every user manager. Removal with `apt remove erhai-mesa` restores the distribution selection
-after the next cold boot. Ubuntu Mesa currently lacks this chip entry, so removal
-restores software rendering. Sandboxed applications with their own graphics
-runtimes need separate validation; this package does not replace their runtimes.
+Install the resulting deb with `sudo apt install ./out/mesa-debs/erhai-mesa_*.deb`.
+The cache change takes effect for new processes; cold boot to make GDM and all
+sessions load the new libraries. `apt remove erhai-mesa` restores distribution
+library selection for new processes; cold boot again to replace all running
+users. Ubuntu Mesa currently lacks this chip entry, so removal restores software
+rendering. Sandboxed applications with their own graphics runtimes need
+separate validation; this package does not replace their runtimes.
 
 The `probe` profile supplies minimal GBM/EGL/GLES; `desktop` also builds the
-Wayland, X11 and GLVND interfaces. The separate core24 candidate still includes
-Turnip and remains unvalidated on hardware. Neither desktop profile builds
-a software renderer. These are development profiles, not a complete supported
-desktop package. The manifest records build inputs, native package versions,
-staged file hashes and symlinks. Compatible outputs are incremental and locked
-against concurrent writers; changed inputs require a fresh output directory.
+Wayland, X11 and GLVND interfaces, Turnip and softpipe. The separate core24
+candidate includes Turnip and softpipe and remains unvalidated on hardware.
+These are development profiles, not a complete supported desktop package.
+The manifest records build inputs, native package versions, staged file hashes
+and symlinks. Compatible outputs are incremental and locked against concurrent
+writers; changed inputs require a fresh output directory.
 Keep the distribution's working desktop available while validating the staged
 driver. Hardware drawing, compositor correctness and physical display output
 are separate checks.

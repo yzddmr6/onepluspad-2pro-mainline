@@ -1,6 +1,7 @@
 # Mesa desktop candidate
 
-Mesa 26.2.3 is built with Freedreno OpenGL/GLES and Turnip Vulkan. The source
+Mesa 26.2.3 is built with Freedreno OpenGL/GLES, softpipe software rendering
+and Turnip Vulkan. The source
 archive and ordered patches are pinned in `source.json`. The existing A830v1
 upstream entry and texture-sequence allocator fix remain in the series.
 The three Turnip patches retain their original authors and patch envelopes;
@@ -20,7 +21,14 @@ The cross file must preserve its sysroot link flags and add
 Run `tools/package-mesa.py` in the target ARM64 root for dependency scanning.
 With QEMU user emulation, always set `QEMU_CPU=max,pauth-impdef=on`.
 
-Libraries stay under `/usr/lib/erhai/mesa`; session selection is unchanged.
+Libraries stay under `/usr/lib/erhai/mesa`. The package registers its `lib`
+directory in `/etc/ld.so.conf.d/00-erhai-mesa.conf` and runs `ldconfig` on
+configuration and removal. New processes select this build without graphics
+library environment overrides, including programs that clear their environment.
+The distribution GLVND dispatcher and its SONAME-based Mesa EGL vendor entry
+remain in use. When the GPU is unavailable, this build provides softpipe;
+software rendering performance differs from the distribution's llvmpipe.
+The former `80-erhai-mesa` environment generator is removed on upgrade.
 The package diverts both distribution Freedreno ICD filenames
 (`freedreno_icd.json` and `freedreno_icd.aarch64.json`) using `dpkg-divert`, installs
 an ICD pointing to its private Turnip library, and restores the distribution ICD
