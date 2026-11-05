@@ -1,0 +1,8 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+set -e
+if [ "$1" = purge ]; then
+    rm -f /var/lib/erhai/audio/speaker-disabled
+    rmdir /var/lib/erhai/audio 2>/dev/null || true
+fi
+exit 0
