@@ -40,8 +40,8 @@ def main():
     args = parser.parse_args()
     if not args.cross_file and platform.machine() not in ('aarch64', 'arm64'):
         parser.error('this recipe currently requires a native arm64 build environment')
-    if not 1 <= args.jobs <= 8:
-        parser.error('--jobs must be between 1 and 8')
+    if not 1 <= args.jobs <= 12:
+        parser.error('--jobs must be between 1 and 12')
     lock = json.loads((INPUTS / 'source.json').read_text())
     archive = args.source_archive.resolve()
     if sha(archive) != lock['sha256']:

@@ -160,8 +160,8 @@ def main():
     parser.add_argument('--clean', action='store_true',
                         help='remove the work directory, build root included, after success')
     args = parser.parse_args()
-    if not 1 <= args.jobs <= 8:
-        parser.error('--jobs must be between 1 and 8, the limit of tools/build-mesa.py')
+    if not 1 <= args.jobs <= 12:
+        parser.error('--jobs must be between 1 and 12, the limit of tools/build-mesa.py')
     if shutil.which('unshare') is None:
         die('unshare is required')
     if not BINFMT.is_file():
