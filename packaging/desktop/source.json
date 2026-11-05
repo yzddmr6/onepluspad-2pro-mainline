@@ -1025,15 +1025,6 @@
       "sha256": "814337bcd9f701473f784616a462c5f9673e8a4c0944281954f92a7521a5b851"
     },
     {
-      "package": "gawk",
-      "version": "1:5.3.2-1ubuntu1",
-      "architecture": "arm64",
-      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/g/gawk/gawk_5.3.2-1ubuntu1_arm64.deb",
-      "file": "gawk_5.3.2-1ubuntu1_arm64.deb",
-      "bytes": 513972,
-      "sha256": "889ee35ccf7f52a044ea8e836c79a8e27f6d16db6d26e6d531c8eb363ccc0838"
-    },
-    {
       "package": "python3-linux-procfs",
       "version": "0.7.3-3",
       "architecture": "arm64",
@@ -1095,6 +1086,24 @@
       "file": "virt-what_1.27-1build1_arm64.deb",
       "bytes": 19780,
       "sha256": "005e97152944c28399b66ce233a33f8036a8c80302baf77a00e9712eeea302e6"
+    },
+    {
+      "package": "gawk",
+      "version": "1:5.3.2-1ubuntu1.1",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/g/gawk/gawk_5.3.2-1ubuntu1.1_arm64.deb",
+      "file": "gawk_5.3.2-1ubuntu1.1_arm64.deb",
+      "bytes": 515408,
+      "sha256": "7b755f02cd1d565b89e077fe4237a8f1bca4462356c8ed532b6bc2be2e8295e6"
+    },
+    {
+      "package": "python3-pyasyncore",
+      "version": "1.0.2-3build1",
+      "architecture": "all",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/p/python-pyasyncore/python3-pyasyncore_1.0.2-3build1_all.deb",
+      "file": "python3-pyasyncore_1.0.2-3build1_all.deb",
+      "bytes": 10420,
+      "sha256": "659dd1a0070679231f0331c3794b0f1f55b4843d4c1f340105e10a36be657033"
     }
   ],
   "runtime_snapshot": "20260924T000000Z",
