@@ -862,6 +862,12 @@ def build_triplet(args, work):
 
 
 def stage_kernel(root, args, work, release):
+    # The payload advertises erhai-kernel-zram so device policy can depend on
+    # installed modules without activating the kernel selector before RAM boot.
+    config = (Path(args.kernel_out) / '.config').read_text().splitlines()
+    if not ({'CONFIG_SWAP=y', 'CONFIG_ZRAM_BACKEND_ZSTD=y'} <= set(config)
+            and any(f'CONFIG_ZRAM={mode}' in config for mode in ('y', 'm'))):
+        die('erhai-kernel-zram requires CONFIG_SWAP, CONFIG_ZRAM and its zstd backend')
     if args.triplet_signed:
         die('versioned module payloads require a fresh source-bound triplet')
     modules_stage = work / 'modules'

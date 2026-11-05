@@ -30,6 +30,12 @@ The Xiaomi Pad 6 Pro Linux project provided build and recovery design references
 sensor-stack integration experience and patches:
 https://github.com/yzddmr6/xiaomipad-6pro-mainline
 
+The MIT-licensed TuneD profile layout, PPD service mount and zram policy
+structure are adapted from yzddmr6/xiaomipad-8pro-mainline, TuneD integration
+commit 0a7914dc8adaeab45db847343b924c446000295a. Board frequencies are defined
+separately for erhai; file-level MIT notices are preserved.
+https://github.com/yzddmr6/xiaomipad-8pro-mainline
+
 Graphics, audio and sensors
 --------------------------
 Mesa and its device-table patch retain upstream authorship and licenses;

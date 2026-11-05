@@ -4,6 +4,7 @@ Architecture: arm64
 Maintainer: @MAINTAINER@
 Installed-Size: @INSTALLED_SIZE@
 Section: kernel
+Provides: erhai-kernel-zram
 Priority: optional
 Depends: kmod, erhai-firmware (>= 0.1.0~)@DEBUG_DEPENDENCY@
 Description: OnePlus Pad 2 Pro kernel and modules @KERNEL_RELEASE@
