@@ -14,7 +14,7 @@ import tempfile
 
 REPO = Path(__file__).resolve().parents[1]
 PREFIX = 'usr/lib/erhai/mesa'
-SCRIPTS = ('preinst', 'postrm')
+SCRIPTS = ('preinst', 'postinst', 'postrm')
 
 
 def sha(path):
@@ -47,6 +47,7 @@ def main():
     if (result['input_sha256'] != sha(build / 'input.json')
             or result['profile'] != 'desktop'
             or result['prefix'] != '/usr/lib/erhai/mesa'
+            or '-Dgallium-drivers=freedreno,softpipe' not in identity['flags']
             or identity['source']['sha256'] != source['sha256']
             or identity['source']['version'] != source['version']
             or [p['upstream_commit'] for p in identity['source']['patches']]
