@@ -1,0 +1,10 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -e
+if [ "$1" = purge ]; then
+    deb-systemd-helper purge erhai-snap-graphics.service >/dev/null
+    rm -f /var/lib/erhai/snap-graphics-configured
+fi
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload >/dev/null || true
+fi

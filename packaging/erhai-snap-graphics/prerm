@@ -1,0 +1,7 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -e
+if [ "$1" = remove ]; then
+    deb-systemd-invoke stop erhai-snap-graphics.service >/dev/null || true
+    deb-systemd-helper disable erhai-snap-graphics.service >/dev/null
+fi

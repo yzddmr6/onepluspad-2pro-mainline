@@ -1,0 +1,90 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: MIT
+"""Connect installed gpu-2404 consumers; --install is used by the boot unit."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+
+PROVIDER = 'erhai-mesa-2404:gpu-2404'
+DISCARD_NS = '/usr/lib/snapd/snap-discard-ns'
+MARKER = Path('/var/lib/erhai/snap-graphics-configured')
+PAYLOAD = Path('/usr/share/erhai/snaps')
+
+
+def connections(text):
+    lines = [line.split() for line in text.splitlines() if line.strip()]
+    if not lines or lines[0] != ['Interface', 'Plug', 'Slot', 'Notes']:
+        raise ValueError('unexpected snap connections --all header')
+    plugs = {}
+    for row in lines[1:]:
+        if len(row) != 4:
+            raise ValueError('unexpected snap connections --all row')
+        interface, plug, slot, _ = row
+        if plug == '-' or not plug.endswith(':gpu-2404'):
+            continue
+        if interface not in ('content', 'content[gpu-2404]') or not re.fullmatch(
+                r'[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:_[a-z0-9]{1,10})?:gpu-2404', plug):
+            raise ValueError('unexpected gpu-2404 plug: ' + plug)
+        plugs.setdefault(plug, set()).add(slot)
+    return {plug: plugs[plug] for plug in sorted(plugs)}
+
+
+def snap(*args, check=True):
+    return subprocess.run(['snap', *args], check=check, text=True, capture_output=True,
+                          env=dict(os.environ, LC_ALL='C'))
+
+
+def install():
+    metadata = json.loads((PAYLOAD / 'provider.json').read_text())
+    payload = PAYLOAD / 'erhai-mesa-2404.snap'
+    with payload.open('rb') as stream:
+        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+    if digest != metadata['sha256']:
+        raise ValueError('provider payload hash mismatch')
+    listing = snap('list', 'erhai-mesa-2404', check=False)
+    if listing.returncode:
+        if (listing.stdout + listing.stderr).strip() != 'error: no matching snaps installed':
+            raise RuntimeError(listing.stdout + listing.stderr)
+    else:
+        rows = [line.split() for line in listing.stdout.splitlines()]
+        if len(rows) != 2 or rows[0][:2] != ['Name', 'Version'] or rows[1][0] != 'erhai-mesa-2404':
+            raise ValueError('unexpected provider snap list output')
+        if rows[1][1] == metadata['version']:
+            return
+    print(snap('install', '--dangerous', str(payload)).stdout, end='', flush=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--install', action='store_true')
+    args = parser.parse_args()
+    if args.install:
+        install()
+    for plug, slots in connections(snap('connections', '--all').stdout).items():
+        # Remove old content first; overlapping providers otherwise clash at
+        # gpu-2404 and snapd can retain a renamed mount in the saved namespace.
+        for slot in sorted(slots - {'-', PROVIDER}):
+            print(f'Disconnecting previous content slot {plug} -> {slot}', flush=True)
+            print(snap('disconnect', plug, slot).stdout, end='', flush=True)
+        if PROVIDER not in slots:
+            print(f'Connecting {plug} to {PROVIDER}', flush=True)
+            print(snap('connect', plug, PROVIDER).stdout, end='', flush=True)
+        # Clear saved namespaces even for existing connections. The next launch
+        # creates a namespace from the final connection set.
+        subprocess.run([DISCARD_NS, plug.split(':', 1)[0]], check=True,
+                       text=True, capture_output=True)
+    if args.install:
+        MARKER.parent.mkdir(parents=True, exist_ok=True)
+        MARKER.touch()
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
+        detail = getattr(error, 'stderr', '') or ''
+        raise SystemExit(f'erhai-snap-graphics: {error}\n{detail}')

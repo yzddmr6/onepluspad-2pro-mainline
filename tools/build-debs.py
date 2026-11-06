@@ -117,13 +117,42 @@ VERSION_FILE = PACKAGING / 'VERSION'
 MAINTAINER = 'yzddmr6 <46088090+yzddmr6@users.noreply.github.com>'
 DEBIAN_SCRIPTS = ('preinst', 'postinst', 'prerm', 'postrm')
 PACKAGES = ('erhai-display-power', 'erhai-device-support', 'erhai-firmware', 'erhai-audio',
-            'erhai-firefox', 'erhai-release-notifier', 'erhai-settings', 'erhai-kernel', 'erhai-debug', 'erhai-device')
+            'erhai-firefox', 'erhai-release-notifier', 'erhai-settings', 'erhai-kernel', 'erhai-debug', 'erhai-device',
+            'erhai-snap-graphics')
 PARTS = ('boot', 'init_boot', 'vendor_boot')
 SWITCHER_PROGRAMS = ('erhai-switch', 'erhai-switch-install-ubuntu-images')
 
 
 def die(message):
     raise SystemExit(f'build-debs: {message}')
+
+
+def stage_snap_graphics(root, build):
+    if build is None:
+        die('erhai-snap-graphics requires --snap-graphics-build')
+    manifest = json.loads((build / 'manifest.json').read_text())
+    name = manifest['package']['file']
+    if Path(name).name != name:
+        die('invalid provider filename')
+    snap = build / name
+    if sha256_file(snap) != manifest['package']['sha256']:
+        die('provider payload does not match its build manifest')
+    metadata = json.loads(run(['unsquashfs', '-cat', str(snap), 'meta/snap.yaml']))
+    if (metadata['name'] != 'erhai-mesa-2404' or metadata['base'] != 'core24'
+            or metadata['architectures'] != ['arm64'] or metadata['confinement'] != 'strict'
+            or metadata['version'] != manifest['version']
+            or metadata['slots'] != {'gpu-2404': {'interface': 'content',
+                                                 'read': ['$SNAP']}}):
+        die('incompatible provider metadata')
+    copy_tree(PACKAGING / 'erhai-snap-graphics/tree', root)
+    payload = root / 'usr/share/erhai/snaps'
+    payload.mkdir(parents=True)
+    shutil.copy2(snap, payload / 'erhai-mesa-2404.snap')
+    (payload / 'provider.json').write_text(json.dumps({
+        'name': metadata['name'], 'version': metadata['version'],
+        'sha256': manifest['package']['sha256']}, indent=2) + '\n')
+    docs = root / 'usr/share/doc/erhai-snap-graphics'
+    shutil.copy2(build / 'manifest.json', docs / 'provider-build.json')
 
 
 def sha256_file(path):
@@ -1111,6 +1140,8 @@ def main():
                              'packaging/firmware and the manifest')
     parser.add_argument('--only', choices=PACKAGES, action='append',
                         help='Build just these packages (repeatable)')
+    parser.add_argument('--snap-graphics-build', type=Path,
+                        help='Verified package-mesa-snap.py output; enables erhai-snap-graphics')
     args = parser.parse_args()
 
     manifest = json.loads(MANIFEST.read_text())
@@ -1123,7 +1154,8 @@ def main():
     if shutil.which('dpkg-deb') is None:
         die('dpkg-deb is required')
     wanted = tuple(args.only) if args.only else tuple(
-        package for package in PACKAGES if args.debug or package != 'erhai-debug')
+        package for package in PACKAGES if (args.debug or package != 'erhai-debug')
+        and (args.snap_graphics_build or package != 'erhai-snap-graphics'))
 
     if 'erhai-device-support' in wanted:
         if not args.release_version or not re.fullmatch(r'[0-9][0-9A-Za-z.+~\-]*', args.release_version):
@@ -1168,6 +1200,8 @@ def main():
                 stage_display_power(root)
             elif package in ('erhai-debug', 'erhai-firefox'):
                 copy_tree(PACKAGING / package / 'tree', root)
+            elif package == 'erhai-snap-graphics':
+                stage_snap_graphics(root, args.snap_graphics_build)
             elif package == 'erhai-firmware':
                 stage_firmware(root, manifest)
             elif package == 'erhai-settings':
@@ -1206,7 +1240,7 @@ def main():
         epoch = source_date_epoch(args.kernel_out if kernel_meta else None)
         built = []
         for package in roots:
-            architecture = 'arm64' if package in ('erhai-kernel', 'erhai-device', 'erhai-display-power', 'erhai-settings', image_package) else 'all'
+            architecture = 'arm64' if package in ('erhai-kernel', 'erhai-device', 'erhai-display-power', 'erhai-settings', 'erhai-snap-graphics', image_package) else 'all'
             write_control(roots[package], package, version, substitutions)
             built.append(pack(roots[package], package, version, architecture, out_dir, epoch))
 

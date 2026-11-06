@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MIT
+[Unit]
+Description=Install erhai Mesa and connect gpu-2404 snap consumers
+Requires=snapd.seeded.service
+After=snapd.seeded.service erhai-firefox-snap-removal.service
+ConditionPathExists=!/var/lib/erhai/snap-graphics-configured
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/erhai-snap-graphics-connect --install
+TimeoutStartSec=5min
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
