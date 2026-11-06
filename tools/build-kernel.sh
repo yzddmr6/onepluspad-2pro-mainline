@@ -15,7 +15,10 @@ src=${KERNEL_SOURCE:-"$ws/kernel/linux"}
 out=${OUT_DIR:-"$ws/out/kernel-dev"}
 jobs=${JOBS:-$(nproc)}
 cross=${CROSS_COMPILE:-aarch64-linux-gnu-}
-fragment="$src/arch/arm64/configs/erhai-firstboot.config"
+fragments=(
+	"$src/arch/arm64/configs/sm8750-peripherals.config"
+	"$src/arch/arm64/configs/erhai-firstboot.config"
+)
 
 if [[ $# != 0 ]]; then
 	echo "Usage: $0 (KERNEL_SOURCE, OUT_DIR, JOBS, CROSS_COMPILE optional)"
@@ -26,7 +29,9 @@ src=$(realpath "$src")
 	echo 'Kernel source must have its own Git repository.' >&2
 	exit 1
 }
-[[ -f $fragment ]]
+for fragment in "${fragments[@]}"; do
+	[[ -f $fragment ]]
+done
 mkdir -p "$out"
 out=$(realpath "$out")
 exec 9>"$out/.build.lock"
@@ -55,7 +60,7 @@ if command -v ccache >/dev/null; then
 	cc="ccache $cc"
 fi
 args=(-C "$src" O="$out" "CC=$cc")
-recipe=$(cat "$src/arch/arm64/configs/defconfig" "$fragment" | sha256sum | cut -d' ' -f1)
+recipe=$(cat "$src/arch/arm64/configs/defconfig" "${fragments[@]}" | sha256sum | cut -d' ' -f1)
 toolchain=$("${cross}gcc" --version | head -1)
 identity=$(printf '%s\n' "$src" "$base" "$toolchain" "$cross" "$KCFLAGS" "$KAFLAGS" | sha256sum | cut -d' ' -f1)
 if [[ -f $out/.build-input && $(cat "$out/.build-input") != "$identity" ]]; then
@@ -65,19 +70,21 @@ fi
 printf '%s\n' "$identity" >"$out/.build-input"
 if [[ ! -f $out/.config || ! -f $out/.recipe || $(cat "$out/.recipe") != "$recipe" ]]; then
 	make "${args[@]}" defconfig >"$out/configure.log" 2>&1
-	"$src/scripts/kconfig/merge_config.sh" -m -O "$out" "$out/.config" "$fragment" >>"$out/configure.log" 2>&1
+	"$src/scripts/kconfig/merge_config.sh" -m -O "$out" "$out/.config" "${fragments[@]}" >>"$out/configure.log" 2>&1
 	make "${args[@]}" olddefconfig >>"$out/configure.log" 2>&1
 	printf '%s\n' "$recipe" >"$out/.recipe"
 fi
-while IFS= read -r setting; do
-	case "$setting" in
-	CONFIG_*=y)
-		grep -Fxq "$setting" "$out/.config" || {
-			echo "Requested built-in dependency missing: $setting" >&2; exit 1;
-		}
-		;;
-	esac
-done <"$fragment"
+for fragment in "${fragments[@]}"; do
+	while IFS= read -r setting; do
+		case "$setting" in
+		CONFIG_*=y|CONFIG_*=m)
+			grep -Fxq "$setting" "$out/.config" || {
+				echo "Requested kernel setting missing: $setting ($fragment)" >&2; exit 1;
+			}
+			;;
+		esac
+	done <"$fragment"
+done
 
 printf 'Building %s with %s (%s jobs)\n' "$head" "$toolchain" "$jobs"
 # Each source/configuration/compiler combination needs a distinct module ABI

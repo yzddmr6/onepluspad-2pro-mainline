@@ -18,6 +18,7 @@ with tempfile.TemporaryDirectory(prefix='erhai-kernel-input-') as temporary:
     fragment = source / 'arch/arm64/configs/erhai-firstboot.config'
     fragment.parent.mkdir(parents=True)
     fragment.write_text('# unrelated fixture\n')
+    (fragment.parent / 'sm8750-peripherals.config').write_text('# unrelated peripherals\n')
     git('add', '.')
     git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
         'commit', '-qm', 'Unrelated input fixture')

@@ -68,8 +68,10 @@ target apt-get "${apt_options[@]}" update
 # Mozilla's firefox, requested by exact version, replaces Ubuntu's
 # transitional firefox, whose version epoch sorts higher, so apt counts it as
 # a downgrade. Apt never selects a lower version that was not requested.
+# Purge packages replaced by conflicts, including power-profiles-daemon when
+# tuned-ppd takes over, so the image retains no removed-package configuration.
 target apt-get "${apt_options[@]}" --no-install-recommends --assume-yes \
-    --allow-downgrades install "$@"
+    --allow-downgrades --purge install "$@"
 cleanup_policy
 rm -rf "$build"
 # The ISO lists its own medium as a package source. An installed system has no

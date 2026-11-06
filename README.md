@@ -125,7 +125,7 @@ development are not included in the supported feature set.
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
 | Boot and storage | SM8750P / UFS | ✅ | Ubuntu boot and storage access work. Dual-boot switching is limited to the tested layout described above. |
-| Internal display | Dual DSI / DSC | ✅ | 3392 × 2400 at 120 Hz. Other refresh rates await hardware testing. |
+| Internal display | Dual DSI / DSC | ✅ | 3392 × 2400 at 120 Hz only. |
 | Touch | Novatek NT36536 | ✅ | Finger input, desktop interaction and login verified. Pen support is tracked separately. |
 | GPU and desktop | Adreno 830 / Freedreno / Turnip / Mesa | 🟡 | GNOME, OpenGL and Vulkan hardware rendering work: glmark2 completes all scenes, and Vulkan runs through Turnip (vkcube, vkmark). Sandboxed applications and sustained loads need testing. |
 | Brightness | Dual KTZ8868 / one backlight interface | 🟡 | Unified brightness control and blanking are integrated; the slider’s usable brightness range needs physical testing. |
@@ -150,7 +150,7 @@ development are not included in the supported feature set.
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
 | Internal microphones | WCD939x / ALSA / PipeWire | 🟡 | Default input and two-channel capture work. With ADC 13 / TX DEC 112, normal speech at about 30 cm peaks around -8 dBFS without clipping. Background-noise performance remains uncharacterized. |
-| Speakers | Six AW88261 amplifiers / AudioReach | 🟡 | The 350 (-2.5 dB) amplifier level passed listening checks. This candidate enables playback by default, with persistent opt-out. Vendor DSP speaker protection is absent; default-on release acceptance is pending. See [daily-use policies](docs/DAILY.md). |
+| Speakers | Six AW88261 amplifiers / AudioReach | 🟡 | The 350 (-2.5 dB) amplifier level passed listening checks. Speakers are enabled by default and can be disabled persistently. Vendor DSP speaker protection is absent. See [daily-use policies](docs/DAILY.md). |
 | USB-C analog audio | WCD939x headset path | ❌ | Analog adapters and headset detection are not implemented. Digital USB audio is tracked above. |
 | Video playback in desktop players | Ubuntu GStreamer packages / Iris | 🟡 | Showtime, the default player, plays H.264, H.265 and VP9 with hardware decoding and keeps playing after seeking. Other players and long playback are untested. |
 | Hardware video codecs | Qualcomm Iris | 🟡 | H.264, H.265 and VP9 hardware decoding works in the default player through GStreamer and in Firefox through VA-API. Hardware encoding is untested. |

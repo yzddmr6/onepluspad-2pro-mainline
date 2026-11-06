@@ -2,7 +2,7 @@
 
 This candidate enables internal speaker discovery, three GNOME power modes
 and compressed RAM swap. Reboot after upgrading the matching kernel and
-device packages. Hardware acceptance of this candidate is still pending.
+device packages. The combined candidate still awaits final whole-device regression.
 
 ## Speakers
 
@@ -30,8 +30,8 @@ voltage protections. The unchanged board ACF enables peak AGC on Amp5 and
 Amp6, but not Amp0–3. The vendor DSP excursion/voice-coil-temperature
 protection and per-speaker filtering are absent. Therefore matching the
 stock volume does not establish equal safety, and prior short listening
-checks do not establish continuous full-volume safety. Default-on release
-acceptance is pending. No other board's amplifier configuration is used.
+checks do not establish continuous full-volume safety. Default-on playback
+has passed listening checks. No other board's amplifier configuration is used.
 
 Hardware references: [AWINIC AW88261 data sheet, pp. 22, 24, 34](https://doc.awinic.com/doc/20230609wm/c815e155-60b7-40fb-889b-676b02e67d0a.pdf),
 the board's `packaging/firmware/awinic/erhai/aw88261_acf.bin`, and the
