@@ -6,8 +6,9 @@
 
 v0.7.1 updates the kernel, matching modules and boot images to fix intermittent
 Bluetooth startup failures and audio error floods. The kernel configuration is
-unchanged from v0.7.0. Other device packages and the Android switch module retain
-their v0.7.0 versions. Mixed component versions in the archive are expected;
+unchanged from v0.7.0. The device-support package also hides Android system
+partitions from the dock and file manager. Other device packages and the Android
+switch module retain their previous versions. Mixed component versions are expected;
 repartitioning and reinstalling Ubuntu are unnecessary.
 
 Download `erhai-device-packages-v0.7.1.tar` and `SHA256SUMS`, verify the download,
