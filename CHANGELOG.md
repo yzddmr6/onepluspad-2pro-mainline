@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.7.0
+
+Device packages are numbered 0.7.0 and install over v0.6.x with APT; see
+"Upgrading an existing installation" in
+[FLASHING](docs/FLASHING.en.md#upgrading-an-existing-installation). Install the
+kernel and device packages together, then reboot.
+
+- Kernel `erhai-v0.7.0`, now based on Linux 7.2.15:
+  - Common peripheral drivers are built: Apple Magic Mouse touch scrolling
+    ([#16](https://github.com/yzddmr6/onepluspad-2pro-mainline/issues/16)),
+    USB game controllers, drawing tablets, USB serial and network adapters,
+    printers and USB audio, plus the F2FS, XFS and HFS+ file systems.
+  - zstd compressed RAM swap (zram) is available.
+  - The internal display offers only its 120 Hz mode. The 60 Hz and 30 Hz
+    modes, which left the panel black or grey after switching, are removed.
+  - Fixes a deadlock between UFS clock scaling and device commands, Wi-Fi RX
+    buffer replenishment and firmware-recovery handling. Iris H.264/H.265
+    encoding produces key frames on request, and resolution-changing decoding
+    finishes the old sequence correctly.
+- `erhai-mesa`: applications load the Adreno 830 Mesa build through the system
+  library path instead of environment variables; GNOME Settings shows the GPU,
+  and programs started with a cleared environment are hardware accelerated.
+- `erhai-device-support`: GNOME offers Power Saver, Balanced and Performance
+  through TuneD, which replaces power-profiles-daemon, and
+  systemd-zram-generator creates zstd swap of half the memory, up to 8 GiB; see
+  [daily-use policies](docs/DAILY.en.md).
+- `erhai-audio`: the internal speakers are enabled by default and can be
+  disabled persistently. The vendor DSP speaker protection is absent.
+
+Thanks to @zczyh0922 for the Magic Mouse report and its fix.
+
 ## v0.6.1
 
 Device packages are numbered 0.6.1 and install over v0.6.0 with APT; see
