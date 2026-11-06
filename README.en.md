@@ -136,7 +136,7 @@ Features under development are not included in the supported feature set.
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
 | Wi-Fi | WCN7860 / ath12k | ✅ | Networking, automatic connection at boot and data transfers work. Packages keep the radio in world domain `00`. 5 GHz uses passive scanning and cannot host a hotspot. Changing the country code while associated can crash the WLAN firmware; do not do so. |
-| Bluetooth | WCN7860 / BlueZ | ✅ | Controller initialization, firmware loading, device discovery and per-device Bluetooth address configuration work. |
+| Bluetooth | WCN7860 / BlueZ | ✅ | The Bluetooth controller, scanning and device connections work. |
 | USB device mode | USB-C / NCM | 🟡 | USB networking works. Some unplug/replug cycles require a reboot to restore the connection. |
 | USB host peripherals | HID, storage, network and digital audio | ✅ | USB drives connected directly through a USB-C to USB-A adapter receive power from the tablet and can be recognized and mounted. A mouse connected through a dock works without external PD power. |
 | USB storage formats | UAS, exFAT and NTFS3 | ✅ | exFAT and NTFS3 support reading, writing and Chinese filenames. NTFS USB drives mount automatically on the desktop. |
@@ -151,7 +151,7 @@ Features under development are not included in the supported feature set.
 | Speakers | Six AW88261 amplifiers / AudioReach | 🟡 | Speakers are enabled by default and can be disabled persistently. Vendor DSP speaker protection is absent. See [daily-use policies](docs/DAILY.en.md). |
 | USB-C analog audio | WCD939x headset path | ❌ | Analog adapters and headset detection are not implemented. Digital USB audio is tracked above. |
 | Video playback in desktop players | Ubuntu GStreamer packages / Iris | ✅ | Showtime, the default player, plays H.264, H.265 and VP9 with hardware decoding and continues playback after seeking. |
-| Hardware video codecs | Qualcomm Iris | ✅ | H.264 and H.265 hardware encoding and H.264, H.265 and VP9 hardware decoding are supported. The default player uses hardware decoding through GStreamer, and Firefox through VA-API. |
+| Hardware video codecs | Qualcomm Iris | ✅ | Hardware decoding of H.264, H.265 and VP9 (the default player through GStreamer, Firefox through VA-API) and hardware encoding of H.264 and H.265. |
 | Front and rear cameras | SC820CS / SC1300CS | 🟡 | The default Camera app (Snapshot) supports preview and photos with both cameras. Automatic white balance uses a simple grey-world algorithm, so scenes dominated by one colour can look tinted. Lens-shading correction is absent, leaving darker corners. Focus is fixed at a distance, making close objects soft, and dim scenes are noisy. |
 | Automatic rotation | SSC / iio-sensor-proxy | ✅ | With the keyboard detached, the screen follows the orientation in all four directions, each the right way up. With the keyboard attached it stays fixed, as on a laptop. |
 | Automatic brightness | SSC ambient light / GNOME | ✅ | The ambient-light sensor is integrated with GNOME. Enabling automatic brightness adjusts the backlight to ambient light; idle dimming and blanking follow Ubuntu defaults. |
