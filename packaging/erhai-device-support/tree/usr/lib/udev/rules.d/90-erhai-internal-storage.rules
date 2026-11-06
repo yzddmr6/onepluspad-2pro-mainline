@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT
+# Hide every partition on the tablet's internal UFS that is not a Linux
+# filesystem partition from udisks clients (GNOME Files, the Shell and the
+# dock): Android, firmware, persist and modem volumes are not offered for
+# mounting.  Only the GPT type GUID decides, not labels or this unit's
+# partition GUIDs.  Runs after 60-persistent-storage.rules, which imports
+# ID_PART_ENTRY_TYPE.
+#
+# The internal UFS is the platform device bound to ufshcd-qcom (1d84000.ufs).
+# USB disks sit below the USB controller and never match.  Whole-disk nodes
+# are left alone: each LUN carries a GPT and no filesystem, so udisks offers no
+# volume for it.
+ACTION=="remove", GOTO="erhai_internal_storage_end"
+SUBSYSTEM!="block", GOTO="erhai_internal_storage_end"
+KERNEL!="sd*", GOTO="erhai_internal_storage_end"
+ENV{DEVTYPE}!="partition", GOTO="erhai_internal_storage_end"
+ENV{ID_PART_ENTRY_TYPE}=="0fc63daf-8483-4772-8e79-3d69d8477de4", GOTO="erhai_internal_storage_end"
+SUBSYSTEMS=="platform", DRIVERS=="ufshcd-qcom", ENV{UDISKS_IGNORE}="1"
+LABEL="erhai_internal_storage_end"
