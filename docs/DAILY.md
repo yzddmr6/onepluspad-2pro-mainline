@@ -1,96 +1,70 @@
-# Daily-use policies
+# 日用配置：扬声器、电源模式与压缩交换空间
 
-This candidate enables internal speaker discovery, three GNOME power modes
-and compressed RAM swap. Reboot after upgrading the matching kernel and
-device packages. The combined candidate still awaits final whole-device regression.
+[English](DAILY.en.md) · [项目首页](../README.md)
 
-## Speakers
+设备支持包默认提供内置扬声器，并加入 GNOME 三档电源模式与压缩内存交换空间。
+内核与设备支持包需一起升级，升级后重启。
 
-UCM exposes `Speaker` in the `HiFi` verb on each boot. PipeWire can select it
-without a startup helper. The HiFi verb establishes FE-to-BE routes before
-ACP probes the PCMs; Speaker activation then sets amplifier and DSP levels.
-The persistent opt-out disables the playback route while retaining Mic. Existing user choices of an external
-output remain under WirePlumber's normal policy.
+## 扬声器
 
-`sudo erhai-audio-speaker disable` withdraws the speakers persistently;
-`sudo erhai-audio-speaker enable` restores them. Both restart active users'
-sound servers. `status` reports the policy and current controls. An opt-out
-survives an upgrade or package removal; purging `erhai-audio` clears it.
+每次启动时，UCM 在 `HiFi` 场景中提供 `Speaker` 设备，PipeWire 无需启动辅助程序即可选用。
+HiFi 场景在 ACP 探测 PCM 之前建立前端到后端的路由，启用 Speaker 时再设置功放与 DSP 电平。
+持久关闭会撤下播放路由，保留麦克风；用户已选择的外部输出仍按 WirePlumber 的常规策略处理。
 
-The six amplifier controls remain at 350 (-2.5 dB), matching the original
-ACF Music profile; DSP gain stays at 8192 (Q13 unity). WirePlumber sets
-`channelmix.max-volume = 1.0` on this board's speaker sink. This clamps that
-sink's software volume gain, **not** the amplitude or energy of the mixed
-signal, and is not a speaker protection algorithm. Direct ALSA access and
-administrator changes can bypass this policy. The ALSA control itself still
-allows values up to 360 (0 dB).
+`sudo erhai-audio-speaker disable` 持久关闭扬声器，`sudo erhai-audio-speaker enable` 恢复；
+两者都会重启在线用户的声音服务。`status` 显示当前策略与控件状态。
+关闭设置在升级或卸载软件包后保留，彻底清除（purge）`erhai-audio` 时一并清除。
 
-AW88261 has chip over-temperature, short-circuit/over-current and supply
-voltage protections. The unchanged board ACF enables peak AGC on Amp5 and
-Amp6, but not Amp0–3. The vendor DSP excursion/voice-coil-temperature
-protection and per-speaker filtering are absent. Therefore matching the
-stock volume does not establish equal safety, and prior short listening
-checks do not establish continuous full-volume safety. Default-on playback
-has passed listening checks. No other board's amplifier configuration is used.
+六路功放控件保持 350（-2.5 dB），与原厂 ACF 的音乐配置一致；DSP 增益保持 8192（Q13 单位增益）。
+WirePlumber 为本机扬声器输出设置 `channelmix.max-volume = 1.0`，它限制的是这一输出的软件音量增益，
+**不是**混音信号的幅度或能量，也不是扬声器保护算法。直接访问 ALSA 或管理员修改可以绕过这一策略；
+ALSA 控件本身仍允许设到 360（0 dB）。
 
-Hardware references: [AWINIC AW88261 data sheet, pp. 22, 24, 34](https://doc.awinic.com/doc/20230609wm/c815e155-60b7-40fb-889b-676b02e67d0a.pdf),
-the board's `packaging/firmware/awinic/erhai/aw88261_acf.bin`, and the
-`aw88261_dev_reg_update()` implementation in the pinned kernel.
+AW88261 芯片自带过温、短路/过流与供电电压保护。未改动的板级 ACF 在 Amp5 与 Amp6 上启用了峰值 AGC，
+Amp0–3 没有。原厂 DSP 的振幅/音圈温度保护与逐路滤波都没有实现，因此音量与原厂一致不等于安全性一致，
+此前的短时听音也不能证明长时间满音量播放安全。默认开启的播放已通过听音确认。未使用其他机型的功放配置。
 
-## GNOME power modes
+硬件参考：[AWINIC AW88261 数据手册第 22、24、34 页](https://doc.awinic.com/doc/20230609wm/c815e155-60b7-40fb-889b-676b02e67d0a.pdf)、
+本机的 `packaging/firmware/awinic/erhai/aw88261_acf.bin`，以及所固定内核中的 `aw88261_dev_reg_update()` 实现。
 
-Ubuntu `tuned-ppd` supplies GNOME's `net.hadess.PowerProfiles` interface and
-replaces the conflicting `power-profiles-daemon` package. Select the mode in
-GNOME Settings or quick settings. Both mains and battery mappings use the
-same board profile; the default is Balanced.
+## GNOME 电源模式
 
-| GNOME mode | TuneD profile | CPU0–5 max (kHz) | CPU6–7 max (kHz) | GPU max (Hz) | Boost |
+Ubuntu 的 `tuned-ppd` 提供 GNOME 使用的 `net.hadess.PowerProfiles` 接口，并替换与之冲突的
+`power-profiles-daemon` 软件包。在 GNOME 设置或快捷设置中选择模式；插电与用电池使用同一套板级配置，默认为均衡。
+
+| GNOME 模式 | TuneD 配置 | CPU0–5 上限（kHz） | CPU6–7 上限（kHz） | GPU 上限（Hz） | Boost |
 |---|---|---:|---:|---:|---:|
-| Power Saver | erhai-power-saver | 1785600 | 1958400 | 342000000 | 0 |
-| Balanced | erhai-balanced | 3532800 | 4089600 | 1100000000 | 0 |
-| Performance | erhai-performance | 3532800 | 4320000 | 1100000000 | 1 |
+| 省电 | erhai-power-saver | 1785600 | 1958400 | 342000000 | 0 |
+| 均衡 | erhai-balanced | 3532800 | 4089600 | 1100000000 | 0 |
+| 性能 | erhai-performance | 3532800 | 4320000 | 1100000000 | 1 |
 
-All profiles retain `schedutil`, CPU minima 384000/1017600 kHz and GPU minimum
-160000000 Hz. Balanced permits the highest non-boost CPU/GPU OPPs with
-boost disabled. Performance enables boost before raising policy6 to 4320000
-kHz; the board also exposes 4204800 kHz as a boost frequency. Power Saver
-retains its lower ceilings and disables boost. CPUCP firmware and thermal
-limits still apply; no thermal trip is changed.
+各档都保留 `schedutil`，CPU 下限 384000/1017600 kHz，GPU 下限 160000000 Hz。
+均衡允许最高的非 boost CPU/GPU 档位并关闭 boost。性能模式先开启 boost，再把 policy6 上限提到 4320000 kHz；
+本机另有 4204800 kHz 这一 boost 频点。省电模式保持较低上限并关闭 boost。
+CPUCP 固件与温控限制仍然有效，没有改动任何温控触发点。
 
-The profiles live in `/usr/lib/tuned/profiles/erhai-*`. The separately owned
-`/etc/tuned/erhai-ppd.conf` is a conffile. The `tuned-ppd.service` drop-in binds
-it over Ubuntu's `/etc/tuned/ppd.conf` only inside the service, leaving the
-original distribution file untouched. Once its conffile is configured, the
-package restarts enabled PPD services, including a service that failed during
-dependency installation. Disabled or masked PPD services remain stopped.
-Administrator overrides belong under
-`/etc/tuned/profiles/`. `tuned-adm active` and `sudo tuned-adm verify` inspect
-the running profile; GNOME switching should be tested through its D-Bus API,
-not inferred from a direct `tuned-adm profile` command alone.
+配置位于 `/usr/lib/tuned/profiles/erhai-*`。单独归属的 `/etc/tuned/erhai-ppd.conf` 是配置文件（conffile）；
+`tuned-ppd.service` 的 drop-in 只在该服务内部把它绑定到 Ubuntu 的 `/etc/tuned/ppd.conf` 上，发行版原文件保持不变。
+这个配置文件配置完成后，软件包会重启已启用的 PPD 服务，包括在安装依赖期间启动失败的服务；
+已禁用或屏蔽的 PPD 服务保持停止。管理员的覆盖配置放在 `/etc/tuned/profiles/`。
+`tuned-adm active` 与 `sudo tuned-adm verify` 可检查当前配置；检验 GNOME 的切换请通过它的 D-Bus 接口，
+不要只凭直接执行 `tuned-adm profile` 推断。
 
-Removing device support clears its profiles from TuneD's saved selection
-(using the distribution balanced profile if none remain) and reloads running
-TuneD/PPD services with the distribution mapping. Reboot after removal to
-recreate swap with the distribution zram policy. Purging also removes the board PPD conffile. The Ubuntu packages
-remain installed unless explicitly removed through APT.
+卸载设备支持包时，会从 TuneD 保存的选择中清除这些配置（若没有剩余，则改用发行版的 balanced 配置），
+并让运行中的 TuneD/PPD 服务按发行版映射重新加载。卸载后重启，交换空间会按发行版的 zram 策略重新创建。
+彻底清除还会删除本机的 PPD 配置文件。除非通过 APT 明确删除，Ubuntu 软件包会保留。
 
-## Compressed swap
+## 压缩交换空间
 
-Ubuntu `systemd-zram-generator` creates `/dev/zram0` with zstd compression,
-priority 100 and size `min(ram / 2, 8192)` MiB, where `ram` is usable kernel
-MemTotal. A marketed 16 GB device normally gets slightly less than 8 GiB.
-There is no custom zram service and no backing-device writeback.
+Ubuntu 的 `systemd-zram-generator` 创建 `/dev/zram0`：zstd 压缩，优先级 100，大小为 `min(ram / 2, 8192)` MiB，
+其中 `ram` 是内核可用的 MemTotal。标称 16 GB 的设备通常得到略少于 8 GiB。
+没有自定义 zram 服务，也没有后备设备回写。
 
-The kernel must provide `CONFIG_ZRAM=m`, `CONFIG_ZRAM_BACKEND_ZSTD=y` and
-`CONFIG_ZRAM_DEF_COMP_ZSTD=y` (which also selects zsmalloc). Older erhai
-kernels without zram must be upgraded before enabling the generator;
-otherwise boot can wait for an absent zram device. Device support depends on
-`erhai-kernel-zram`, provided by a kernel payload only after the package builder
-checks swap, zram and zstd support. Installing that payload does not activate
-the kernel selector, allowing a RAM boot before persistent activation. This
-dependency does not verify the currently booted kernel: boot the matching
-candidate before runtime checks.
+内核必须提供 `CONFIG_ZRAM=m`、`CONFIG_ZRAM_BACKEND_ZSTD=y` 与 `CONFIG_ZRAM_DEF_COMP_ZSTD=y`（后者也会选上 zsmalloc）。
+不带 zram 的旧 erhai 内核必须先升级才能启用生成器，否则启动时可能一直等待不存在的 zram 设备。
+设备支持包依赖 `erhai-kernel-zram`，只有通过了 swap、zram 与 zstd 支持检查的内核载荷才会提供它。
+安装该载荷不会激活内核选择器，因此可以先 RAM 启动验证，再持久激活。
+这一依赖不检查当前运行的内核：做运行时检查前，请先启动对应的内核。
 
-Use `zramctl`, `swapon --show`, `/proc/meminfo` and
-`/sys/block/zram0/comp_algorithm` to inspect size, priority and compression.
-The size limit describes logical swap capacity; RAM is allocated as used.
+可用 `zramctl`、`swapon --show`、`/proc/meminfo` 与 `/sys/block/zram0/comp_algorithm` 查看大小、优先级与压缩算法。
+大小上限指逻辑交换容量，内存按实际使用分配。

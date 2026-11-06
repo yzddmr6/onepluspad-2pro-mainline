@@ -1,28 +1,18 @@
-# Building the kernel and device components
+# 构建指南
 
-[中文](BUILD.zh-CN.md) · [Project overview](../README.md)
+[English](BUILD.en.md) · [项目首页](../README.md)
 
-Build the kernel, device packages and Ubuntu root filesystem on a Linux host.
-Use the project source revisions and original inputs recorded in the manifests.
-Before using a resulting image, read the [installation and recovery notes](FLASHING.md).
+在 Linux 主机上构建内核、设备包与 Ubuntu 根系统。内核源码由
+[linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai) 单独维护，
+必须使用输入清单指定的项目提交和原始输入。
 
+## 主机与源码
 
-## Host and source checkout
+使用 Linux 主机，准备 Git、Python 3、GNU make、AArch64 GCC/binutils、bc、bison、flex、
+OpenSSL/ELF 开发头文件与 kmod；ccache 可选。音频构建另需 m4 和 alsa-utils。
+内核版本、配置位置和工具输入见 [kernel/source.json](../kernel/source.json)。
 
-Use a Linux build host. Kernel builds need Git, Python 3, GNU make, a GNU
-AArch64 cross compiler, binutils, bc, bison, flex, OpenSSL and ELF development
-headers, and kmod. ccache is optional. Audio topology builds additionally need
-m4 and alsa-utils; each graphics/sensor build has its own pinned dependencies.
-
-The kernel checkout must contain the project commit recorded in
-[`kernel/source.json`](../kernel/source.json). The `upstream` URL there identifies
-Linux stable; it does not contain this tablet's patches. The device kernel is
-maintained in [linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai).
-Place the matching checkout
-at `kernel/linux` under this checkout, or set `ERHAI_WORKSPACE` to a workspace
-containing `kernel/linux`. Do not substitute an unmodified upstream kernel.
-
-Use Git checkouts so the build can record the source revisions:
+使用 Git 获取源码，保留构建记录所需的提交身份：
 
 ```sh
 git clone https://github.com/yzddmr6/onepluspad-2pro-mainline.git
@@ -32,61 +22,55 @@ kernel_commit=$(python3 -c 'import json; print(json.load(open("kernel/source.jso
 git -C kernel/linux checkout "$kernel_commit"
 ```
 
-Kernel builds reject another commit by default. `ALLOW_UNPINNED_KERNEL=1` is an
-explicit development override.
+内核构建默认拒绝与清单不一致的提交。`ALLOW_UNPINNED_KERNEL=1` 仅用于明确的开发实验。
 
-Run the commands below from the integration repository root. Python build tools
-provide `--help`; shell tools use the environment variables shown below.
+独立 checkout 使用以下布局，后续命令均从集成仓库根目录执行：
 
-## Repository layout
-
-```
-tools/       build & packaging entry points (see below)
-initramfs/   RAM userspace profiles (USB ACM console / NCM evidence channel)
-switch/      dual-boot switcher and its KernelSU module (see switch/README.md)
-packaging/   debian metadata for the device .deb set (see tools/build-debs.py),
-             and firmware/ -- the device firmware closure it packs
-kernel/      source.json pinning the kernel repo identity and tool inputs
+```text
+onepluspad-2pro-mainline/
+  kernel/linux/     匹配 source.json 中提交的独立内核 checkout
+  cache/           已校验的原始输入
+  out/             构建输出，不进源码仓库
 ```
 
-Tools resolve their workspace automatically when this repo is checked out at
-`<workspace>/public/onepluspad-2pro-mainline`; standalone checkouts work too
-(`ERHAI_WORKSPACE` overrides). Build outputs land in `out/`. Assemble each
-candidate from pinned original sources and that build's outputs; previous
-release images and modified root trees are comparison data.
+`ERHAI_WORKSPACE` 可指定另一个包含 `kernel/linux`、`cache` 和 `out` 的工作区。
+Python 入口可用 `--help` 查看参数；shell 入口采用下文的环境变量。
 
-## Prepare inputs
+## 准备输入
 
-Device firmware, stock boot build inputs and the small AOSP/AudioReach source
-archives are included. Normal builds require neither a full stock ROM download
-nor manual firmware extraction. Run:
+固件、原厂启动构建输入及小型 AOSP/AudioReach 源码归档已随项目提供。普通构建
+不需要下载完整原厂 ROM，也不需要手动提取固件。先执行：
 
 ```sh
 python3 tools/prepare-inputs.py
 ```
 
-The script verifies and unpacks the included inputs, downloads pinned Ubuntu
-ARM64 BusyBox and reuses verified downloads. It requires Python 3.11+ and
-dpkg-deb, and never accesses a tablet. Sources and hashes are recorded in
-[kernel/source.json](../kernel/source.json), the
-[firmware manifest](../packaging/firmware-manifest.json) and the
-[stock input manifest](../packaging/boot-reference/source.json).
+脚本校验并解开随附输入，自动下载固定版本的 Ubuntu ARM64 BusyBox，复用已校验缓存；
+不访问平板。准备需要 Python 3.11+ 与 dpkg-deb。各项来源与哈希见
+[kernel/source.json](../kernel/source.json)、[固件清单](../packaging/firmware-manifest.json)
+及[原厂输入清单](../packaging/boot-reference/source.json)。
 
-| Included | Downloaded separately when needed |
+| 随项目提供 | 按需从固定来源获取 |
 |---|---|
-| Device firmware, stock boot build inputs, AOSP tool sources, AudioReach sources and device patches | Ubuntu Desktop, Ubuntu packages, the separate device kernel, Mesa and sensor-stack sources |
+| 设备固件、原厂启动构建输入、AOSP 工具源码、AudioReach 源码及设备补丁 | Ubuntu Desktop、Ubuntu 软件包、独立内核、Mesa 和传感器上游源码 |
 
-The included stock inputs match OPD2413 ColorOS C.34. They are build references,
-not a general recovery package. Per-device calibration, addresses and Android
-fallback backups must come from the user's own tablet during installation.
-Ubuntu Desktop uses the original ISO layers described below; Ubuntu Base and
-overlay-merging experiments are not the desktop delivery recipe.
+原厂构建输入对应 OPD2413 ColorOS C.34；它们用于构建，不是通用恢复包。
+本机校准、设备地址和 Android 回退备份在安装时从用户自己的平板取得。
 
-## Build a RAM boot image
+## 内核与 RAM 启动镜像
 
 ```sh
 kernel_out="$PWD/out/kernel"
 OUT_DIR="$kernel_out" tools/build-kernel.sh
+```
+
+输出包括 Image、设备树、模块、最终配置及构建身份。重复构建复用兼容的 OUT 与 ccache，
+不需要每次全量重编。正式候选必须保持内核和模块匹配。
+
+输入准备器已将 BusyBox 与完整 AOSP 工具放到构建缓存。NCM initramfs 使用本次
+内核生成的 `gen_init_cpio`，启动封装使用随附原厂输入：
+
+```sh
 PROFILE=ncm OUT_DIR="$PWD/out/initramfs" \
   GEN_INIT_CPIO="$kernel_out/usr/gen_init_cpio" tools/build-initramfs.sh
 python3 tools/build-erhai-abl-symbols.py --output out/abl-dtb \
@@ -99,62 +83,29 @@ python3 tools/build-mainline-boot.py --output out/mainline-boot \
   --initramfs out/initramfs/initramfs-ncm.cpio.gz
 ```
 
-`build-erhai-abl-symbols.py` builds the contained overlay sink layout by
-default, the one daily deliveries use: the sink sits in a disabled container,
-so rpmhpd, the NoCs and the PSCI power domains reach `sync_state()`.
-It reads the original `cache/stock-c34/images/vendor_boot.img` and `dtbo.img`
-directly; `--vendor-boot` and `--dtbo-img` select other pinned originals.
-Base-tree index 6 supplies the identity for the recorded C.34 input; a different
-stock layout needs an explicitly verified `--identity-index`. No previous OUT
-tree is required. Extracted original trees remain an explicit alternative via
-`--base-dir` and, if needed, `--identity-base`.
-`--legacy-sink` is retained for developer comparisons. It prevents some
-power-management initialization from completing and is not the normal build
-choice. Boot and package builders require explicit opt-in for that layout
-and record the selected layout in their manifests.
+原厂输入必须匹配目标固件。当前封装逻辑根据已核对的 ColorOS C.34 输入选择原厂
+身份条目，不能假定其他版本相同。这些命令只生成开发镜像，不能据此认定已经可以
+刷写或得到 Ubuntu 桌面；设备使用范围见[试用与恢复](FLASHING.md)。
 
-The NCM profile provides a USB link (device `192.168.77.2`, telnet 2323,
-HTTP evidence on 8080) with a bounded recovery timer. Its recovery destination
-depends on the installed boot images; the host controller must also verify the
-return to Android. See [testing and recovery](FLASHING.md). Optional kernel cmdline flags: `erhai.watchdog=NN` (session length),
-`erhai.rootfs=<url>` with `erhai.rootfs.sha256=<digest>` (fetch and verify a
-squashfs over NCM before mounting its RAM overlay),
-`erhai.switchroot=1` (hand PID1 to systemd with a matching expiry timer),
-`erhai.weston=1` (autostart the pixman weston desktop).
+## 设备包与图形组件
 
-For a RAM desktop test, add `--profile desktop --rootfs /path/to/desktop.squashfs
---rootfs-url http://192.168.77.10:8000/desktop.squashfs` to the boot-image
-builder. Serve that exact file at the specified URL. The builder computes its
-SHA-256 and records the URL and digest in both the boot command line and
-manifest; it supplies no default root image. The initramfs refuses missing or
-mismatched hashes and failed downloads, keeping diagnostics and the original
-watchdog running. Whole-file and chunked HTTP/hash handling have been tested
-with the pinned ARM64 BusyBox; this updated RAM desktop path has not yet been
-booted on the tablet.
+设备内容分为内核、固件、音频、显示电源、设备支持和可选调试包，分别更新。
+`erhai-kernel` 选择器精确依赖匹配的版本化镜像/模块包；音频和固件不要求所有包版本相同。
 
-A setup image for first-time preparation also passes `--debug-package` with an
-`erhai-debug` deb built alone (`tools/build-debs.py --only erhai-debug`). The
-builder appends the deb to the ramdisk as a second archive, adds
-`erhai.debug=1` and records the package in the manifest. Before handing over to
-systemd, the initramfs installs it into the RAM overlay with the root's own
-dpkg, so the published root filesystem and installed systems stay without it.
+`tools/build-debs.py --help` 列出构建参数。AOSP avbtool 已由输入准备器提供；
+包含启动三件套的构建使用自己的 AVB 签名密钥，密钥不进入软件包。固件从仓库读取，来源与分发边界见
+[固件说明](../packaging/firmware/README.md)。音频原始源码由
+[packaging/audio/source.json](../packaging/audio/source.json)锁定，默认使用准备器写入的缓存。
 
-For a temporary kernel using an already installed root, use the persistent
-profile with an explicit `erhai.session=90` (valid range 60–3600 seconds).
-The initramfs places an expiry service only in the new root's `/run`; once
-userspace starts, it returns the tablet to the bootloader after that bound.
-Normal persistent boots omit this parameter and do not expire. The runtime
-marker `/run/erhai-test-session.started` distinguishes a running userspace
-watchdog from a boot that never reached the service.
+Mesa 的构建、安装和回退见[图形专项](GRAPHICS.md)。传感器入口为
+`tools/build-sensors.py --help`。组件构建的输入、依赖与包行为详见
+[英文构建参考](BUILD.en.md#device-packages)。
 
-## Device packages
-
-The installed system is Canonical's Ubuntu, unpacked as it ships. The
-functional device layer is packaged separately. The GNOME display-power adapter targets Settings Daemon 50; diagnostics are a separate optional package.
+沿用上面的内核、DTB 和 initramfs 输出，完整设备包的构建示例为：
 
 ```sh
 mkdir -p keys
-# Generate once and retain for later builds.
+# 首次构建生成一次；后续保留此密钥。
 test -f keys/boot.pem || openssl genpkey -algorithm RSA \
   -pkeyopt rsa_keygen_bits:4096 -out keys/boot.pem
 python3 tools/build-debs.py --output out/device-packages \
@@ -164,129 +115,32 @@ python3 tools/build-debs.py --output out/device-packages \
   --avbtool "${ERHAI_WORKSPACE:-$PWD}/cache/tools/avbtool.py"
 ```
 
-| Package | Owns |
-|---|---|
-| `erhai-device-support` | TuneD power-mode profiles and systemd-zram-generator configuration (see [daily-use policies](DAILY.md)); `/usr/sbin/erhai-switch{,-install-ubuntu-images}`, the store directory and its logrotate snippet, the "Switch to Android" desktop entry and its polkit action, the power-key service and lock policy (idle power settings follow Ubuntu defaults), and the two programs that give this unit its own Bluetooth and Wi-Fi addresses (`erhai-bt-address` with its units, `erhai-wifi-address` with its udev rule and NetworkManager drop-in), and the systemd hardware-watchdog policy: off by default, with an opt-in 30 s variant to copy into `/etc/systemd/system.conf.d/`. The addresses themselves live in `/var/lib/erhai/` and are in **no** package: they are machine-specific data, written on the tablet at first boot |
-| `erhai-kernel` | selects a versioned kernel payload; configuration activates its triplet through the switcher without rebooting |
-| `erhai-kernel-image-<release>` | matching signed boot images and configured modules; installation only populates files and runs `depmod`, allowing RAM validation before selection |
-| `erhai-firmware` | the firmware closure the mainline drivers ask for and the distribution does not ship under those names |
-| `erhai-audio` | the board AudioReach topology and UCM for the internal microphones; DisplayPort audio is disabled in the default profile, and internal speakers are enabled by default with a persistent opt-out (see [daily-use policies](DAILY.md)) |
-| `erhai-display-power` | the backlight power service, its socket and the GNOME 50 display-power adapter; it requires the kernel's single led-backlight device |
-| `erhai-debug` (optional) | USB diagnostic DHCP, HTTP and root-shell units, using Ubuntu's `busybox-static`; all units require `erhai.debug=1`. While installed, the kernel panics on a hung task, soft lockup or oops and reboots 10 s later |
-| `erhai-device` | a metapackage depending on the required device packages |
+签名密钥为 RSA-4096 PEM，`keys/` 不进入 Git。使用其他已核验固件时，可用 `--stock`
+指定对应原始启动镜像，不能混用不同设备或固件的输入。
 
-The kernel build includes all configured modules and records their hashes.
-Its release suffix identifies the source, configuration and compiler so that
-different builds use different module directories. Runtime modules are staged
-with Kbuild's `modules_install`; the target's kmod generates dependency indices.
-Build/source symlinks into a developer workspace are excluded.
 
-Versioned payload packages coexist. The selector protects the running kernel
-and the switcher's current/previous selections from automatic package removal;
-unreferenced kernels can be removed normally. Immutable kernel identity is kept
-in the store's `kernel.json`, separate from deployment information in `meta.json`.
-Module autoload, SCMI CPU frequency, installed upgrade and booting the previous
-unversioned kernel have been verified on hardware. Booting and returning between
-two versioned module ABIs has also been verified. The actual installer and APT
-parser pass isolated store-rotation tests. Removal of unreferenced project
-payloads has also been tested on the installed system; this does not cover
-third-party kernels or every future upgrade combination.
+## Ubuntu Desktop 根系统
 
-When installing a complete local deb set explicitly, mark the versioned payload
-as an automatic dependency after verifying the selector. The selector's exact
-dependency and the generated retention rules then retain selected kernels
-without making every historical payload a permanent manual installation.
-
-The build needs no root (`dpkg-deb --root-owner-group` on a staged tree) and
-takes its firmware from `packaging/firmware/`, checking every file against the
-sha256 and size recorded in `packaging/firmware-manifest.json` before packing
-it — so `erhai-firmware` builds out of this checkout alone, with no ROM cache
-and no network. `--refresh-from-rom` runs the other direction: it extracts the
-closure from the pinned stock ROM images and upstream archives again and diffs
-that against the tree, which is how a later ROM version gets in. Neither the
-AVB signing key nor avbtool ever enters a package.
-
-The `erhai-device` metapackage declares minimum compatible component versions,
-rather than requiring every component to have an identical version. Audio, firmware and desktop
-integration can therefore receive compatible updates without activating a new
-kernel. The `erhai-kernel` selector still depends on the exact versioned payload
-that contains matching images and modules. Each payload declares the firmware
-minimum it actually consumes. Component-only builds also avoid reading a kernel
-output or kernel checkout; their archive epoch comes from the integration source
-or an explicit `SOURCE_DATE_EPOCH`. On development installations with an
-older metapackage, update that metadata-only package first; inspect the APT plan
-and reject any proposed kernel activation or removal for this step.
-
-Building `erhai-audio` also requires GNU m4, `alsatplg` from alsa-utils, and the
-original archive pinned in `packaging/audio/source.json`. Pass its path with
-`--audio-source`; the default is `cache/audioreach-topology-993a17dc.tar.gz` in
-the workspace. The builder verifies the archive, compiles the board source and
-decodes the result as a format check. Local topology helpers under `packaging/audio/`
-are tracked with the board recipe. Tool versions, hashes, source identity
-and the upstream BSD license are included in the audio package. No prebuilt
-reference-board topology is renamed or used as a build input.
-
-Two builds of the same inputs produce the same bytes: the version carries a
-build id derived from payload and package metadata (`<release>[~dbg]+g<kernel>.b<id>`), the AVB footers
-use a salt derived from the image instead of avbtool's random default, and the
-archive timestamps are pinned to the kernel commit for kernel builds and to
-the integration commit for standalone component builds.
-
-Device support and display power can be updated independently while respecting
-their declared interface dependencies. The display package also constrains
-the GNOME major ABI. The kernel selector
-continues to require the exact matching image/module package.
-
-`--debug` includes `erhai.debug=1` in the triplet, builds `erhai-debug` alongside
-the device set and marks the version `~dbg`. The normal build omits the optional
-package and the flag. The metapackage does not require diagnostics. An explicit
-debug handoff needs `erhai-debug` in the root or, for a RAM desktop, carried by
-its boot image as described above; the initramfs itself never copies binaries
-or creates persistent diagnostic units in a root.
-
-`erhai-device-support` retires recognized, unowned files generated by earlier
-initramfs versions on both normal and debug upgrades. Originals remain under
-`/var/lib/erhai/debug/legacy/`; package removal does not reactivate them. An
-already enabled diagnostic channel keeps its enabled link during migration.
-Unknown edited files are preserved and cause the migration to stop for review.
-The revised migration is still awaiting final installed-device validation.
-
-## Graphics packages
-
-The optional `erhai-mesa` deb supplies the native desktop driver. Core24 Snap
-applications need a separate `gpu-2404` content provider, built against their
-own runtime ABI. Both use the same pinned Mesa source and patches.
-Build, installation and rollback instructions are in [GRAPHICS.md](GRAPHICS.md).
-Hardware drawing, application behavior and physical display output have separate
-acceptance requirements; development candidates are not validated releases.
-
-## Desktop root filesystem
-
-With 7z installed, download the pinned official Ubuntu Desktop ISO and extract
-its two original layers automatically:
+使用官方 Ubuntu Desktop 26.04 ARM64 ISO 中原始的 `minimal.squashfs` 与
+`minimal.standard.squashfs`。安装 7z 后，可自动下载 ISO 并提取这两层：
 
 ```sh
 python3 tools/prepare-inputs.py --desktop
 ```
 
-The layers are placed in `${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper/`.
-Existing original layers can also be passed directly to the assembler; their
-hashes must match `packaging/desktop/source.json`.
+结果位于 `${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper/`。已有原始层也可直接
+传给装配器，按
+[packaging/desktop/source.json](../packaging/desktop/source.json)校验输入。
 
-`tools/build-desktop-rootfs.py` assembles the two original Desktop layers and
-explicit device packages. It requires rootful Docker on amd64, an existing
-ARM64 binfmt interpreter, Python 3.11+ and `dpkg-dev`. Pull the assembly image
-pinned in `packaging/desktop/source.json` first; the builder downloads and
-verifies the locked native tools and Ubuntu runtime dependencies itself.
+当前装配需要 amd64 主机、rootful Docker、已配置的 ARM64 binfmt、Python 3.11+ 与
+dpkg-dev。先拉取清单固定的容器镜像。装配期间容器需要额外的挂载能力；这是可信
+本机构建操作，不用于运行未审阅的外部代码。
 
-The desktop needs the Mesa package for hardware rendering and the sensor
-package for sensor integration. Build both, then assemble them with the device
-packages created above. Keep one selected version per component in these output
-directories. Both component builders use unprivileged `unshare`, so the host
-must permit user namespaces and provide ARM64 binfmt. `--native-nir` also needs
-Mako and MarkupSafe in the host Python (`python3-mako` and
-`python3-markupsafe` on Ubuntu). These builds run outside the assembly Docker
-container. The following example uses Bash.
+桌面硬件加速和传感器需要各自的软件包。先完成这两个组件的构建，再将它们与
+前面生成的设备包一起装入根系统；每个输出目录只保留本次选定的一个版本。
+这两个组件通过非特权 `unshare` 构建，主机需允许 user namespace；`--native-nir`
+还要求主机 Python 可导入 Mako 与 MarkupSafe（Ubuntu：`python3-mako`、
+`python3-markupsafe`）。它们使用 ARM64 binfmt，不在装配用的 Docker 容器内构建：
 
 ```sh
 python3 tools/build-mesa-root.py --output out/mesa-debs --jobs 6 --native-nir
@@ -300,32 +154,12 @@ python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/u
   --output out/desktop-root "${args[@]}"
 ```
 
-Select one version of each desired device component, including the matching
-kernel selector and payload. The container has no network and uses kernel
-OverlayFS to apply the original layers, including whiteouts. Its additional
-SYS_ADMIN capability and container-only unconfined AppArmor setting permit
-trusted attributes and the overlay mount; target package processes drop that
-added capability. Package installation uses a temporary local APT source and
-service-start policy. The target's normal Ubuntu APT sources remain intact.
+上述命令使用 Bash。输出包括 `rootfs.squashfs`、软件包列表、构建输入与日志。
+装配通过官方 APT 包加入运行依赖和设备组件，保留 Ubuntu 正常的软件源。
+清单还按 URL 与 SHA-256 钉住 Mozilla 官方 Firefox deb；装配按确切版本安装它，替换
+Ubuntu 的过渡包 `firefox`，设备包中的 `erhai-firefox` 配置 Mozilla APT 源供之后更新。
+Mozilla 不再提供已钉住的版本时，改钉当前版本。
+账户、校准、无线地址与 Android 回退镜像需要在后续安装阶段处理，不进入通用根树。
 
-The lock also pins Mozilla's Firefox deb by URL and SHA-256. The assembly
-requests that exact version, which replaces Ubuntu's transitional `firefox`
-package; `erhai-firefox` from the device packages configures Mozilla's APT
-repository for later updates. When Mozilla no longer serves the pinned build,
-pin a current one.
-
-The output includes `rootfs.squashfs`, the selected package list and build inputs. Machine identifiers, radio addresses, sensor
-calibration and the Android rollback set must be supplied on installation.
-Use the [installation guide](FLASHING.md) for the supported layout and device
-checks. Building alone does not verify hardware support. Local commands and build logs stay
-separate from the image and its portable input manifest.
-
-## Existing dual-boot installations
-
-The switcher uses the established active-slot layout and replaces the three
-boot images as a set. It is intended for existing installations with matching
-partition layouts and complete rollback images; see [testing and recovery](FLASHING.md).
-Every image written into `boot`/`init_boot`/`vendor_boot` must carry an AVB
-hash footer (`tools/sign-boot-triplet.py`), self-signed included — `vbmeta`
-lists `boot` as a chain partition, so a missing footer is malformed metadata
-that even an unlocked bootloader refuses. See [the switcher reference](../switch/README.md).
+安装范围与操作见[试用、安装与恢复](FLASHING.md)。
+构建清单记录本次选定的输入；请将启动镜像、根系统与校验和作为一套使用。

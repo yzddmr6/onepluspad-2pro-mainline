@@ -1,70 +1,58 @@
-# Testing, Installation and Recovery
+# 试用、安装与恢复
 
-[中文](FLASHING.zh-CN.md) · [Project overview](../README.md)
+[English](FLASHING.en.md) · [项目首页](../README.md)
 
-This guide covers first-time partition preparation, Linux installation, system
-switching and Android boot recovery. The device scope and validation status of
-first-time preparation and reinstallation are stated separately below.
+本指南包含首次分区准备、Linux 安装、双系统切换和 Android 启动恢复。
+支持范围限定为下述机型与布局；首次准备和既有布局重装的验证状态分别注明。
 
-## Device scope
+## 适用范围
 
-Testing uses a bootloader-unlocked OnePlus Pad 2 Pro (OPD2413 / erhai), with
-16 GB RAM and 512 GB storage. Its existing installation has a separate Linux root
-partition and rotates Android/Ubuntu `boot`, `init_boot` and `vendor_boot` images
-through the active slot. The installer accepts ColorOS C.34 and C.35; other storage capacities, layouts, slot B and Pad 3 are untested.
+已测设备为 OnePlus Pad 2 Pro（OPD2413 / erhai），16 GB + 512 GB，Bootloader 已解锁。
+既有安装使用独立 Linux 根分区，在活动槽轮换 Android 与 Ubuntu 的
+`boot`、`init_boot`、`vendor_boot` 三件套。安装器接受 ColorOS C.34 与 C.35；其他存储容量、分区布局、B 槽和 Pad 3 未验证。
 
-## RAM testing
+## RAM 试用
 
-A temporary RAM boot does not replace boot partitions. A temporary kernel using
-an installed root can still write files and journals: this differs from a session
-whose root filesystem is entirely in RAM.
+RAM 临时启动不替换启动分区，但使用已安装根系统的临时内核仍可能写入文件和日志。
+必须区分“全 RAM 根系统”和“临时内核启动持久根系统”。
 
-The development RAM desktop has passed boot, graphics-driver and bounded
-recovery checks. There is no one-command trial for new users. Developer testing requires matching
-boot images, a root filesystem and checksums, with recovery after the session
-timeout established in advance. Do not combine artifacts from unrelated builds.
+开发用 RAM 桌面已验证启动、图形驱动与限时恢复，尚未提供一键试用入口。开发者试用需要
+匹配的启动镜像、根系统与校验和，并确认会话超时后的恢复方式。不要混用不同构建的产物。
 
-Development sessions need explicit device selection, bounded timeouts and
-userspace recovery. Panic/userspace timers cannot recover every hardware lockup.
-Unauthenticated USB diagnostics are for trusted direct connections only.
+开发会话须绑定目标设备、有明确超时，并具备用户态恢复；panic/用户态定时器不能
+保证从所有硬锁死中恢复。免认证 USB 调试通道只用于可信直连。
 
-## Return to Android on an existing installation
+## 已有安装返回 Android
 
-These steps require the established project layout and complete switcher storage.
+以下仅适用于已经建立本项目布局，并具有完整切换存储区的设备。
 
-- In Ubuntu, use **Switch to Android**, enter the administrator password and wait
-  for the automatic reboot.
-- In Android, use the installed KernelSU switching module; see the
-  [switcher reference](../switch/README.md) for its installation and path conventions.
-- An installed Linux system net-charges from a USB PD charger; on a computer's USB
-  port the battery still drains. Fastboot does not charge: when the battery
-  runs low there, return to Android to charge and confirm that capacity has
-  recovered before continuing.
+- Ubuntu 桌面打开 **Switch to Android（切换到 Android）**，按提示输入管理员密码，等待自动重启。
+- Android 侧使用已安装的 KernelSU 切换模块；其安装和路径约定见
+  [切换器说明](../switch/README.md)。
+- 已装 Linux 中接 USB PD 充电器可以净充电（电脑 USB 口供电不足，仍会净放电）；Fastboot 下不能充电，
+  电量不足时返回 Android 充电，确认电量恢复后再继续。
 
-Both switching directions have been tested on the existing layout. Switching
-writes three boot partitions; it does not apply to a fresh tablet, missing
-rollback images or a different layout.
+两个方向的切换在既有测试布局上已有验证。切换会改写三个启动分区，不能用于尚未
+安装、缺失回退镜像或布局不一致的设备。
 
-The switcher stops on a failed write, without automatically rebooting or
-rolling back. An interruption marker prevents replacing the Android backup. Keep the complete Android triplet
-backup on the host and use the Fastboot recovery procedure below after an interruption.
+写入失败时切换器停止，不自动重启或自动回滚；中断标记会阻止错误更新 Android 备份。
+请保留电脑上的完整 Android 三件套备份；中断后使用下文的 Fastboot 恢复入口。
 
-## Prebuilt release images
+## 发布版预构建镜像
 
-Releases from v0.2.1 attach the images this guide otherwise builds. The
-installation still runs `tools/install.py` from this repository's checkout with
-the host tools listed below, but no kernel, Mesa or root filesystem build is needed.
-One root filesystem serves both first-time preparation and installation.
+从 v0.2.1 起，Release 附带本文原本需要自行构建的镜像。安装仍需本仓库检出中的
+`tools/install.py` 和下文列出的主机工具，但无需构建内核、Mesa 或根文件系统。
+首次准备分区和安装使用同一个根文件系统。
 
-| Asset | Use |
+| 附件 | 用途 |
 |---|---|
-| `ubuntu-pad2pro-VERSION-rootfs.squashfs.part*` and `…-rootfs.manifest.json` | Root filesystem to install, without USB diagnostics; first-time preparation also runs it as the temporary RAM desktop |
-| `ubuntu-pad2pro-VERSION-setup-boot.img` and `…-setup-boot.manifest.json` | Boot image of that temporary RAM desktop; it loads the root filesystem from the host and adds the USB diagnostic channel to that session only |
-| `erhai-device-packages-VERSION.tar` | Packages for upgrading an existing installation, without USB diagnostics: the device packages built by `tools/build-debs.py` (kernel, firmware, audio, display power, device support, Firefox repository and the `erhai-device` metapackage), `erhai-mesa` and `erhai-sensors` |
-| `erhai-switch-VERSION.zip` | Android switch module |
-| `SHA256SUMS` | Checksums of every asset and of the joined image |
+| `ubuntu-pad2pro-版本-rootfs.squashfs.part*` 与 `…-rootfs.manifest.json` | 用于安装的根文件系统，不含 USB 调试通道；首次准备分区时也用它运行临时内存桌面 |
+| `ubuntu-pad2pro-版本-setup-boot.img` 与 `…-setup-boot.manifest.json` | 该临时内存桌面的启动镜像，从主机加载上述根文件系统，只为这次会话加入 USB 调试通道 |
+| `erhai-device-packages-版本.tar` | 升级已有安装用的软件包，均不含 USB 调试通道：`tools/build-debs.py` 构建的设备包（内核、固件、音频、显示电源、设备支持、Firefox 软件源与 `erhai-device` 元包），以及 `erhai-mesa` 与 `erhai-sensors` |
+| `erhai-switch-版本.zip` | Android 侧切换模块 |
+| `SHA256SUMS` | 所有附件及拼接后镜像的校验值 |
 
-Join and check the image in the download directory:
+在下载目录中拼接并校验：
 
 ```sh
 image=$(ls ubuntu-pad2pro-*-rootfs.squashfs.part0); image=${image%.part0}
@@ -72,36 +60,26 @@ cat "$image".part* > "$image"
 sha256sum --check --ignore-missing SHA256SUMS
 ```
 
-Then use it in place of the build outputs named below. In this checkout, save
-the joined image as `out/desktop-root/rootfs.squashfs` and its manifest as
-`out/desktop-root/manifest.json`. First-time preparation serves that file to the
-tablet and boots `ubuntu-pad2pro-VERSION-setup-boot.img` instead of
-`out/ram-desktop/boot-mainline.img`; installation passes the same file to
-`--rootfs`. For an upgrade, unpack `erhai-device-packages-VERSION.tar` and install
-its packages as described in
-[Upgrading an existing installation](#upgrading-an-existing-installation).
+之后用它替代下文的构建产物：在本仓库检出中，把拼接后的镜像存为 `out/desktop-root/rootfs.squashfs`，
+清单存为 `out/desktop-root/manifest.json`。首次准备分区时由文件服务器把它提供给平板，并用
+`ubuntu-pad2pro-版本-setup-boot.img` 代替 `out/ram-desktop/boot-mainline.img`；安装时把同一文件传给
+`--rootfs`。升级时，解开 `erhai-device-packages-版本.tar`，按[升级已有安装](#升级已有安装)安装其中的包。
 
-## Preparing Linux partitions for the first time
+## 首次准备 Linux 分区
 
-This step is for a **512 GB OPD2413 with its stock partition layout**, an unlocked
-bootloader, working KernelSU root and USB debugging. **Slot A must be active**,
-and firmware must match [the tested combination](../packaging/installation.json).
-The `check-device` command below checks these before entering the RAM desktop. **First-time partition preparation erases Android apps,
-accounts and files. Back up personal data to the host first.** Skip this section
-if `linux_rootfs` and `linux_data` already exist.
+本节只适用于 **512 GB OPD2413 的原厂分区布局**，Bootloader 已解锁，Android 中已有
+KernelSU root 和 USB 调试权限。活动槽必须为 **A**，原厂固件须在
+[已验证组合](../packaging/installation.json)中；下方 `check-device` 会在进入 RAM 桌面前检查。**首次分区会清除 Android 的应用、账户和文件，请先将个人数据备份到电脑。**
+已有 `linux_rootfs` / `linux_data` 的设备跳过本节，直接使用后面的重装步骤。
 
-Partition creation and Android data erasure have been tested on the device
-specified above. The allocation is 200 GiB Android, 60 GiB Linux root and the
-remaining space for Linux home. It leaves the active slot, stock boot images
-and other UFS partitions unchanged.
+该分区工具已在上述机型上完成分区创建和 Android 数据清除验证。
+分区方案为 Android 200 GiB、Linux 根分区 60 GiB，其余为 Linux 数据。
+它不改变活动槽、原厂启动镜像或其他 UFS 分区。
 
-Follow the [build guide](BUILD.md) to assemble `out/desktop-root/rootfs.squashfs`;
-the installation below uses the same file. Preparation runs it as a temporary
-RAM desktop. The boot image of that desktop carries the separately built
-`erhai-debug` package and installs it in RAM for the USB diagnostic channel;
-the root filesystem itself stays without it. With the build guide's
-`kernel_out`, DTB and initramfs, create the package, the bounded RAM image and
-the Android switch module:
+按[构建指南](BUILD.md)装配 `out/desktop-root/rootfs.squashfs`，后面的安装使用同一文件。
+首次准备时它作为临时 RAM 桌面运行：该桌面的启动镜像携带单独构建的 `erhai-debug` 包，在内存中安装以提供
+USB 调试通道；根文件系统本身不含该包。沿用构建指南中的 `kernel_out`、DTB 与 initramfs，
+生成该包、限时 RAM 启动镜像和切换模块：
 
 ```sh
 python3 tools/build-debs.py --only erhai-debug --output out/debug-package
@@ -119,9 +97,8 @@ split -b 64M -d out/desktop-root/rootfs.squashfs out/desktop-root/rootfs.squashf
 python3 -m http.server 8088 --bind 0.0.0.0 --directory out/desktop-root
 ```
 
-The chunks avoid the current USB stall during long transfers. They can be removed
-after the download. Keep the server running. In another host terminal, select the tablet, save its
-boot images and start the temporary image:
+分段文件用于避开当前 USB 长连接传输的停滞；下载完成后可删除 `.parts` 目录。
+保持文件服务器运行。在另一个终端设置目标序列号，备份本机启动镜像，再临时启动：
 
 ```sh
 set -e
@@ -136,26 +113,24 @@ adb -s "$device_serial" reboot bootloader
 fastboot -s "$device_serial" boot out/ram-desktop/boot-mainline.img
 ```
 
-Use `ip -br link` to find the new USB network interface and substitute its name
-for `USB_INTERFACE` below. Skip address configuration if USB DHCP has already
-assigned `192.168.77.10` to the host. Keep this diagnostic network connected only
-to your own computer. The host needs `curl` and a Telnet client.
+电脑识别出 USB 网络后，用 `ip -br link` 查到新增接口名。将下方 `USB_INTERFACE` 换成
+该接口名；文件服务器终端继续保持运行。若电脑已通过 USB DHCP 获得 `192.168.77.10`，
+可跳过地址设置。调试网络只连接自己的电脑；主机需要 `curl` 和 Telnet 客户端。
 
 ```sh
 sudo ip link set USB_INTERFACE up
 sudo ip address replace 192.168.77.10/24 dev USB_INTERFACE
 ```
 
-Wait for the RAM desktop, then connect from the host with
-`telnet 192.168.77.2 2323`. In the tablet's root shell, save the partition-table
-backup and display the plan:
+等待 RAM 桌面出现，再从电脑连接 `telnet 192.168.77.2 2323`。以下命令在平板的
+root shell 中执行，只查看方案并保存分区表（下载成功后才执行）：
 
 ```sh
 /usr/bin/busybox wget -O /run/prepare-dualboot.py http://192.168.77.10:8088/prepare-dualboot.py &&
 python3 /run/prepare-dualboot.py
 ```
 
-In the host terminal, retrieve both backup files:
+回到电脑终端，把分区表备份保存下来：
 
 ```sh
 set -e
@@ -163,15 +138,13 @@ curl --fail http://192.168.77.2:8081/run/erhai-gpt-backup.bin -o "$device_backup
 curl --fail http://192.168.77.2:8081/run/erhai-gpt-backup.json -o "$device_backup/gpt.json"
 ```
 
-Once the backups are on the host and you accept losing all Android data, apply
-the plan in the same tablet root shell:
+确认备份已在电脑上、接受 Android 数据全部丢失后，在同一个平板 root shell 中应用：
 
 ```sh
 python3 /run/prepare-dualboot.py --erase-android && reboot bootloader
 ```
 
-Stop if the tool reports a failure. Only after it succeeds and the tablet reaches
-Fastboot, run these commands on the host:
+工具报告失败时停止，不执行下面的擦除。在工具成功、平板回到 Fastboot 后，从电脑执行：
 
 ```sh
 set -e
@@ -180,45 +153,35 @@ fastboot -s "$device_serial" erase metadata
 fastboot -s "$device_serial" reboot
 ```
 
-Complete Android setup. If stock recovery requests a data format, complete that
-step. Reinstall the KernelSU manager, enable USB debugging, and grant **Shell (ADB)**
-root access under KernelSU's Superuser page. Erasing Android data resets this
-grant; enabling USB debugging alone is not enough. Transfer the module from the host:
+完成 Android 的初始化；若原厂恢复界面要求格式化数据，完成该步骤。重新安装 KernelSU
+管理应用，恢复 USB 调试，并在 KernelSU 的“超级用户”中允许 **Shell（ADB）** 使用 root。
+清除 Android 数据会重置这项授权；仅开启 USB 调试还不够。从电脑把模块传到平板：
 
 ```sh
 adb -s "$device_serial" push out/erhai-switch-*.zip /sdcard/Download/
 ```
 
-Select the ZIP from Downloads in KernelSU, install it and reboot Android.
-Continue with the Linux installation below.
+在 KernelSU 中选择“下载”目录里的 ZIP 安装，重启 Android，随后执行下面的 Linux 安装步骤。
 
-If partition editing is interrupted, retain the host backup, return to the RAM
-desktop and use `sgdisk --load-backup=BACKUP_PATH /dev/sda` to restore the table,
-then check it with `sgdisk --verify /dev/sda`. Restoring the table cannot recover
-erased files.
+若分区写入中断，保留电脑上的备份，重新进入 RAM 桌面，用 `sgdisk --load-backup=备份路径 /dev/sda`
+恢复原分区表，再运行 `sgdisk --verify /dev/sda` 检查。恢复分区表不能恢复已擦除的数据。
 
-## Clean installation on an existing Linux layout
+## 既有 Linux 分区的全新安装
 
-The installer targets OPD2413 devices that already have `linux_rootfs` and
-`linux_data` partitions and **active slot A**. Clean reinstallation, live boot
-partition readback, normal reboot and both switching directions have been tested
-on this layout. It retains
-Android data and the GPT, replaces both Linux filesystems, and uses the existing
-switcher to activate the Ubuntu boot triplet. Stock devices without Linux
-partitions are outside this procedure.
+安装器适用于已建立 `linux_rootfs` 与 `linux_data`、当前活动槽为 **A** 的 OPD2413 双系统布局。这一路径已完成清空重装、启动三件套读回、普通重启和双系统往返验证。
+它保留 Android 数据和 GPT；清空两个 Linux 分区，并通过既有切换器安装
+Ubuntu 启动三件套。尚未划分 Linux 分区的原厂设备不适用这一流程。
 
-The host needs amd64 Linux, rootful Docker, Android platform-tools, ARM64 binfmt, a native C compiler and `dpkg-deb`. Start with Android
-running, battery at least 50%, USB debugging, working KernelSU root and this
-project's switch module installed. Firmware must match the [tested combination](../packaging/installation.json); another OTA on the same model is not automatically accepted. Use the build guide's `rootfs.squashfs` and
-its adjacent `manifest.json`. Allow space for the private installation images.
-The installer builds the pinned AOSP `ext2simg` tool, which uses the ext4 allocation
-bitmap and preserves zero metadata needed when replacing an older filesystem.
+主机需要 amd64 Linux、rootful Docker、Android platform-tools、ARM64 binfmt、原生 C 编译器及 `dpkg-deb`。平板从 Android 开始，电量至少 50%，USB 调试与 KernelSU
+root 可用，且已安装本项目的切换模块。固件须在[已验证组合](../packaging/installation.json)中；
+同型号的其它 OTA 不会自动获准刷入。准备构建指南生成的 `rootfs.squashfs` 及同目录
+`manifest.json`，备份目录应有足够空间存放系统安装镜像。安装器自动从固定输入构建
+AOSP `ext2simg`，按 ext4 已分配块转换，保留必要的零元数据。
 
-`backup` saves Android boot images and device data; it does
-not back up Linux user files. Export any Linux files you want to keep before
-proceeding: this backup cannot restore them.
+`backup` 只保存 Android 启动镜像和设备数据，不备份 Linux 用户文件。
+需要保留的 Linux 文件请事先另行导出；下面的备份无法恢复它们。
 
-From the project directory, use the tablet's serial from `adb devices`:
+从项目目录依次执行；序列号使用 `adb devices` 列出的本机值：
 
 ```sh
 device_serial=DEVICE_SERIAL
@@ -229,91 +192,67 @@ python3 tools/install.py --serial "$device_serial" --work "$install_work" --phas
 python3 tools/install.py --serial "$device_serial" --work "$install_work" --phase install --erase-linux
 ```
 
-The first two phases back up the tablet's boot set and calibration and prepare
-images on the host. `--erase-linux` explicitly permits deleting the Linux system
-and user files. The installer checks device, partition and input identities,
-erases and flashes the two Linux partitions, returns to Android, then invokes
-the switcher. It reads back all three boot partitions before rebooting Ubuntu.
-Complete first-run account setup on the tablet.
+前两步读取本机启动备份、校准并在电脑上准备镜像。第三步的 `--erase-linux` 明确确认
+删除 Linux 系统和用户文件。安装器核对设备、分区和输入，清除并写入两个 Linux 分区，
+返回 Android 后调用切换器，读回全部启动三件套再重启 Ubuntu。首次账户设置在平板上完成。
 
-Keep `install_work` private: it contains this tablet's backups and calibration,
-not public release assets. A completed write still requires first-boot, touch,
-desktop and dual-boot checks.
+`install_work` 包含设备专属备份及校准，应私密保存，不上传至仓库或作为公共镜像发布。
+安装器报告写入完成后，仍需检查首次启动、触控、桌面和双系统切换。
 
-If Ubuntu fails to start, enter Fastboot and restore the verified Android set:
+若 Ubuntu 启动失败，进入 Fastboot 后可写回本机已校验的 Android 备份：
 
 ```sh
 python3 tools/install.py --serial "$device_serial" --work "$install_work" --phase restore-android
 ```
 
-This restores and verifies the Android boot triplet. The Linux partitions retain
-the newly installed contents.
+该命令恢复 Android 启动三件套并读回核对；Linux 分区保持重装后的内容。
 
-## Daily use and USB diagnostics
+## 日常使用与 USB 调试
 
-The unauthenticated USB root shell and file service of first-time preparation
-exist only in the RAM session of the setup boot image. The root filesystem and
-an installation made from it have no diagnostic channel. To keep the channel
-for development with a trusted host, assemble the root filesystem from device
-packages built with `--debug` (see the [build guide](BUILD.md#device-packages))
-and install that root instead: their kernel package adds `erhai.debug=1` to the
-boot images and requires `erhai-debug`.
+首次准备时使用的免认证 USB root shell 和文件服务只存在于 setup 启动镜像的 RAM 会话中；
+根文件系统以及由它安装的系统都不含调试通道。需要在可信电脑上继续开发时，可按
+[构建指南](BUILD.md#设备包与图形组件)用 `--debug` 构建设备包，以此装配根文件系统后再安装：
+其内核包在启动镜像中加入 `erhai.debug=1`，并依赖 `erhai-debug`。
 
-Installing regular device packages over such an installation, built without
-`--debug` into a new empty output directory or taken from a release's
-`erhai-device-packages-VERSION.tar` as described in
-[Upgrading an existing installation](#upgrading-an-existing-installation),
-replaces the diagnostic boot images. After reboot, the USB shell, HTTP service
-and diagnostic DHCP stay disabled. Stopping only the desktop services does not
-disable the early-boot channels in a diagnostic image.
+在这样的安装上换装普通设备包（不带 `--debug` 构建到新的空输出目录，或取自 Release 的
+`erhai-device-packages-版本.tar`，安装方法见[升级已有安装](#升级已有安装)）即替换调试启动镜像，
+重启后不再启用 USB shell、HTTP 和调试 DHCP。只停止桌面上的调试服务不能关闭调试镜像在启动早期提供的通道。
 
-## Upgrading an existing installation
+## 升级已有安装
 
-A newer release installs over an existing installation with APT. It does not
-repartition the tablet, reinstall Ubuntu or touch Android. Build the release's
-device packages and sensor package (`tools/build-debs.py` and `tools/build-sensors.py`,
-see the [build guide](BUILD.md#device-packages)), each into a new empty output
-directory, with the same choice of `--debug` as the installed packages. Transfer
-both directories to the tablet, then run in its terminal:
+新版本用 APT 直接装在已有安装之上，不重新分区、不重装 Ubuntu，也不碰 Android。
+按[构建指南](BUILD.md#设备包与图形组件)用 `tools/build-debs.py` 和 `tools/build-sensors.py`
+分别把新版本的设备包和传感器包构建到新的空输出目录，
+`--debug` 的选择与已装的包保持一致。把两个目录传到平板，在平板终端执行：
 
 ```sh
 sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 ```
 
-The release's `erhai-device-packages-VERSION.tar` holds the same packages and
-`erhai-mesa`, without USB diagnostics; installing them also turns a diagnostic
-installation into a regular one (`tar xf erhai-device-packages-*.tar && sudo apt install ./erhai-device-packages-*/*.deb`).
+也可以直接用 Release 里的 `erhai-device-packages-版本.tar`：其中除上述包外还有 `erhai-mesa`，均不含 USB 调试通道，
+装上后调试安装也会变成普通安装（`tar xf erhai-device-packages-*.tar && sudo apt install ./erhai-device-packages-*/*.deb`）。
 
-The kernel package writes the new boot images to the active slot during the
-installation, and the previous kernel package stays installed. The sensor
-registry imported at installation time is kept. If the new kernel does not start,
-follow the recovery steps below.
+安装时内核包会把新的启动镜像写入活动槽，旧内核包仍保留；安装时导入的传感器注册表保持不变。
+新内核起不来时，按下文的恢复步骤处理。
 
-The `erhai-firefox` package moves Firefox from the Ubuntu snap to Mozilla's deb.
-After the upgrade, run `sudo apt update && sudo apt install firefox` and accept
-the replacement of Ubuntu's transitional `firefox` package, which APT lists as a
-downgrade because of that package's version epoch. The snap keeps each user's
-profile in `~/snap/firefox/common/.mozilla/firefox`; to keep it, copy it before
-the first start of the new Firefox with
-`mkdir -p ~/.mozilla && cp -a ~/snap/firefox/common/.mozilla/firefox ~/.mozilla/`,
-then remove the snap with `sudo snap remove firefox`. The snap is removed
-automatically at boot only when no user has a `~/snap/firefox` directory.
+`erhai-firefox` 包把 Firefox 从 Ubuntu 的 Snap 换成 Mozilla 官方 deb。升级后执行
+`sudo apt update && sudo apt install firefox`，并确认替换 Ubuntu 的过渡包 `firefox`；
+该过渡包带版本 epoch，APT 会把替换显示为降级。Snap 版把每个用户的配置放在
+`~/snap/firefox/common/.mozilla/firefox`；需要保留时，在首次启动新 Firefox 前执行
+`mkdir -p ~/.mozilla && cp -a ~/snap/firefox/common/.mozilla/firefox ~/.mozilla/`，
+再用 `sudo snap remove firefox` 移除 Snap。只有在没有任何用户存在 `~/snap/firefox`
+目录时，开机才会自动移除该 Snap。
 
-## Failure and full stock recovery
+## 异常与完整恢复
 
-If the tablet stops responding, hold **Power + Volume Up for about 15 seconds**.
-Release when the screen turns off or the OnePlus logo appears. If it stays off,
-press Power to start it. This combination has been used to recover the OPD2413.
+若平板无响应，同时按住 **电源键＋音量上键约 15 秒**，屏幕熄灭或出现 OnePlus
+标志后松开；若只关机了，再按电源开机。此组合已在 OPD2413 上用于恢复。
 
-Preserve errors, image versions and backups after a failed boot. Establish the
-current system and completed writes before proceeding. Do not repeatedly rerun
-installation or mix versions of the boot triplet; check all three partitions together.
+启动失败后保留报错、镜像版本和备份，先确认当前系统与已完成的写入步骤。不要反复
+重跑安装或混刷不同版本的启动三件套；三个分区需要作为一组核对。
 
-Returning to the existing Android system does not restore a factory partition
-layout. Full stock recovery also depends on matching firmware, layout and user
-data. A general recovery procedure has not been independently hardware-validated
-by this project.
+切换回既有 Android 不等于恢复出厂布局。完整原厂恢复还涉及匹配固件、分区布局及
+用户数据，本项目尚未提供经过独立真机验收的通用恢复流程。
 
-Keep this tablet's boot-image and calibration backups. Never restore another
-device's calibration, addresses or persist partition. Keep the bootloader unlocked
-while non-stock images remain installed.
+保留本机启动镜像及校准备份；不得使用其他设备的校准、地址或 persist。
+设备仍含非原厂镜像时不要重新锁定 Bootloader。

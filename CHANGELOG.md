@@ -4,7 +4,7 @@
 
 Device packages are numbered 0.6.1 and install over v0.6.0 with APT; see
 "Upgrading an existing installation" in
-[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation).
+[FLASHING](docs/FLASHING.en.md#upgrading-an-existing-installation).
 
 - Kernel `erhai-v0.6.1`, still based on Linux 7.2.14:
   - 12 GB units boot. The crash-log (ramoops) region now lies in RAM that
@@ -35,7 +35,7 @@ fix, and to @BUSHIGEMENNI for the fast-charging and pen-charging drivers
 
 Device packages are numbered 0.6.0 and install over v0.5.x with APT; see
 "Upgrading an existing installation" in
-[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation).
+[FLASHING](docs/FLASHING.en.md#upgrading-an-existing-installation).
 
 - Kernel `erhai-v0.6.0`, still based on Linux 7.2.14:
   - Both cameras work in camera applications. The sensors run from the 24 MHz
@@ -89,7 +89,7 @@ set within 6 seconds.
 
 Device packages are numbered 0.5.0 and install over v0.4.x with APT; see
 "Upgrading an existing installation" in
-[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation).
+[FLASHING](docs/FLASHING.en.md#upgrading-an-existing-installation).
 
 - Kernel `erhai-v0.5.0`, now based on Linux 7.2.14:
   - In system suspend the SoC reaches its deepest power states, CX power
@@ -136,7 +136,7 @@ established the 9 V contract.
 
 Device packages are numbered 0.4.0 and install over v0.3.x with APT; see
 "Upgrading an existing installation" in
-[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation).
+[FLASHING](docs/FLASHING.en.md#upgrading-an-existing-installation).
 
 - Kernel `erhai-v0.4.0`, now based on Linux 7.2.10:
   - Storage uses the UFS multi-circular queue and lazy IOMMU invalidation:
@@ -182,7 +182,7 @@ change and none did after it.
 
 Device and sensor packages are numbered 0.3.0 and install over v0.2.x with
 APT; see "Upgrading an existing installation" in
-[FLASHING](docs/FLASHING.md#upgrading-an-existing-installation). The device
+[FLASHING](docs/FLASHING.en.md#upgrading-an-existing-installation). The device
 package archive of the release now also carries `erhai-mesa`.
 
 - Kernel `erhai-v0.3.0`:
@@ -217,7 +217,7 @@ package archive of the release now also carries `erhai-mesa`.
   transitional package. The root filesystem installs a pinned build, and the
   Firefox snap is removed after first-boot seeding. Existing installations
   switch as described in
-  [FLASHING](docs/FLASHING.md#upgrading-an-existing-installation). The
+  [FLASHING](docs/FLASHING.en.md#upgrading-an-existing-installation). The
   repository setup is based on
   [TheMojoMan's oneplus-erhai-ubuntu](https://github.com/TheMojoMan/oneplus-erhai-ubuntu).
 - The on-screen keyboard is no longer forced on. GNOME offers it for touch
@@ -227,7 +227,7 @@ package archive of the release now also carries `erhai-mesa`.
   runs the installation image as its RAM desktop; the setup boot image carries
   the `erhai-debug` package and installs it into that RAM session only, so
   neither the published image nor an installed system has USB diagnostics.
-  See "Prebuilt release images" in [FLASHING](docs/FLASHING.md).
+  See "Prebuilt release images" in [FLASHING](docs/FLASHING.en.md).
 - erhai-mesa revision 5 fixes the Mesa freedreno abort on the
   `fd6_texture_state` assertion. One GL context allocated sampler view seqnos
   in the application thread and freed them in the driver thread without
@@ -280,14 +280,14 @@ Thanks to @HOSHINO61 for both changes.
 - Prebuilt images are attached to the release: an installation root filesystem
   without USB diagnostics, the setup root filesystem and boot image for first-time
   preparation, and the device packages; see "Prebuilt release images" in
-  [FLASHING](docs/FLASHING.md).
+  [FLASHING](docs/FLASHING.en.md).
 - The kernel and device behavior are unchanged from v0.2.0 (kernel
   `erhai-v0.2.0`).
 
 ## v0.2.0
 
 Device and sensor packages are numbered 0.2.0 and install over v0.1.0 with APT;
-see "Upgrading an existing installation" in [FLASHING](docs/FLASHING.md).
+see "Upgrading an existing installation" in [FLASHING](docs/FLASHING.en.md).
 
 - System suspend defaults to s2idle. On the installed tablet, 300-second
   RTC-timed suspends in both display modes resume the display, touch, Wi-Fi and
@@ -327,5 +327,5 @@ Developer source preview for the OnePlus Pad 2 Pro (OPD2413).
 - Dual-boot switching for the documented installation layout and optional USB diagnostics.
 
 Tested hardware support and known limitations are maintained in the
-[README](README.md#hardware-support). Build and recovery instructions are in
-[BUILD](docs/BUILD.md) and [FLASHING](docs/FLASHING.md).
+[README](README.en.md#hardware-support). Build and recovery instructions are in
+[BUILD](docs/BUILD.en.md) and [FLASHING](docs/FLASHING.en.md).
