@@ -116,7 +116,7 @@ implementation details.
 The tables below describe current hardware support and known limitations.
 Features under development are not included in the supported feature set.
 
-✅ Working · 🟡 Partial · 🔧 In development · ❌ Unsupported
+✅ Working · 🟡 Partial · ❌ Unsupported
 
 ### Platform, Display and Input
 
@@ -128,7 +128,7 @@ Features under development are not included in the supported feature set.
 | GPU and desktop | Adreno 830 / Freedreno / Turnip / Mesa | ✅ | GNOME, OpenGL and Vulkan hardware rendering work. Vulkan uses Turnip. |
 | Brightness | Dual KTZ8868 / one backlight interface | ✅ | Unified backlight control supports manual brightness adjustment and screen blanking. |
 | Magnetic keyboard | Pogo keyboard / touchpad | ✅ | Keyboard input works and stays connected while idle and after system sleep. The on-screen keyboard appears for touch input when detached and hides when attached. Holding the magnifier key turns the top row into F1 to F12. |
-| Active pen | NT36536 pen input | 🔧 | The pen input driver is available. |
+| Active pen | NT36536 pen input | 🟡 | Pen input is not enabled yet: the driver is present but off by default. |
 | Pen charging | CPS8601 | ✅ | A pen attached to the back charges wirelessly. |
 
 ### Wireless and USB

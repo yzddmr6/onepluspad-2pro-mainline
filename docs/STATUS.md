@@ -5,4 +5,4 @@
 - [中文支持表](../README.md#硬件支持)
 - [English support table](../README.en.md#hardware-support)
 
-✅ 可用 / Working · 🟡 部分支持 / Partial · 🔧 开发中 / In development · ❌ 尚不支持 / Unsupported
+✅ 可用 / Working · 🟡 部分支持 / Partial · ❌ 尚不支持 / Unsupported
