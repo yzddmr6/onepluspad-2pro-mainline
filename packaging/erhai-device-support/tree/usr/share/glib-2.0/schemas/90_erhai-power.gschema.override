@@ -6,3 +6,6 @@ power-button-action='nothing'
 
 [org.gnome.desktop.screensaver]
 lock-enabled=true
+
+[org.gnome.shell]
+enabled-extensions=['piano-osk-guard@io.github.piano']
