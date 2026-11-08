@@ -1,0 +1,7 @@
+Interface           Plug                          Slot                         Notes
+content[gpu-2404]   thunderbird:gpu-2404           mesa-2404:gpu-2404            -
+content             snap-store:gpu-2404            mesa-2404:gpu-2404            -
+content             future-app_test:gpu-2404       -                            -
+content             -                             piano-mesa-2404:gpu-2404      -
+content[gpu-2604]   next-app:gpu-2604              mesa-2604:gpu-2604            manual
+network             thunderbird:network            :network                     -

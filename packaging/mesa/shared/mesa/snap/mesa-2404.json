@@ -1,0 +1,24 @@
+{
+  "name": "mesa-2404",
+  "revision": 1166,
+  "version": "25.0.7-snap211",
+  "architecture": "arm64",
+  "file": "mesa-2404_1166.snap",
+  "sha256": "55031bcdc8feb2b9782266d8375459c69c4025d8d63818244f69f6be0a1b9e2c",
+  "bytes": 183046144,
+  "repository": "https://github.com/canonical/mesa-2404",
+  "publisher": "Canonical",
+  "license": "MIT as declared by meta/snap.yaml; individual library licences and notices remain under usr/share/doc/*/copyright",
+  "seed": {
+    "lock": "ubuntu/desktop-layers.json",
+    "squashfs_sha256": "35f9b475e79de3ba87da4bbe957778d6d5f9637ce27d9267ed6b98d48b6fb0bc",
+    "path": "var/lib/snapd/seed/snaps/mesa-2404_1166.snap"
+  },
+  "download_command": "snap download mesa-2404 --revision=1166 (on ARM64)",
+  "embedded_provenance_sha256": {
+    "snap/manifest.yaml": "d9c540f904812cced31ecd69d4636d884d0b626723da03cb8fbfdfd7a7d72b48",
+    "snap/snapcraft.yaml": "924bfe855a3d2d0d27cb819329f130e92dde003c3c44dccfe590fa3ab6b9bbfd",
+    "bin/gpu-2404-provider-wrapper": "b6403de56f37877aee1415db30721c6be13fe17b60f131da17604f18aba3ee67"
+  },
+  "policy": "Keep every stock file and symlink. Overlay only the verified Mesa build payload, normalize its ICD paths, change snap name/version, and add piano provenance. Keep stock hooks, component declarations, wrapper and non-Mesa libraries unchanged."
+}

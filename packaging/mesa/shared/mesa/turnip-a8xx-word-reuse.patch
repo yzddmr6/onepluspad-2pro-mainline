@@ -1,0 +1,333 @@
+--- a/src/compiler/nir/nir_opt_loop_unroll.c
++++ b/src/compiler/nir/nir_opt_loop_unroll.c
+@@ -1466,3 +1466,170 @@
+    }
+    return progress;
+ }
++
++/* Cache one immutable scalar word across consecutive iterations. The address
++ * is still evaluated exactly (including signed division); do not round it or
++ * speculate a read into a previously inactive iteration. */
++static bool
++cache_quantized_offset(nir_loop *loop, nir_def *def, unsigned depth)
++{
++   if (depth > 8 || !nir_def_is_alu(def))
++      return false;
++   nir_alu_instr *alu = nir_def_as_alu(def);
++   uint32_t stride;
++   if ((alu->op == nir_op_idiv || alu->op == nir_op_udiv) &&
++       nir_src_is_const(alu->src[1].src) &&
++       nir_src_as_uint(alu->src[1].src) == 4 &&
++       runtime_stride(loop, alu->src[0].src.ssa, 0, &stride) && stride == 1)
++      return true;
++   /* nir_opt_algebraic may already express signed /4 as
++    * sign(i) * (abs(i) >> 2). This is only a profitability match: the full
++    * original address remains the cache key, including the sign change. */
++   if (alu->op == nir_op_ushr && nir_src_is_const(alu->src[1].src) &&
++       nir_src_as_uint(alu->src[1].src) == 2) {
++      nir_def *index = alu->src[0].src.ssa;
++      if (nir_def_is_alu(index) && nir_def_as_alu(index)->op == nir_op_iabs)
++         index = nir_def_as_alu(index)->src[0].src.ssa;
++      if (runtime_stride(loop, index, 0, &stride) && stride == 1)
++         return true;
++   }
++   if (alu->op != nir_op_iadd && alu->op != nir_op_imul &&
++       alu->op != nir_op_ishl)
++      return false;
++   return cache_quantized_offset(loop, alu->src[0].src.ssa, depth + 1) ||
++          cache_quantized_offset(loop, alu->src[1].src.ssa, depth + 1);
++}
++
++static nir_intrinsic_instr *
++cache_loop_load(nir_loop *loop)
++{
++   if (loop->info->complex_loop || loop->info->instr_cost > 64 ||
++       !list_is_singular(&loop->info->loop_terminator_list))
++      return NULL;
++   nir_loop_terminator *term = list_first_entry(&loop->info->loop_terminator_list,
++                                               nir_loop_terminator,
++                                               loop_terminator_link);
++   if (!nir_is_trivial_loop_if(term->nif, term->break_block) ||
++       nir_block_first_instr(term->break_block) != nir_block_last_instr(term->break_block) ||
++       !exec_list_is_empty(&term->continue_from_block->instr_list))
++      return NULL;
++   nir_intrinsic_instr *load = NULL;
++   foreach_list_typed(nir_cf_node, node, node, &loop->body) {
++      if (node == &term->nif->cf_node)
++         continue;
++      if (node->type != nir_cf_node_block)
++         return NULL;
++      nir_block *block = nir_cf_node_as_block(node);
++      nir_foreach_instr(instr, block) {
++         if (instr->type == nir_instr_type_alu ||
++             instr->type == nir_instr_type_load_const ||
++             instr->type == nir_instr_type_phi)
++            continue;
++         if (instr->type != nir_instr_type_intrinsic)
++            return NULL;
++         nir_intrinsic_instr *in = nir_instr_as_intrinsic(instr);
++         if (in->intrinsic == nir_intrinsic_load_const_ir3 ||
++             in->intrinsic == nir_intrinsic_bindless_resource_ir3)
++            continue;
++         if (load || block == nir_loop_first_block(loop) ||
++             in->intrinsic != nir_intrinsic_load_ssbo ||
++             in->def.bit_size != 32 || in->def.num_components != 1 ||
++             (nir_intrinsic_access(in) & (ACCESS_VOLATILE | ACCESS_COHERENT)) ||
++             (nir_intrinsic_access(in) & (ACCESS_NON_WRITEABLE | ACCESS_CAN_REORDER)) !=
++                (ACCESS_NON_WRITEABLE | ACCESS_CAN_REORDER) ||
++             !cache_quantized_offset(loop, in->src[1].ssa, 0))
++            return NULL;
++         /* The cached address is meaningful only for an invariant descriptor. */
++         nir_instr *resource = nir_def_instr(in->src[0].ssa);
++         if (resource->block->index >= nir_loop_first_block(loop)->index) {
++            if (resource->type != nir_instr_type_intrinsic)
++               return NULL;
++            nir_intrinsic_instr *bindless = nir_instr_as_intrinsic(resource);
++            if (bindless->intrinsic != nir_intrinsic_bindless_resource_ir3 ||
++                !nir_src_is_const(bindless->src[0]))
++               return NULL;
++         }
++         load = in;
++      }
++   }
++   return load;
++}
++
++static void
++cache_loop_apply(nir_loop *loop, nir_intrinsic_instr *load)
++{
++   nir_builder b = nir_builder_create(nir_cf_node_get_function(&loop->cf_node));
++   b.cursor = nir_before_cf_node(&loop->cf_node);
++   nir_def *zero = nir_imm_int(&b, 0), *no = nir_imm_false(&b), *yes = nir_imm_true(&b);
++   nir_block *pre = nir_cursor_current_block(b.cursor);
++   nir_phi_instr *address = nir_phi_instr_create(b.shader);
++   nir_phi_instr *word = nir_phi_instr_create(b.shader);
++   nir_phi_instr *valid = nir_phi_instr_create(b.shader);
++   nir_def_init(&address->instr, &address->def, 1, 32);
++   nir_def_init(&word->instr, &word->def, 1, 32);
++   nir_def_init(&valid->instr, &valid->def, 1, 1);
++   nir_phi_instr_add_src(address, pre, zero);
++   nir_phi_instr_add_src(word, pre, zero);
++   nir_phi_instr_add_src(valid, pre, no);
++   b.cursor = nir_before_instr(&load->instr);
++   nir_def *offset = load->src[1].ssa;
++   nir_if *nif = nir_push_if(&b, nir_ior(&b, nir_inot(&b, &valid->def),
++                                      nir_ine(&b, offset, &address->def)));
++   nir_intrinsic_instr *fresh = nir_instr_as_intrinsic(nir_instr_clone(b.shader, &load->instr));
++   nir_builder_instr_insert(&b, &fresh->instr);
++   nir_push_else(&b, nif);
++   nir_pop_if(&b, nif);
++   nir_def *result = nir_if_phi(&b, &fresh->def, &word->def);
++   nir_def_rewrite_uses(&load->def, result);
++   nir_instr_remove(&load->instr);
++   nir_block *back = nir_loop_last_block(loop);
++   nir_phi_instr_add_src(address, back, offset);
++   nir_phi_instr_add_src(word, back, result);
++   nir_phi_instr_add_src(valid, back, yes);
++   b.cursor = nir_after_phis(nir_loop_first_block(loop));
++   nir_builder_instr_insert(&b, &address->instr);
++   nir_builder_instr_insert(&b, &word->instr);
++   nir_builder_instr_insert(&b, &valid->instr);
++
++}
++
++static bool
++cache_loop_list(struct exec_list *list)
++{
++   foreach_list_typed(nir_cf_node, node, node, list) {
++      if (node->type == nir_cf_node_if) {
++         nir_if *nif = nir_cf_node_as_if(node);
++         if (cache_loop_list(&nif->then_list) || cache_loop_list(&nif->else_list))
++            return true;
++      } else if (node->type == nir_cf_node_loop) {
++         nir_loop *loop = nir_cf_node_as_loop(node);
++         nir_intrinsic_instr *load = cache_loop_load(loop);
++         if (load) {
++            cache_loop_apply(loop, load);
++            return true;
++         }
++         if (cache_loop_list(&loop->body))
++            return true;
++      }
++   }
++   return false;
++}
++
++bool
++nir_opt_loop_cache_readonly(nir_shader *shader)
++{
++   bool progress = false;
++   nir_foreach_function_impl(impl, shader) {
++      while (true) {
++         nir_metadata_require(impl, nir_metadata_loop_analysis,
++                              shader->options->force_indirect_unrolling,
++                              (int)shader->options->force_indirect_unrolling_sampler);
++         nir_metadata_require(impl, nir_metadata_block_index);
++         if (!cache_loop_list(&impl->body))
++            break;
++         nir_progress(true, impl, nir_metadata_none);
++         progress = true;
++      }
++   }
++   return progress;
++}
+--- a/src/compiler/nir/nir.h
++++ b/src/compiler/nir/nir.h
+@@ -6909,6 +6909,7 @@
+ bool nir_opt_loop(nir_shader *shader);
+ 
+ bool nir_opt_loop_unroll(nir_shader *shader);
++bool nir_opt_loop_cache_readonly(nir_shader *shader);
+ bool nir_opt_loop_unroll_runtime(nir_shader *shader, unsigned factor, unsigned max_cost);
+ 
+ typedef enum {
+--- a/src/freedreno/ir3/ir3_nir.c
++++ b/src/freedreno/ir3/ir3_nir.c
+@@ -138,13 +138,11 @@
+                         (range - 1) * 16);
+ }
+ 
+-/* Hoist only pure address calculations/constants out of loops we expanded. */
+-static bool
+-ir3_runtime_unroll_licm_filter(nir_instr *instr, nir_loop *loop,
++/* Pure address subset shared by bounded unroll and cached readonly loads. */
++static bool
++ir3_pure_address_licm_filter(nir_instr *instr, nir_loop *loop,
+                                bool dominates_exit)
+ {
+-   if (!loop->partially_unrolled)
+-      return false;
+    if (instr->type == nir_instr_type_alu)
+       return true;
+    if (instr->type != nir_instr_type_intrinsic)
+@@ -152,6 +150,14 @@
+    nir_intrinsic_op op = nir_instr_as_intrinsic(instr)->intrinsic;
+    return op == nir_intrinsic_load_const_ir3 ||
+           op == nir_intrinsic_bindless_resource_ir3;
++}
++
++static bool
++ir3_runtime_unroll_licm_filter(nir_instr *instr, nir_loop *loop,
++                             bool dominates_exit)
++{
++   return loop->partially_unrolled &&
++          ir3_pure_address_licm_filter(instr, loop, dominates_exit);
+ }
+ 
+ static bool
+@@ -819,6 +825,13 @@
+    nir_lower_idiv_options idiv_options = {
+       .allow_fp16 = true,
+    };
++   if (compiler->gen == 8 && s->info.stage == MESA_SHADER_COMPUTE &&
++       OPT(s, nir_opt_loop_cache_readonly)) {
++      /* Reuse LICM for immutable address arithmetic, never SSBO reads. */
++      OPT(s, nir_opt_licm, ir3_pure_address_licm_filter);
++      ir3_optimize_loop(compiler, &optimize_options, s);
++   }
++
+    bool progress = OPT(s, nir_opt_idiv_const, 8);
+    progress |= OPT(s, nir_lower_idiv, &idiv_options);
+ 
+--- a/src/compiler/nir/tests/loop_unroll_tests.cpp
++++ b/src/compiler/nir/tests/loop_unroll_tests.cpp
+@@ -409,8 +409,12 @@
+                for (unsigned a = 0; a < nir_op_infos[alu->op].num_inputs; a++)
+                   for (unsigned c = 0; c < NIR_MAX_VEC_COMPONENTS; c++)
+                      args[a][c] = values.at(alu->src[a].src.ssa)[alu->src[a].swizzle[c]];
++               unsigned bits = nir_alu_type_get_type_size(nir_op_infos[alu->op].output_type) ? 0 : alu->def.bit_size;
++               for (unsigned a = 0; !bits && a < nir_op_infos[alu->op].num_inputs; a++)
++                  if (!nir_alu_type_get_type_size(nir_op_infos[alu->op].input_types[a]))
++                     bits = alu->src[a].src.ssa->bit_size;
+                nir_eval_const_opcode(alu->op, values[&alu->def].data(), nullptr,
+-                                     alu->def.num_components, alu->def.bit_size, ptrs, 0);
++                                     alu->def.num_components, bits ? bits : 32, ptrs, 0);
+             } else if (instr->type == nir_instr_type_intrinsic) {
+                auto *in = nir_instr_as_intrinsic(instr);
+                if (in->intrinsic == nir_intrinsic_load_ubo) {
+@@ -555,3 +559,85 @@
+    }
+    FAIL();
+ }
++
++static void quantize_test_load(nir_builder *b)
++{
++   nir_foreach_block(block, b->impl) {
++      nir_foreach_instr(instr, block) {
++         if (instr->type != nir_instr_type_intrinsic)
++            continue;
++         auto *in = nir_instr_as_intrinsic(instr);
++         if (in->intrinsic != nir_intrinsic_load_ssbo)
++            continue;
++         nir_def *index = nir_def_as_alu(in->src[1].ssa)->src[0].src.ssa;
++         b->cursor = nir_before_instr(instr);
++         nir_def *offset = nir_imul_imm(b, nir_idiv(b, index, nir_imm_int(b, 4)), 4);
++         nir_src_rewrite(&in->src[1], offset);
++         return;
++      }
++   }
++}
++
++TEST_F(nir_runtime_unroll_test, cached_word_signed_boundaries)
++{
++   build();
++   quantize_test_load(&bld);
++   nir_shader *original = nir_shader_clone(nullptr, bld.shader);
++   ASSERT_TRUE(nir_opt_loop_cache_readonly(bld.shader));
++   nir_validate_shader(bld.shader, "cached word loop");
++   EXPECT_FALSE(nir_opt_loop_cache_readonly(bld.shader));
++   for (uint32_t start : {0u, 1u, 2u, 3u, 0xfffffff8u, 0xffffffffu, 0x80000000u, 0x7ffffff0u}) {
++      for (unsigned n = 0; n <= 33; n++) {
++         auto a = run(original, start, start + n), b = run(bld.shader, start, start + n);
++         a.reads.erase(std::unique(a.reads.begin(), a.reads.end()), a.reads.end());
++         EXPECT_TRUE(a == b) << "start=" << start << " count=" << n;
++      }
++   }
++   auto empty_a = run(original, 5, 3), empty_b = run(bld.shader, 5, 3);
++   EXPECT_TRUE(empty_a == empty_b) << "reads " << empty_a.reads.size() << "/" << empty_b.reads.size() << " sum " << empty_a.sum << "/" << empty_b.sum;
++   ralloc_free(original);
++}
++TEST_F(nir_runtime_unroll_test, cached_word_reject_write)
++{
++   build(false, false, false, 1, true);
++   quantize_test_load(&bld);
++   EXPECT_FALSE(nir_opt_loop_cache_readonly(bld.shader));
++}
++TEST_F(nir_runtime_unroll_test, cached_word_reject_volatile)
++{
++   build();
++   quantize_test_load(&bld);
++   nir_foreach_block(block, bld.impl) {
++      nir_foreach_instr(instr, block) {
++         if (instr->type == nir_instr_type_intrinsic) {
++            auto *in = nir_instr_as_intrinsic(instr);
++            if (in->intrinsic == nir_intrinsic_load_ssbo)
++               nir_intrinsic_set_access(in, (gl_access_qualifier)(nir_intrinsic_access(in) | ACCESS_VOLATILE));
++         }
++      }
++   }
++   EXPECT_FALSE(nir_opt_loop_cache_readonly(bld.shader));
++}
++TEST_F(nir_runtime_unroll_test, cached_word_lowered_signed_division)
++{
++   build();
++   quantize_test_load(&bld);
++   nir_opt_algebraic(bld.shader);
++   nir_opt_constant_folding(bld.shader);
++   nir_shader *original = nir_shader_clone(nullptr, bld.shader);
++   ASSERT_TRUE(nir_opt_loop_cache_readonly(bld.shader));
++   nir_opt_licm(bld.shader, [](nir_instr *in, nir_loop *, bool) {
++      return in->type == nir_instr_type_alu;
++   });
++   nir_validate_shader(bld.shader, "cached lowered division plus pure LICM");
++   for (int start = -10; start <= 10; start++) {
++      for (unsigned n = 0; n <= 33; n++) {
++         auto a = run(original, start, start + n), b = run(bld.shader, start, start + n);
++         a.reads.erase(std::unique(a.reads.begin(), a.reads.end()), a.reads.end());
++         EXPECT_TRUE(a == b) << "start=" << start << " count=" << n;
++      }
++   }
++   EXPECT_EQ(run(original, 0, 33).reads.size(), 33u);
++   EXPECT_EQ(run(bld.shader, 0, 33).reads.size(), 9u);
++   ralloc_free(original);
++}

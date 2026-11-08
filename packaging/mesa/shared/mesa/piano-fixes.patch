@@ -1,12 +1,23 @@
-From: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
-Subject: [PATCH] mesa: publish shared contexts after state tracker initialization
+Mesa 26.2.0: match Adreno 830 revision 1 with the speed bin supplied by drm/msm.
 
-Extract the generic shared-context fix from piano-fixes.patch; the A830v1
-speedbin match is already supplied by the existing upstream patch.
-Source: https://github.com/yzddmr6/xiaomipad-8pro-mainline/commit/21d2db452c909745d3dabc6e64034bb002223a79
-License: MIT
-Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+MSM_PARAM_CHIP_ID adds speedbin in bits 63:32 for GPUs without a legacy revn.
+Use Mesa's existing wildcard fuse ID; this still matches the KGSL ID with zero
+upper bits. The revision-0 entry already uses this convention. Based on the
+MIT-licensed freedreno_devices.py at Mesa commit 9f0a761020bca92f2b07156a0621e5360cb8eca5.
+The ROCKNIX 92a6fca6 SM8750 chip-ID patch independently includes this wildcard.
+This local minimal change does not copy its redundant revision-0 KGSL entry.
 
+--- a/src/freedreno/common/freedreno_devices.py
++++ b/src/freedreno/common/freedreno_devices.py
+@@ -1342,7 +1342,7 @@
+ 
+ add_gpus([
+         GPUId(chip_id=0xffff44050000, name="Adreno (TM) 830"),
+-        GPUId(chip_id=0x44050001, name="Adreno (TM) 830"), # KGSL
++        GPUId(chip_id=0xffff44050001, name="Adreno (TM) 830"),
+     ], A6xxGPUInfo(
+         CHIP.A8XX,
+         [a7xx_base, a7xx_gen3, a8xx_base, a8xx_gen1],
 
 --- a/src/mesa/main/context.c
 +++ b/src/mesa/main/context.c

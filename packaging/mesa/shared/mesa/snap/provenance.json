@@ -1,0 +1,71 @@
+{
+  "repository": "https://github.com/yzddmr6/onepluspad-2pro-mainline",
+  "commit": "70588c971d260b0d0955242f226791725664c8b1",
+  "author": "yzddmr6 <46088090+yzddmr6@users.noreply.github.com>",
+  "licence": "GPL-2.0-only (original per-file SPDX and source repository LICENSE; not MIT)",
+  "files": [
+    {
+      "source": "tools/build-mesa-root.py",
+      "destination": "tools/build-mesa-root.py",
+      "sha256": "0d7fe7daefea536b3dd31c99400e5e7994e54ca4e4e85c76a68d9493dc230425"
+    },
+    {
+      "source": "tools/build-mesa.py",
+      "destination": "tools/build-mesa.py",
+      "sha256": "e58cb1199a4e55be4ff1595855917ebb24b55f770ec5556bb0cf04173423869d"
+    },
+    {
+      "source": "tools/package-mesa-snap.py",
+      "destination": "tools/package-mesa-snap.py",
+      "sha256": "cdf6ecac0ee726737047161d104ce6266897e92b369293ebec6f27d631eed89e"
+    },
+    {
+      "source": "tools/lib/build_root.py",
+      "destination": "tools/lib/build_root.py",
+      "sha256": "a6f6d1cac0678c85ed58ade0373de7d9dbbd2e02139286db409aafe5cff862a7"
+    },
+    {
+      "source": "packaging/mesa-snap/VERSION",
+      "destination": "packaging/mesa-snap/VERSION",
+      "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865"
+    },
+    {
+      "source": "packaging/mesa-snap/gpu-2404-provider-wrapper",
+      "destination": "packaging/mesa-snap/gpu-2404-provider-wrapper",
+      "sha256": "4ae36b2adc8e4fad629c4bc7dc1e752b280a28772d3a08efc4e0c7cfb9770c3e",
+      "retired": "2026-10-12; runtime now retains the exact wrapper from the locked stock snap."
+    },
+    {
+      "source": "packaging/mesa/build-root-core24.json",
+      "destination": "mesa/snap/core24-sdk.json",
+      "sha256": "cc7b7fae3af447fbd3b55fb5f7718fbfff39318adda6c8c758487c21de4294a7"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "LICENSES/oneplus-mesa-tools-GPL-2.0-only.txt",
+      "sha256": "8780e78a1a737e127f25a65f6d95269bffd36158dc261114de7859b490bfc5aa"
+    }
+  ],
+  "local_changes": [
+    "Rename provider and SDK-local paths from erhai to piano.",
+    "Use the official release archive and ordered patches pinned by mesa/source.json, shared with the desktop deb.",
+    "Limit the imported root build entry point to gpu-2404, retain native NIR and resume, and keep downloads under the caller cache.",
+    "Retain imported tool/wrapper GPL-2.0-only notices and ship their licence.",
+    "2026-10-12: replace the minimal dependency-closure runtime with the complete pinned mesa-2404 revision 1166, overlay only compiled Mesa files, and preserve the stock wrapper/hooks and non-Mesa content.",
+    "Reuse verified Mesa build artifacts for packaging-only changes; no runtime files from an old minimal provider are copied outside the recorded Mesa payload."
+  ],
+  "stock_provider": {
+    "repository": "https://github.com/canonical/mesa-2404",
+    "commit": "07eefb905dd4a75b31f05b7954326312cb19e99a",
+    "author": "Christopher James Halse Rogers <chris@cooperteam.net>",
+    "licence": "MIT as declared by the stock snap; preserve each embedded library copyright notice",
+    "source_identity_evidence": "The embedded snap/snapcraft.yaml matches this commit byte-for-byte and its history count is 211, matching 25.0.7-snap211. This identifies the matching recipe; binary identity remains the revision/hash lock.",
+    "artifact_lock": "mesa/snap/mesa-2404.json",
+    "files": "Complete stock snap payload, including wrapper, hooks and component monitor",
+    "local_changes": [
+      "Overlay the Mesa files recorded by the pinned core24 Mesa build",
+      "Change only name/version in snap metadata",
+      "Add piano build provenance and licence files"
+    ]
+  }
+}
