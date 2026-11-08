@@ -84,6 +84,7 @@ build, never contents of a package.
 import argparse
 from contextlib import ExitStack
 import hashlib
+import gzip
 import json
 import os
 import re
@@ -116,7 +117,7 @@ VERSION_FILE = PACKAGING / 'VERSION'
 MAINTAINER = 'yzddmr6 <46088090+yzddmr6@users.noreply.github.com>'
 DEBIAN_SCRIPTS = ('preinst', 'postinst', 'prerm', 'postrm')
 PACKAGES = ('erhai-display-power', 'erhai-device-support', 'erhai-firmware', 'erhai-audio',
-            'erhai-firefox', 'erhai-settings', 'erhai-kernel', 'erhai-debug', 'erhai-device')
+            'erhai-firefox', 'erhai-release-notifier', 'erhai-settings', 'erhai-kernel', 'erhai-debug', 'erhai-device')
 PARTS = ('boot', 'init_boot', 'vendor_boot')
 SWITCHER_PROGRAMS = ('erhai-switch', 'erhai-switch-install-ubuntu-images')
 
@@ -1021,6 +1022,13 @@ def write_control(root, package, version, substitutions):
         (debian / script).write_text(text)
         (debian / script).chmod(0o755)
 
+    if package == 'erhai-release-notifier':
+        changelog = (f'{package} ({version}) unstable; urgency=medium\n\n'
+                     '  * Provide desktop notifications for project releases.\n\n'
+                     f' -- {MAINTAINER}  Sun, 08 Nov 2026 00:00:00 +0000\n')
+        (root / 'usr/share/doc' / package / 'changelog.gz').write_bytes(
+            gzip.compress(changelog.encode(), mtime=0))
+
     # Files under /etc are configuration: dpkg must keep local edits instead of
     # replacing them on upgrade.
     conffiles = sorted(f'/{p.relative_to(root).as_posix()}'
@@ -1073,6 +1081,8 @@ def pack(root, package, version, architecture, out_dir, epoch):
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--release-version',
+                        help='Project release (without v), required when building device support')
     parser.add_argument('--output', type=Path, default=WS / 'out/erhai-debs')
     parser.add_argument('--kernel-out', type=Path, default=WS / 'out/kernel-firstboot')
     parser.add_argument('--dtb', type=Path, default=WS / 'out/abl-dtb/erhai-abl.dtb',
@@ -1116,6 +1126,11 @@ def main():
     wanted = tuple(args.only) if args.only else tuple(
         package for package in PACKAGES if args.debug or package != 'erhai-debug')
 
+    if 'erhai-device-support' in wanted:
+        if not args.release_version or not re.fullmatch(r'[0-9][0-9A-Za-z.+~\-]*', args.release_version):
+            parser.error('--release-version is required for erhai-device-support')
+        run(['dpkg', '--validate-version', args.release_version])
+
     release_file = Path(args.kernel_out) / 'include/config/kernel.release'
     release = None
     if 'erhai-kernel' in wanted:
@@ -1143,6 +1158,13 @@ def main():
             root.mkdir(parents=True)
             if package == 'erhai-device-support':
                 stage_device_support(root)
+                release_file = root / 'usr/share/mainline-release/version'
+                release_file.parent.mkdir(parents=True, exist_ok=True)
+                release_file.write_text(args.release_version + '\n')
+            elif package == 'erhai-release-notifier':
+                copy_tree(PACKAGING / 'release-notifier', root)
+                install_file(PACKAGING / package / 'copyright',
+                             root / 'usr/share/doc' / package / 'copyright', 0o644)
             elif package == 'erhai-display-power':
                 stage_display_power(root)
             elif package in ('erhai-debug', 'erhai-firefox'):
@@ -1192,6 +1214,7 @@ def main():
         summary = {
             'version': version,
             'release': release_counter,
+            'project_release': args.release_version,
             'build_id': build_id,
             'source_date_epoch': epoch,
             'built': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),

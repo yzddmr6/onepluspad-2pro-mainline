@@ -103,12 +103,14 @@ Mesa 的构建、安装和回退见[图形专项](GRAPHICS.md)。传感器入口
 
 沿用上面的内核、DTB 和 initramfs 输出，完整设备包的构建示例为：
 
+`RELEASE_VERSION` 是本次 GitHub 发布标签去掉 `v` 后的版本号，由发布流程传入；构建设备支持包时必填。它写入 `/usr/share/mainline-release/version`，供桌面更新提醒读取，与 `packaging/VERSION` 的组件版本独立。
+
 ```sh
 mkdir -p keys
 # 首次构建生成一次；后续保留此密钥。
 test -f keys/boot.pem || openssl genpkey -algorithm RSA \
   -pkeyopt rsa_keygen_bits:4096 -out keys/boot.pem
-python3 tools/build-debs.py --output out/device-packages \
+python3 tools/build-debs.py --release-version "$RELEASE_VERSION" --output out/device-packages \
   --kernel-out "$kernel_out" --dtb out/abl-dtb/erhai-abl.dtb \
   --initramfs out/initramfs/initramfs-ncm.cpio.gz \
   --avb-key keys/boot.pem \

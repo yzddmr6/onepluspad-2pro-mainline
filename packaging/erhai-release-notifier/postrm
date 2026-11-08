@@ -1,0 +1,6 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -e
+if [ "$1" = purge ]; then
+    deb-systemd-helper --user purge mainline-release-notifier.timer >/dev/null
+fi
