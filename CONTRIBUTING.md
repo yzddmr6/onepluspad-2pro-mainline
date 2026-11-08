@@ -1,26 +1,50 @@
-# Contributing
+# 参与贡献
 
-Device packages, userspace integration, build tools and documentation belong in
-this repository. Drivers, device trees and kernel configuration belong in the
-separate device-kernel repository. The selected revision is recorded in
-[kernel/source.json](kernel/source.json). Kernel changes belong in
-[linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai).
+[English](CONTRIBUTING.en.md)
 
-Keep changes focused and explain the problem, resulting behavior and validation.
-Preserve original authorship and licenses when adapting community code. Prefer
-existing Linux subsystems and distribution packages over device-specific services.
+## 改动发到哪里
 
-Run checks relevant to the change. Documentation-only changes need link and
-consistency checks, not a kernel rebuild. For device results, report the model,
-firmware, exact software version, reproduction steps and observed outcome.
-Distinguish compilation, emulation and hardware tests; do not infer functionality
-from a device node or a successful probe alone.
+- 设备包、用户态集成、构建与安装工具和文档：本仓 [onepluspad-2pro-mainline](https://github.com/yzddmr6/onepluspad-2pro-mainline)，目标分支 `main`。
+- 内核驱动、设备树和内核配置：[linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai)，目标分支 `erhai/v0.7`（当前发布线）。本仓选用的内核版本记在 [kernel/source.json](kernel/source.json)。
+- 两边都要改时分别提 PR，互相链接并写明合入顺序。
+- 发布相关文件或项目规则要改，先开 issue 讨论。交流渠道见 README。
 
-Remove credentials, serial numbers, wireless addresses and personal data from
-shared logs. Do not include factory calibration or private keys in contributions.
-The README lists the project's discussion channels.
+## 提交前逐项核对
 
-Keep published version tags immutable. A binary release must identify matching
-sources and inputs, its supported installation scope and known limitations.
-Kernel upstream submissions follow the target subsystem's contribution rules;
-publishing this project's development source is a separate step.
+每一项都要能在 PR 里看到对应的事实；不适用的写“不适用”和理由。纯文档只做文档检查；工具按实际影响验证：改变构建配置、镜像内容、安装或恢复行为的，验证对应产物与设备边界，不能因为工具在主机上运行就免测；能用可靠的离线检查覆盖的，不重复做破坏性操作。
+
+1. **一个 PR 一个主题。** 一个功能或一个修复，能单独评审、单独回退。相机、充电、传感器这样的功能各提一个 PR；重构、格式调整与功能分开。删掉已经合入、被替代或与主题无关的提交。每个提交是一个逻辑改动、能单独构建，提交说明写清问题和为什么要改。
+2. **基于目标分支的最新提交。** 你的 `origin` 多半是自己的 fork：先加上本项目仓库（`git remote add upstream https://github.com/yzddmr6/onepluspad-2pro-mainline.git`）并 `git fetch upstream`，再 rebase 到 `upstream/main` 的最新提交，自己解决冲突。检查完整的最终差异（`git diff upstream/main...HEAD`）；发生过冲突的文件，对照重放前后的内容确认没有遗漏或误删。`--stat` 只用来看范围。
+3. **说的和做的一致。** 标题、正文和 `Fixes:` 里关于功能与修复的说法，要与最终差异和实际调用路径一致；修 bug 给出在当前目标分支上的复现方法或源码依据。测试结论写明被测版本、场景和结果；rebase 或改代码之后，说明哪些旧的测试结果仍然适用、哪些已经补测。
+4. **按发布方式构建。** 用[构建指南](docs/BUILD.md)里的入口和完整发布输入（`kernel/source.json` 选定的内核与其中列出的配置片段、匹配的模块与 DTB、软件包与服务）构建，写明被测的提交或产物。调用的接口、sysfs 节点和服务要在被测组合里真实存在：来自目标分支、本 PR 或明确链接的配套 PR；写明提供方和合入顺序，并验证可选提供方缺席时的行为。不要凭假定的接口写实现；只编译通过不等于能用。
+5. **硬件参数有依据。** 固定内存地址、寄存器值、时序、电压电流等参数给出原厂或上游依据，并对所有已支持的变体成立：12 GB 与 16 GB 内存、外设有或没有。固定的保留内存地址要落在所有内存容量机型的 RAM 范围内。改共享代码要说明对现有使用者的影响。
+6. **真机回测。** 在自己的设备上装上改动（写明是 RAM 启动还是已装系统），至少确认：
+   - 冷启动能进入登录界面或桌面；
+   - `dmesg` 与改动前相比没有新增 `Oops`、`BUG`、`WARNING`、`hung task`、`soft lockup` 或 `Call trace`；
+   - 挂起后能唤醒，睡眠时长按墙上时间核对（见[系统休眠](docs/SUSPEND.md)）；改动涉及电源或充电时，在电池供电下也测一次；
+   - 显示与触控的生命周期：熄屏再亮屏、锁屏后解锁、长时间熄屏后唤醒；
+   - 改动涉及的子系统真实可用；新增的可选功能缺失或失败时，不拖垮与它无关的既有功能（开机、触控、挂起），必要依赖失败时正确报错并回收资源。错误路径优先用源码审查或离线故障注入核对，不要为了勾选去卸载或重绑正在使用的硬件驱动；改动涉及充电时，也要检查退出到普通模式、睡眠和恢复后原有功能正常。
+
+   没有把握的新功能默认关闭；不加没有协议依据的周期轮询、重试、延时或唤醒。
+7. **署名与来源。** 用你自己的身份提交（作者是写代码的人，提交者是应用改动的人）。导入别人的代码时保留原作者、原日期和原有尾注，给出能访问的来源链接，本地修改另成提交，并在 [NOTICE](NOTICE) 登记来源与许可。固件文件按 `packaging/firmware-manifest.json` 记录来源镜像、路径与 SHA-256。用了 AI 的，每个相关提交用 `Co-Authored-By:` 尾注写明实际使用的模型，例如 `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`，用了几个模型写几条；PR 里写明实际使用的工具、模型和用在哪些部分；不附提示词或会话记录；已合入的提交不为补这一行而改写。AI 不能替任何人加 `Signed-off-by:`、`Tested-by:`，也不能声称做过没做的测试。
+8. **不越权。** 普通 PR 不改发布用的版本锁（如 `kernel/source.json` 选定的内核），不扩大权限或写入范围，也不替维护者宣布批准、授权、测试结论或发布；已发布的版本标签不移动。与本主题直接相关的源码、补丁或依赖更新，同步更新对应的哈希并说明来源与复验结果；不要只为让校验通过而改期望值。
+9. **不带个人数据。** 提交、生成的文件和默认日志输出里不能有序列号、蓝牙/Wi-Fi 地址、逐机标定、凭据、私钥、个人路径和会话记录。贴日志前先脱敏。
+
+## 设计约定
+
+- 优先用现有 Linux 子系统和发行版的包，不另起设备专用服务；缺能力时固定上游来源、只带最小补丁，并写明什么时候可以去掉。
+- 根文件系统是官方 Ubuntu 的原样输入；设备相关内容按归属打成 `erhai-*` 包，与发行版文件冲突只用 `dpkg-divert`，机器专属数据在安装时注入。
+- 构建与打包工具不隐式访问设备；输入固定、可公开获取，不依赖私有路径、别人工作区的产物或另一台设备的标定。
+
+<a id="evidence"></a>
+## PR 与问题报告里要写的
+
+按 [PR 模板](.github/pull_request_template.md) 填写：问题与改动；主题、目标分支与基于的提交、依赖与合入顺序；来源与许可；AI 协助（工具、模型与用途）；验证——机型与内存、原厂系统版本、内核版本与提交、集成提交或镜像、测试方式（离线、RAM 启动、已装系统冷启动、升级）、命令与结果、脱敏日志；没测到或有限制的部分。
+
+编译、模拟、设备节点存在或 probe 成功都不证明功能可用；另一台设备上的结果不证明这一台也可用。
+
+## 合入方式
+
+维护者每个版本审一次待合入的 PR。能合的直接合；有小问题时，维护者可能合入后自己补修、拆分或只摘取一部分，并在 PR 里说明。维护者整合后的组合按同一份清单验收。
+
+中英文文档一起更新。文档里的命令不代表授权你去刷写、清空或重启别人的设备。
