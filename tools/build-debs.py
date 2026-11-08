@@ -962,7 +962,7 @@ def metadata_digest(package, substitutions):
     together with every substitution that is not the version itself.
     """
     digest = hashlib.sha256()
-    for name in ('control', *DEBIAN_SCRIPTS):
+    for name in ('control', 'changelog', *DEBIAN_SCRIPTS):
         source = PACKAGING / package_template(package) / name
         if source.is_file():
             digest.update(f'{name} {sha256_file(source)}\n'.encode())
@@ -1001,6 +1001,12 @@ def installed_size_kib(root):
 def write_control(root, package, version, substitutions):
     debian = root / 'DEBIAN'
     debian.mkdir(parents=True, exist_ok=True)
+    changelog = PACKAGING / package_template(package) / 'changelog'
+    if changelog.is_file():
+        text = changelog.read_text().replace('@VERSION@', version).replace('@MAINTAINER@', MAINTAINER)
+        docs = root / 'usr/share/doc' / package
+        docs.mkdir(parents=True, exist_ok=True)
+        (docs / 'changelog.gz').write_bytes(gzip.compress(text.encode(), mtime=0))
     text = (PACKAGING / package_template(package) / 'control').read_text()
     values = {'@VERSION@': version,
               '@INSTALLED_SIZE@': str(installed_size_kib(root)), **substitutions}
@@ -1021,13 +1027,6 @@ def write_control(root, package, version, substitutions):
             text = text.replace(key, value)
         (debian / script).write_text(text)
         (debian / script).chmod(0o755)
-
-    if package == 'erhai-release-notifier':
-        changelog = (f'{package} ({version}) unstable; urgency=medium\n\n'
-                     '  * Provide desktop notifications for project releases.\n\n'
-                     f' -- {MAINTAINER}  Sun, 08 Nov 2026 00:00:00 +0000\n')
-        (root / 'usr/share/doc' / package / 'changelog.gz').write_bytes(
-            gzip.compress(changelog.encode(), mtime=0))
 
     # Files under /etc are configuration: dpkg must keep local edits instead of
     # replacing them on upgrade.

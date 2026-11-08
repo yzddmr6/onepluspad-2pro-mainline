@@ -1,0 +1,5 @@
+erhai-release-notifier (@VERSION@) unstable; urgency=medium
+
+  * Provide desktop notifications for project releases.
+
+ -- @MAINTAINER@  Sun, 08 Nov 2026 00:00:00 +0000
