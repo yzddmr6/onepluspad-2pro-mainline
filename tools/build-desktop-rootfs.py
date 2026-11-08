@@ -119,8 +119,8 @@ def main():
                host_image, '/bin/bash', '/assemble', str(args.jobs), *seeds]
     if layer_cache:
         options = ['--env', 'ERHAI_LAYER_CACHE=1']
-        for name in ('minimal', 'standard'):
-            options += ['--volume', f'{layer_cache / name}:/work/{name}:ro']
+        for layer_name in ('minimal', 'standard'):
+            options += ['--volume', f'{layer_cache / layer_name}:/work/{layer_name}:ro']
         command[2:2] = options
     (out / 'build-command.local.json').write_text(json.dumps(command, indent=2) + '\n')
     started = time.monotonic()
