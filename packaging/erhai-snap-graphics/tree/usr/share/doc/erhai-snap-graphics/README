@@ -1,0 +1,14 @@
+This metapackage selects piano-snap-graphics and its piano-mesa-2404
+content provider. The provider uses the core24 ABI and includes Adreno 830
+revision 1 support. It does not replace native desktop Mesa or snapd.
+
+Source and build instructions:
+https://github.com/yzddmr6/xiaomipad-8pro-mainline/blob/main/docs/BUILD.en.md#graphics-for-core24-snaps
+
+Install both debs together with apt. Close GPU snap applications before
+running sudo piano-snap-graphics-connect --install on an installed system.
+The provider's service handles initial seeding on the next boot.
+
+Removing this metapackage does not disconnect content or remove the provider.
+Restore each previous content connection and discard its saved namespace
+with snap-discard-ns before removing the provider snap and its deb package.

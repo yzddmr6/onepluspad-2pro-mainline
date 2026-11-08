@@ -97,7 +97,8 @@ python3 tools/build-mainline-boot.py --output out/mainline-boot \
 [固件说明](../packaging/firmware/README.md)。音频原始源码由
 [packaging/audio/source.json](../packaging/audio/source.json)锁定，默认使用准备器写入的缓存。
 
-Mesa 的构建、安装和回退见[图形专项](GRAPHICS.md)。传感器入口为
+桌面 Mesa 与可选的 `erhai-snap-graphics` 元包的构建、安装和回退见[图形专项](GRAPHICS.md)。
+Snap 元包依赖共享的 `piano-snap-graphics`，不再装配另一份 content provider。传感器入口为
 `tools/build-sensors.py --help`。组件构建的输入、依赖与包行为详见
 [英文构建参考](BUILD.en.md#device-packages)。
 

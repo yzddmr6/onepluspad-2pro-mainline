@@ -127,34 +127,6 @@ def die(message):
     raise SystemExit(f'build-debs: {message}')
 
 
-def stage_snap_graphics(root, build):
-    if build is None:
-        die('erhai-snap-graphics requires --snap-graphics-build')
-    manifest = json.loads((build / 'manifest.json').read_text())
-    name = manifest['package']['file']
-    if Path(name).name != name:
-        die('invalid provider filename')
-    snap = build / name
-    if sha256_file(snap) != manifest['package']['sha256']:
-        die('provider payload does not match its build manifest')
-    metadata = json.loads(run(['unsquashfs', '-cat', str(snap), 'meta/snap.yaml']))
-    if (metadata['name'] != 'erhai-mesa-2404' or metadata['base'] != 'core24'
-            or metadata['architectures'] != ['arm64'] or metadata['confinement'] != 'strict'
-            or metadata['version'] != manifest['version']
-            or metadata['slots'] != {'gpu-2404': {'interface': 'content',
-                                                 'read': ['$SNAP']}}):
-        die('incompatible provider metadata')
-    copy_tree(PACKAGING / 'erhai-snap-graphics/tree', root)
-    payload = root / 'usr/share/erhai/snaps'
-    payload.mkdir(parents=True)
-    shutil.copy2(snap, payload / 'erhai-mesa-2404.snap')
-    (payload / 'provider.json').write_text(json.dumps({
-        'name': metadata['name'], 'version': metadata['version'],
-        'sha256': manifest['package']['sha256']}, indent=2) + '\n')
-    docs = root / 'usr/share/doc/erhai-snap-graphics'
-    shutil.copy2(build / 'manifest.json', docs / 'provider-build.json')
-
-
 def sha256_file(path):
     digest = hashlib.sha256()
     with open(path, 'rb') as handle:
@@ -1140,8 +1112,6 @@ def main():
                              'packaging/firmware and the manifest')
     parser.add_argument('--only', choices=PACKAGES, action='append',
                         help='Build just these packages (repeatable)')
-    parser.add_argument('--snap-graphics-build', type=Path,
-                        help='Verified package-mesa-snap.py output; enables erhai-snap-graphics')
     args = parser.parse_args()
 
     manifest = json.loads(MANIFEST.read_text())
@@ -1155,7 +1125,7 @@ def main():
         die('dpkg-deb is required')
     wanted = tuple(args.only) if args.only else tuple(
         package for package in PACKAGES if (args.debug or package != 'erhai-debug')
-        and (args.snap_graphics_build or package != 'erhai-snap-graphics'))
+        and package != 'erhai-snap-graphics')
 
     if 'erhai-device-support' in wanted:
         if not args.release_version or not re.fullmatch(r'[0-9][0-9A-Za-z.+~\-]*', args.release_version):
@@ -1198,10 +1168,8 @@ def main():
                              root / 'usr/share/doc' / package / 'copyright', 0o644)
             elif package == 'erhai-display-power':
                 stage_display_power(root)
-            elif package in ('erhai-debug', 'erhai-firefox'):
+            elif package in ('erhai-debug', 'erhai-firefox', 'erhai-snap-graphics'):
                 copy_tree(PACKAGING / package / 'tree', root)
-            elif package == 'erhai-snap-graphics':
-                stage_snap_graphics(root, args.snap_graphics_build)
             elif package == 'erhai-firmware':
                 stage_firmware(root, manifest)
             elif package == 'erhai-settings':

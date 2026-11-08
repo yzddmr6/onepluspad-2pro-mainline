@@ -1,8 +1,0 @@
-#!/bin/sh
-# SPDX-License-Identifier: MIT
-set -e
-if [ "$1" = configure ]; then
-    rm -f /var/lib/erhai/snap-graphics-configured
-    deb-systemd-helper enable erhai-snap-graphics.service >/dev/null
-    if [ -d /run/systemd/system ]; then systemctl daemon-reload; fi
-fi

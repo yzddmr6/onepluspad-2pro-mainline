@@ -257,7 +257,8 @@ The revised migration is still awaiting final installed-device validation.
 
 The optional `erhai-mesa` deb supplies the native desktop driver. Core24 Snap
 applications need a separate `gpu-2404` content provider, built against their
-own runtime ABI. Both use the same pinned Mesa source and patches.
+own runtime ABI. The optional `erhai-snap-graphics` metapackage selects the
+shared `piano-snap-graphics` package; its provider has its own source and ABI locks.
 Build, installation and rollback instructions are in [GRAPHICS.md](GRAPHICS.md).
 Hardware drawing, application behavior and physical display output have separate
 acceptance requirements; development candidates are not validated releases.
