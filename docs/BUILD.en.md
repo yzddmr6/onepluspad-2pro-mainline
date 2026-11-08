@@ -152,12 +152,14 @@ watchdog from a boot that never reached the service.
 The installed system is Canonical's Ubuntu, unpacked as it ships. The
 functional device layer is packaged separately. The GNOME display-power adapter targets Settings Daemon 50; diagnostics are a separate optional package.
 
+`RELEASE_VERSION` is the GitHub release tag without its `v` prefix, supplied by the release process. It is required when building device support and is written to `/usr/share/mainline-release/version` for desktop update notifications, independently of the component counter in `packaging/VERSION`.
+
 ```sh
 mkdir -p keys
 # Generate once and retain for later builds.
 test -f keys/boot.pem || openssl genpkey -algorithm RSA \
   -pkeyopt rsa_keygen_bits:4096 -out keys/boot.pem
-python3 tools/build-debs.py --output out/device-packages \
+python3 tools/build-debs.py --release-version "$RELEASE_VERSION" --output out/device-packages \
   --kernel-out "$kernel_out" --dtb out/abl-dtb/erhai-abl.dtb \
   --initramfs out/initramfs/initramfs-ncm.cpio.gz \
   --avb-key keys/boot.pem \

@@ -175,6 +175,8 @@ Features under development are not included in the supported feature set.
 
 ## Use and Maintenance
 
+Checks GitHub anonymously once a day for the latest release and notifies you when a newer version is available; this can be disabled in notification settings.
+
 The base system comes from the official Ubuntu Desktop image. Device support is
 delivered as separate `erhai-*` packages; Ubuntu packages remain managed by APT.
 Firefox comes from Mozilla's APT repository (`erhai-firefox`) instead of the

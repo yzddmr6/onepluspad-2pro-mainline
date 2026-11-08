@@ -90,3 +90,14 @@ packaging/install-tools/ext2simg.c is the unchanged AOSP e2fsprogs converter,
 Copyright (C) 2016 The Android Open Source Project, under Apache-2.0. Its exact
 source revision and Ubuntu library inputs are recorded in the adjacent
 source.json. The downloaded libraries retain their own copyright and licenses.
+
+Project release notifications
+-----------------------------
+packaging/release-notifier/ and tools/test-release-notifier.py are imported from
+https://github.com/yzddmr6/xiaomipad-8pro-mainline
+commit b0c2d11c8a5bb530fe5ba199e756964123b665db (MIT, Copyright 2026 yzddmr6).
+The runtime and tests are unmodified; only usr/share/mainline-release-notifier/project.json
+selects this repository and product name. The Xiaomi repository is the canonical
+implementation. The MIT text is preserved in packaging/erhai-release-notifier/copyright.
+The separate erhai-release-notifier package and release-version build input are
+local packaging integration.

@@ -160,6 +160,8 @@
 
 ## 使用与维护
 
+每天匿名检查一次 GitHub 上的最新版本，有新版时提示；可在通知设置中关闭。
+
 基础系统来自官方 Ubuntu Desktop，设备适配通过独立的 `erhai-*` 软件包交付，Ubuntu
 软件包继续由 APT 管理。Firefox 从 Mozilla 官方 APT 源安装（`erhai-firefox`），不使用 Snap，
 以便使用设备图形驱动，并经 APT 更新。当前显示电源适配针对 GNOME Settings Daemon 50，桌面大版本
