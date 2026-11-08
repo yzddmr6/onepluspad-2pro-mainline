@@ -482,7 +482,7 @@ class ReverseRpcTest(unittest.TestCase):
 
     def test_series_order_and_refusal_patch(self):
         names = [p.name for p in self.hexagonrpc_patches()]
-        self.assertEqual([n[:4] for n in names], ['0001', '0002', '0003', '0004', '0005'])
+        self.assertEqual([n[:4] for n in names], ['0001', '0002', '0003', '0004', '0005', '0006'])
         refusal = self.hexagonrpc_patches()[4].read_text()
         # A refusal is answered with no output buffers and the loop goes on;
         # the reason stays in the journal for the bring-up check.

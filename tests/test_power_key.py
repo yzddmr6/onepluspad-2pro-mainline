@@ -143,6 +143,7 @@ class SuspendPolicyTest(unittest.TestCase):
         self.assertEqual({section: dict(settings[section]) for section in settings.sections()}, {
             'org.gnome.settings-daemon.plugins.power': {'power-button-action': "'nothing'"},
             'org.gnome.desktop.screensaver': {'lock-enabled': 'true'},
+            'org.gnome.shell': {'enabled-extensions': "['piano-osk-guard@io.github.piano']"},
         })
         logind = configparser.ConfigParser()
         logind.read(tree / 'etc/systemd/logind.conf.d/90-erhai-power.conf')
