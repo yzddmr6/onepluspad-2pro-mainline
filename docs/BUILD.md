@@ -143,7 +143,13 @@ dpkg-dev。先拉取清单固定的容器镜像。装配期间容器需要额外
 `python3-markupsafe`）。它们使用 ARM64 binfmt，不在装配用的 Docker 容器内构建：
 
 ```sh
-python3 tools/build-mesa-root.py --output out/mesa-debs --jobs 6 --native-nir
+# Shared source and recipe: packaging/mesa/shared/mesa/source.json
+python3 tools/build-mesa.py --profile desktop --source-archive <official-Mesa-archive> \
+  --cross-file <arm64-cross-file> --target-root <arm64-SDK> --output out/mesa-build
+python3 packaging/mesa/shared/tools/package-mesa.py --mesa-build out/mesa-build \
+  --output out/shared-mesa --version <package-version>
+python3 tools/package-mesa.py --shared-package out/shared-mesa/piano-mesa_*_arm64.deb \
+  --output out/mesa-debs
 python3 tools/build-sensors.py --output out/sensor-debs
 
 args=()

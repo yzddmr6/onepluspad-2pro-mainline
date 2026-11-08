@@ -39,7 +39,7 @@ https://github.com/yzddmr6/xiaomipad-8pro-mainline
 Graphics, audio and sensors
 --------------------------
 Mesa and its device-table patch retain upstream authorship and licenses;
-packaging/mesa/source.json identifies the inputs, and Mesa's docs/license.rst
+packaging/mesa/shared/mesa/source.json identifies the inputs, and Mesa's docs/license.rst
 and file notices apply. See docs/GRAPHICS.md for the integration boundary.
 Project source: https://gitlab.freedesktop.org/mesa/mesa
 

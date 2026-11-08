@@ -289,7 +289,13 @@ Mako and MarkupSafe in the host Python (`python3-mako` and
 container. The following example uses Bash.
 
 ```sh
-python3 tools/build-mesa-root.py --output out/mesa-debs --jobs 6 --native-nir
+# Shared source and recipe: packaging/mesa/shared/mesa/source.json
+python3 tools/build-mesa.py --profile desktop --source-archive <official-Mesa-archive> \
+  --cross-file <arm64-cross-file> --target-root <arm64-SDK> --output out/mesa-build
+python3 packaging/mesa/shared/tools/package-mesa.py --mesa-build out/mesa-build \
+  --output out/shared-mesa --version <package-version>
+python3 tools/package-mesa.py --shared-package out/shared-mesa/piano-mesa_*_arm64.deb \
+  --output out/mesa-debs
 python3 tools/build-sensors.py --output out/sensor-debs
 
 args=()

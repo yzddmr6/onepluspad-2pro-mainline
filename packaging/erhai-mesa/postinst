@@ -3,6 +3,12 @@
 set -e
 case "$1" in
 configure)
+    for ICD in /usr/share/vulkan/icd.d/freedreno_icd.json \
+               /usr/share/vulkan/icd.d/freedreno_icd.aarch64.json; do
+        if [ "$(dpkg-divert --listpackage "$ICD")" = erhai-mesa ]; then
+            dpkg-divert --package erhai-mesa --remove --rename --divert "$ICD.distrib" "$ICD"
+        fi
+    done
     ldconfig
     ;;
 esac

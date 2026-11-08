@@ -1,0 +1,88 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: MIT
+"""Stateful snap command FIXTURE, never a real snapd or confinement check."""
+import json
+import os
+from pathlib import Path
+import sys
+import time
+
+root = Path(os.environ['SNAP_GRAPHICS_FIXTURE'])
+state = json.loads((root / 'state.json').read_text())
+args = sys.argv[1:]
+# Saved mount namespaces deliberately outlive disconnects. This models the
+# reported snapd clash/placeholder behavior, not a real snapd namespace.
+mounts = state.setdefault('mounts', {})
+def fresh_mounts(consumer):
+    slots = [line.split()[2] for line in state['connections'].splitlines()[1:]
+             if line.split()[1] == consumer + ':gpu-2404' and line.split()[2] != '-']
+    sources = []
+    for slot in slots:
+        sources.append(slot)
+        if slot.startswith('mesa-2404:') or (slot.startswith('piano-mesa-2404:') and state.get('provider_reads', 1) == 2):
+            sources.append('rootfs:kernel-component')
+    return [{'target': 'gpu-2404' + ('' if i == 0 else '-' + str(i+1)), 'source': source}
+            for i, source in enumerate(sources)]
+
+with (root / 'calls.jsonl').open('a') as stream:
+    stream.write(json.dumps({'args': args, 'monotonic': time.monotonic()}) + '\n')
+if args == ['seed']:
+    state['seeded'] = True
+elif not state.get('seeded'):
+    sys.exit('fixture: snap invoked before seeded')
+elif args == ['list', 'piano-mesa-2404']:
+    if not state.get('version'):
+        sys.exit('error: no matching snaps installed')
+    print('Name Version Rev Tracking Publisher Notes')
+    print('piano-mesa-2404', state['version'], 'x1 - - dangerous')
+elif len(args) == 3 and args[:2] == ['install', '--dangerous']:
+    if state.get('fail_install'):
+        sys.exit('fixture: install failed')
+    metadata = json.loads((Path(args[2]).parent / 'provider.json').read_text())
+    state['version'] = metadata['version']
+    print('fixture: provider installed')
+elif args == ['connections', '--all']:
+    print(state['connections'], end='')
+elif len(args) == 3 and args[0] == 'connect':
+    if state.get('fail_connect') == args[1]:
+        sys.exit('fixture: connect failed')
+    if not state.get('version'):
+        sys.exit('fixture: provider absent')
+    consumer = args[1].split(':')[0]
+    saved = mounts.setdefault(consumer, fresh_mounts(consumer))
+    if saved is None:
+        saved = mounts[consumer] = fresh_mounts(consumer)
+    rows = [line.split() for line in state['connections'].splitlines()]
+    current = [row for row in rows[1:] if row[1] == args[1]]
+    if not current:
+        sys.exit('fixture: no such plug')
+    # snapd adds a content connection; it does not replace another provider.
+    rows = [row for row in rows if not (row[1] == args[1] and row[2] == '-')]
+    if not any(row[2] == args[2] for row in current):
+        rows.append([current[0][0], args[1], args[2], 'manual'])
+        for source in ([args[2], 'rootfs:kernel-component'] if state.get('provider_reads', 1) == 2 else [args[2]]):
+            saved.append({'target':'gpu-2404' + ('' if not saved else '-'+str(len(saved)+1)), 'source':source})
+    state['connections'] = '\n'.join('  '.join(row) for row in rows) + '\n'
+elif len(args) == 3 and args[0] == 'disconnect':
+    if state.get('fail_disconnect') == args[1]:
+        sys.exit('fixture: disconnect failed')
+    rows = [line.split() for line in state['connections'].splitlines()]
+    if not any(row[1:3] == args[1:3] for row in rows[1:]):
+        sys.exit('fixture: not connected')
+    consumer = args[1].split(':')[0]
+    saved = mounts.setdefault(consumer, fresh_mounts(consumer))
+    for mount in saved or []:
+        if mount['source'] == args[2]:
+            mount['source'] = 'rootfs:stale-placeholder'
+    interface = next(row[0] for row in rows[1:] if row[1:3] == args[1:3])
+    rows = [row for row in rows if row[1:3] != args[1:3]]
+    if not any(row[1] == args[1] for row in rows[1:]):
+        rows.append([interface, args[1], '-', '-'])
+    state['connections'] = '\n'.join('  '.join(row) for row in rows) + '\n'
+elif len(args) == 2 and args[0] == 'fixture-enter':
+    if mounts.get(args[1]) is None:
+        mounts[args[1]] = fresh_mounts(args[1])
+    print(json.dumps(mounts[args[1]]))
+else:
+    sys.exit('fixture: unexpected command ' + repr(args))
+(root / 'state.json').write_text(json.dumps(state, indent=2) + '\n')
