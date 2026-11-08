@@ -27,7 +27,8 @@ cleanup() {
     if [ "$proc_mounted" = 1 ]; then umount -R "$root/proc" || status=1; fi
     if [ "$mounted" = 1 ]; then umount "$root" || status=1; fi
     if [ "$status" = 0 ]; then
-        rm -rf /work/minimal /work/standard /work/changes /work/overlay-work "$root"
+        rm -rf /work/changes /work/overlay-work "$root"
+        if [ "${ERHAI_LAYER_CACHE:-0}" != 1 ]; then rm -rf /work/minimal /work/standard; fi
     fi
     exit "$status"
 }
@@ -36,8 +37,10 @@ trap cleanup EXIT
 # SYS_ADMIN is needed here for original trusted xattrs and the private overlay
 # mount. Target package scripts drop that added capability via target().
 dpkg -i /work/native/*.deb
-unsquashfs -no-progress -processors "$jobs" -d /work/minimal /layers/minimal.squashfs
-unsquashfs -no-progress -processors "$jobs" -d /work/standard /layers/minimal.standard.squashfs
+if [ "${ERHAI_LAYER_CACHE:-0}" != 1 ]; then
+    unsquashfs -no-progress -processors "$jobs" -d /work/minimal /layers/minimal.squashfs
+    unsquashfs -no-progress -processors "$jobs" -d /work/standard /layers/minimal.standard.squashfs
+fi
 mkdir -p "$root" /work/changes /work/overlay-work
 mount -t overlay overlay \
     -o lowerdir=/work/standard:/work/minimal,upperdir=/work/changes,workdir=/work/overlay-work "$root"

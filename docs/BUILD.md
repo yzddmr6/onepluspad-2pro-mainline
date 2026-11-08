@@ -171,3 +171,5 @@ Mozilla 不再提供已钉住的版本时，改钉当前版本。
 
 安装范围与操作见[试用、安装与恢复](FLASHING.md)。
 构建清单记录本次选定的输入；请将启动镜像、根系统与校验和作为一套使用。
+
+原始 Ubuntu 层可通过 `--layer-cache` 复用只读挂载，避免每次解包整套桌面。缓存目录的 `minimal/` 和 `standard/` 必须分别为原始两层的只读挂载，`layers.json` 必须与 `packaging/desktop/source.json` 的 `layers` 数组一致；原始压缩输入仍会校验。缓存不接受旧产品根树。共享图形库由 `piano-mesa` 提供，与 `erhai-mesa` 过渡包一起作为设备包输入。

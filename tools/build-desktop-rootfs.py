@@ -32,6 +32,8 @@ def main():
                         help='Explicit erhai package from a matching component build; repeat as needed')
     parser.add_argument('--output', type=Path, required=True, help='New output directory')
     parser.add_argument('--cache', type=Path, default=WS / 'cache/desktop-rootfs')
+    parser.add_argument('--layer-cache', type=Path,
+                        help='Read-only mounts of the pinned original layers with layers.json')
     parser.add_argument('--jobs', type=int, default=4)
     parser.add_argument('--timeout', type=int, default=1800, help='Container assembly limit in seconds')
     args = parser.parse_args()
@@ -43,14 +45,23 @@ def main():
         path = args.layers.resolve() / Path(spec['path']).name
         if sha256(path) != spec['sha256']:
             parser.error(f'{path} is not the pinned original Ubuntu layer')
+    layer_cache = args.layer_cache.resolve() if args.layer_cache else None
+    if layer_cache:
+        if json.loads((layer_cache / 'layers.json').read_text()) != lock['layers']:
+            parser.error('layer cache does not match the pinned original Ubuntu layers')
+        for name in ('minimal', 'standard'):
+            directory = layer_cache / name
+            if not directory.is_dir() or not os.path.ismount(directory) or not (
+                    os.statvfs(directory).f_flag & os.ST_RDONLY):
+                parser.error(f'{directory}: expected a read-only original layer mount')
     selected = {}
     selected_paths = {}
     for path in args.device_deb:
         path = path.resolve()
         info = metadata(path)
         name = info['Package']
-        if not name.startswith('erhai-') or info['Architecture'] not in ('arm64', 'all'):
-            parser.error(f'{path}: expected an arm64/all erhai device package')
+        if not (name.startswith('erhai-') or name == 'piano-mesa') or info['Architecture'] not in ('arm64', 'all'):
+            parser.error(f'{path}: expected an arm64/all erhai device package or the shared piano-mesa package')
         if name in selected:
             parser.error(f'duplicate package input: {name}')
         selected_paths[name] = path
@@ -106,6 +117,11 @@ def main():
                '--volume', f'{args.layers.resolve()}:/layers:ro',
                '--volume', f'{assembly_script}:/assemble:ro',
                host_image, '/bin/bash', '/assemble', str(args.jobs), *seeds]
+    if layer_cache:
+        options = ['--env', 'ERHAI_LAYER_CACHE=1']
+        for name in ('minimal', 'standard'):
+            options += ['--volume', f'{layer_cache / name}:/work/{name}:ro']
+        command[2:2] = options
     (out / 'build-command.local.json').write_text(json.dumps(command, indent=2) + '\n')
     started = time.monotonic()
     try:

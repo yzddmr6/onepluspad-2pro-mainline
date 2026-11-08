@@ -337,3 +337,5 @@ Every image written into `boot`/`init_boot`/`vendor_boot` must carry an AVB
 hash footer (`tools/sign-boot-triplet.py`), self-signed included — `vbmeta`
 lists `boot` as a chain partition, so a missing footer is malformed metadata
 that even an unlocked bootloader refuses. See [the switcher reference](../switch/README.md).
+
+Use `--layer-cache` to reuse read-only mounts of the original Ubuntu layers without unpacking the desktop again. The cache directories `minimal/` and `standard/` must mount the two original layers read-only, and `layers.json` must match the `layers` array in `packaging/desktop/source.json`; the original compressed inputs are still verified. A previous product root is not a layer cache. Pass the shared `piano-mesa` library package together with the `erhai-mesa` transition package as device package inputs.
