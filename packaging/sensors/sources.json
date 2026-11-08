@@ -116,6 +116,13 @@
               "shows": "a non-zero result is sent back with outBufsLen = 0 and the loop continues"
             }
           ]
+        },
+        {
+          "file": "patches/hexagonrpc/0006-share-sequence-marshalling-and-listener-continuations.patch",
+          "sha256": "685ab06e82c1fc347650ebd5a78047b241379e0b5f8577808273723ae3719ecf",
+          "origin_url": "https://github.com/yzddmr6/xiaomipad-8pro-mainline/tree/e5cf985/device/sensors/hexagonrpc",
+          "source_commit": "f0dfd5095d3b7defc3b368f227337bfc6d6aef42",
+          "upstream_status": "continuation upstream; marshalling and cleanup carried locally"
         }
       ]
     },
@@ -167,6 +174,68 @@
               "shows": "stock sensor HAL requests the delivery type per sensor (_wakeup_type)"
             }
           ]
+        },
+        {
+          "file": "patches/libssc/0003-upstream-3b89c665af6e.patch",
+          "sha256": "cd61bec830239ccc25ad2dfd1c5259988cfca7a9678950c189805230482e87eb",
+          "origin_url": "https://codeberg.org/DylanVanAssche/libssc/commit/3b89c665af6e6b2930f83d90d98db3cee4b60a7c",
+          "source_commit": "3b89c665af6e6b2930f83d90d98db3cee4b60a7c",
+          "upstream_status": "upstream"
+        },
+        {
+          "file": "patches/libssc/0004-upstream-3befde3ef215.patch",
+          "sha256": "762285f119cd827a68e0d2c4f9496521895f3d07f2da5e7f983be84a9a692d73",
+          "origin_url": "https://codeberg.org/DylanVanAssche/libssc/commit/3befde3ef215bdb78c4a48aa72c99cd458c2aed0",
+          "source_commit": "3befde3ef215bdb78c4a48aa72c99cd458c2aed0",
+          "upstream_status": "upstream"
+        },
+        {
+          "file": "patches/libssc/0005-upstream-f54187cd6012.patch",
+          "sha256": "9ca9ad1b04baac4b2e8087f2d62ab827b83e5dd094483876c787b5c7833f9010",
+          "origin_url": "https://codeberg.org/DylanVanAssche/libssc/commit/f54187cd601260415b47efba7fc2985d28c3e810",
+          "source_commit": "f54187cd601260415b47efba7fc2985d28c3e810",
+          "upstream_status": "upstream"
+        },
+        {
+          "file": "patches/libssc/0006-upstream-9bfe812ea086.patch",
+          "sha256": "fe0fd7746ff9e054f3c197730ea2260fedf3d2d443aaefb772a4d1c6493472a7",
+          "origin_url": "https://codeberg.org/DylanVanAssche/libssc/commit/9bfe812ea0866f7ff4b886e72281f08421ef1549",
+          "source_commit": "9bfe812ea0866f7ff4b886e72281f08421ef1549",
+          "upstream_status": "upstream"
+        },
+        {
+          "file": "patches/libssc/0007-upstream-f6dfbfa5f34e.patch",
+          "sha256": "f64eebac114cd7c8f05ae09c397813b66bd28fdb833de2d5db8af7482a8a9c02",
+          "origin_url": "https://codeberg.org/DylanVanAssche/libssc/commit/f6dfbfa5f34ef22f3d47ef346c22834e79c60df1",
+          "source_commit": "f6dfbfa5f34ef22f3d47ef346c22834e79c60df1",
+          "upstream_status": "upstream"
+        },
+        {
+          "file": "patches/libssc/0008-upstream-56d9e6b2f5a1.patch",
+          "sha256": "f1bafd290f2ebcedaed4e5249e00e68ff48b40a71993c2ca4b3bc6115205baed",
+          "origin_url": "https://codeberg.org/DylanVanAssche/libssc/commit/56d9e6b2f5a113d21229c2d26f8e1d9d7226f4bd",
+          "source_commit": "56d9e6b2f5a113d21229c2d26f8e1d9d7226f4bd",
+          "upstream_status": "upstream"
+        },
+        {
+          "file": "patches/libssc/0009-upstream-167fff52e3fc.patch",
+          "sha256": "1a92b049f60669984a571da3dd3b8bfa210a9ea67b9c206b6ac7a23d3bbb8609",
+          "origin_url": "https://codeberg.org/DylanVanAssche/libssc/commit/167fff52e3fc91630f8ad6ac892942eb6ae1a9c8",
+          "source_commit": "167fff52e3fc91630f8ad6ac892942eb6ae1a9c8",
+          "upstream_status": "upstream"
+        },
+        {
+          "file": "patches/libssc/0010-upstream-54dd13e36d65.patch",
+          "sha256": "a1a70c0d0683cafa49ca8a8b0e8f0af927db53f8134fda030d1527da9fec5e68",
+          "origin_url": "https://codeberg.org/DylanVanAssche/libssc/commit/54dd13e36d65c21263cf5b0f4a70c230a77b26bc",
+          "source_commit": "54dd13e36d65c21263cf5b0f4a70c230a77b26bc",
+          "upstream_status": "upstream"
+        },
+        {
+          "file": "patches/libssc/0011-propagate-test-process-exit-status.patch",
+          "sha256": "19f705efb23edb0370227b52eb0ad1c895c3debe047d7f36e6bdb533e3fff285",
+          "origin_url": "https://github.com/yzddmr6/xiaomipad-8pro-mainline/tree/e5cf985/device/sensors/libssc",
+          "upstream_status": "local test wrapper fix"
         }
       ]
     },

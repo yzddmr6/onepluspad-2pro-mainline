@@ -1,0 +1,270 @@
+From f6dfbfa5f34ef22f3d47ef346c22834e79c60df1 Mon Sep 17 00:00:00 2001
+From: Felix <felix@niederer.dev>
+Date: Sun, 26 Jul 2026 10:12:28 +0200
+Subject: [PATCH] sensor: use g_autoptr for the task in open/close callbacks
+
+---
+ src/libssc-sensor-accelerometer.c | 8 ++------
+ src/libssc-sensor-compass.c       | 8 ++------
+ src/libssc-sensor-gyroscope.c     | 8 ++------
+ src/libssc-sensor-light.c         | 8 ++------
+ src/libssc-sensor-magnetometer.c  | 8 ++------
+ src/libssc-sensor-proximity.c     | 8 ++------
+ 6 files changed, 12 insertions(+), 36 deletions(-)
+
+diff --git a/src/libssc-sensor-accelerometer.c b/src/libssc-sensor-accelerometer.c
+index a955d35..8579af0 100644
+--- a/src/libssc-sensor-accelerometer.c
++++ b/src/libssc-sensor-accelerometer.c
+@@ -112,17 +112,15 @@ report_received (SSCClient *self, guint32 msg_id, guint64 uid_high, guint64 uid_
+ static void
+ accelerometer_close_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_accelerometer_parent_class)->close_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+@@ -176,17 +174,15 @@ ssc_sensor_accelerometer_close_sync (SSCSensorAccelerometer *self, GCancellable
+ static void
+ accelerometer_open_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_accelerometer_parent_class)->open_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+diff --git a/src/libssc-sensor-compass.c b/src/libssc-sensor-compass.c
+index 4c6a9fe..9352fd0 100644
+--- a/src/libssc-sensor-compass.c
++++ b/src/libssc-sensor-compass.c
+@@ -139,17 +139,15 @@ report_received (SSCClient *self, guint32 msg_id, guint64 uid_high, guint64 uid_
+ static void
+ compass_close_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_compass_parent_class)->close_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+@@ -203,17 +201,15 @@ ssc_sensor_compass_close_sync (SSCSensorCompass *self, GCancellable *cancellable
+ static void
+ compass_open_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_compass_parent_class)->open_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+diff --git a/src/libssc-sensor-gyroscope.c b/src/libssc-sensor-gyroscope.c
+index 5b437e8..ac1ca92 100644
+--- a/src/libssc-sensor-gyroscope.c
++++ b/src/libssc-sensor-gyroscope.c
+@@ -107,17 +107,15 @@ report_received (SSCClient *self, guint32 msg_id, guint64 uid_high, guint64 uid_
+ static void
+ gyroscope_close_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_gyroscope_parent_class)->close_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+@@ -171,17 +169,15 @@ ssc_sensor_gyroscope_close_sync (SSCSensorGyroscope *self, GCancellable *cancell
+ static void
+ gyroscope_open_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_gyroscope_parent_class)->open_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+diff --git a/src/libssc-sensor-light.c b/src/libssc-sensor-light.c
+index 12eecba..d6426da 100644
+--- a/src/libssc-sensor-light.c
++++ b/src/libssc-sensor-light.c
+@@ -102,17 +102,15 @@ report_received (SSCClient *self, guint32 msg_id, guint64 uid_high, guint64 uid_
+ static void
+ light_close_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_light_parent_class)->close_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+@@ -167,18 +165,16 @@ ssc_sensor_light_close_sync (SSCSensorLight *self, GCancellable *cancellable, GE
+ static void
+ light_open_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_light_parent_class)->open_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+diff --git a/src/libssc-sensor-magnetometer.c b/src/libssc-sensor-magnetometer.c
+index 118b022..62e3607 100644
+--- a/src/libssc-sensor-magnetometer.c
++++ b/src/libssc-sensor-magnetometer.c
+@@ -107,17 +107,15 @@ report_received (SSCClient *self, guint32 msg_id, guint64 uid_high, guint64 uid_
+ static void
+ magnetometer_close_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_magnetometer_parent_class)->close_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+@@ -171,17 +169,15 @@ ssc_sensor_magnetometer_close_sync (SSCSensorMagnetometer *self, GCancellable *c
+ static void
+ magnetometer_open_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_magnetometer_parent_class)->open_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+diff --git a/src/libssc-sensor-proximity.c b/src/libssc-sensor-proximity.c
+index 63c82f5..3c9015b 100644
+--- a/src/libssc-sensor-proximity.c
++++ b/src/libssc-sensor-proximity.c
+@@ -153,17 +153,15 @@ report_received (SSCClient *self, guint32 msg_id, guint64 uid_high, guint64 uid_
+ static void
+ proximity_close_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_proximity_parent_class)->close_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+@@ -216,17 +214,15 @@ ssc_sensor_proximity_close_sync (SSCSensorProximity *self, GCancellable *cancell
+ static void
+ proximity_open_ready (SSCSensor *sensor, GAsyncResult *result, gpointer user_data)
+ {
+-	GTask *task = G_TASK (user_data);
++	g_autoptr (GTask) task = G_TASK (user_data);
+ 	g_autoptr (GError) error = NULL;
+ 
+ 	if (!SSC_SENSOR_CLASS (ssc_sensor_proximity_parent_class)->open_finish (sensor, result, &error)) {
+ 		g_task_return_error (task, g_steal_pointer (&error));
+-		g_object_unref (task);
+ 		return;
+ 	}
+ 
+ 	g_task_return_boolean (task, TRUE);
+-	g_object_unref (task);
+ }
+ 
+ gboolean
+-- 
+2.43.0
+

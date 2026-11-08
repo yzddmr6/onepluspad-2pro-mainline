@@ -1,0 +1,31 @@
+From 56d9e6b2f5a113d21229c2d26f8e1d9d7226f4bd Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Guido=20G=C3=BCnther?= <agx@sigxcpu.org>
+Date: Fri, 4 Sep 2026 12:53:31 +0200
+Subject: [PATCH] sensor: Remove trailing whitespace
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Eases future changes
+
+Signed-off-by: Guido Günther <agx@sigxcpu.org>
+---
+ src/libssc-sensor.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/libssc-sensor.c b/src/libssc-sensor.c
+index 2cf686f..2128142 100644
+--- a/src/libssc-sensor.c
++++ b/src/libssc-sensor.c
+@@ -645,7 +645,7 @@ wait_for_sensor_service (SSCSensor *self, GTask *task)
+ 			 buf,
+ 			 g_task_get_cancellable (task),
+ 			 (GAsyncReadyCallback)wait_for_sensor_service_ready,
+-			 task); 
++			 task);
+ }
+ 
+ /*****************************************************************************/
+-- 
+2.43.0
+

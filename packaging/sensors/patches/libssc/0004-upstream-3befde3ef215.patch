@@ -1,0 +1,62 @@
+From 3befde3ef215bdb78c4a48aa72c99cd458c2aed0 Mon Sep 17 00:00:00 2001
+From: Dylan Van Assche <git@dylanvanassche.be>
+Date: Sat, 27 Jun 2026 19:54:00 +0200
+Subject: [PATCH] CI: add test.yaml
+
+---
+ .forgejo/workflows/tests.yaml | 28 ++++++++++++++++++++++++++++
+ CHANGELOG.md                  |  3 +++
+ 2 files changed, 31 insertions(+)
+ create mode 100644 .forgejo/workflows/tests.yaml
+
+diff --git a/.forgejo/workflows/tests.yaml b/.forgejo/workflows/tests.yaml
+new file mode 100644
+index 0000000..2bb5760
+--- /dev/null
++++ b/.forgejo/workflows/tests.yaml
+@@ -0,0 +1,28 @@
++name: Tests
++
++on: [push]
++
++jobs:
++  test:
++    name: Tests
++    runs-on: codeberg-tiny
++    container:
++      image: docker.io/alpine:edge
++    steps:
++      - name: Dependencies
++        run: |
++          # clone
++          apk add nodejs
++          # libssc
++          apk add alpine-sdk python3-dev gobject-introspection-dev meson libqmi-dev glib-dev protobuf-c-dev
++          # libssc tests
++          apk add protobuf-dev qrtr-libs py3-gobject3 py3-protobuf
++      - uses: https://code.forgejo.org/actions/checkout@v4
++        with:
++          fetch-depth: 1
++      - name: Compile
++        run: |
++          meson setup _build
++          meson compile -C _build
++      - name: Integration tests
++        run: meson test --print-errorlogs -C _build
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 4885b0f..df215e2 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ 
+ ## Unreleased
+ 
++### Added
++- CI/CD using Forgejo Actions.
++
+ ## [0.4.4] - 2026-06-27
+ 
+ ### Improved
+-- 
+2.43.0
+

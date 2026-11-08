@@ -1,0 +1,38 @@
+From 3b89c665af6e6b2930f83d90d98db3cee4b60a7c Mon Sep 17 00:00:00 2001
+From: Dylan Van Assche <git@dylanvanassche.be>
+Date: Sat, 27 Jun 2026 20:32:06 +0200
+Subject: [PATCH] README: update dependencies
+
+---
+ README.md | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/README.md b/README.md
+index d0564c6..8ffe134 100644
+--- a/README.md
++++ b/README.md
+@@ -28,14 +28,16 @@ General information about libssc, documentation, and other information can be fo
+ 
+ `libssc` uses the Meson build system with a minimal list of external dependencies:
+ 
+-- `libqmi >=1.33.4`
+-- `glib >= 2.56`
+-- `protobuf-c`
++- `libqmi-dev >=1.33.4`
++- `glib-dev >= 2.56`
++- `protobuf-c-dev`
++- `gobject-introspection-dev`
+ 
+ `libssc` tests requires an additional dependency to compile the ProtoBuf messages for simulating the DSP QMI responses:
+ 
+-- `protobuf`
+-- `python-gobject3`
++- `py3-gobject3-dev`
++- `protobuf-dev`
++- `py3-protobuf`
+ - `qrtr-libs`
+ 
+ ```
+-- 
+2.43.0
+

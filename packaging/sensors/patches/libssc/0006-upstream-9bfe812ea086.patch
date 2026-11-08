@@ -1,0 +1,28 @@
+From 9bfe812ea0866f7ff4b886e72281f08421ef1549 Mon Sep 17 00:00:00 2001
+From: Felix <felix@niederer.dev>
+Date: Sat, 25 Jul 2026 22:31:18 +0200
+Subject: [PATCH] CHANGELOG: document GError propagation fix
+
+---
+ CHANGELOG.md | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index df215e2..49471bc 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ ### Added
+ - CI/CD using Forgejo Actions.
+ 
++### Fixed
++- Propagate the `GError` from the sensor open/close callbacks instead of
++  dropping it, so callers no longer receive a `FALSE` result with a `NULL`
++  error (which crashes consumers that dereference `error->message`).
++
+ ## [0.4.4] - 2026-06-27
+ 
+ ### Improved
+-- 
+2.43.0
+
