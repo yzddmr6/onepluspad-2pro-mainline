@@ -58,6 +58,8 @@ def main():
             if not directory.is_dir() or not os.path.ismount(directory) or not (
                     os.statvfs(directory).f_flag & os.ST_RDONLY):
                 parser.error(f'{directory}: expected a read-only original layer mount')
+    gunyahvm = json.loads((REPO / 'packaging/gunyahvm/source.json').read_text())
+    gunyahvm_pins = {p['package']: p for p in gunyahvm['packages']}
     selected = {}
     selected_paths = {}
     for path in args.device_deb:
@@ -71,11 +73,19 @@ def main():
             parser.error(f'duplicate package input: {name}')
         selected_paths[name] = path
         digest = sha256(path)
+        if name in gunyahvm_pins:
+            pin = gunyahvm_pins[name]
+            if info['Version'] != pin['version'] or digest != pin['sha256']:
+                parser.error(f'{name} differs from the pinned GunyahVM release')
         if name == 'resources':
             resource = json.loads((REPO / 'packaging/resources/source.json').read_text())['binary']
             if info['Version'] != resource['version'] or digest != resource['sha256']:
                 parser.error('Resources differs from the pinned shared binary input')
         selected[name] = {'file': path.name, 'sha256': digest, **info}
+    if {'erhai-apps', 'erhai-device'} & selected.keys():
+        missing = gunyahvm_pins.keys() - selected.keys()
+        if missing:
+            parser.error('The product image requires all GunyahVM packages: ' + ', '.join(sorted(missing)))
     dependencies = {}
     for path in args.dependency_deb:
         path = path.resolve()
@@ -128,6 +138,7 @@ def main():
                   ['git', '-C', str(REPO), 'status', '--porcelain'], text=True)),
               'ubuntu': {'iso': lock['iso'], 'layers': lock['layers']},
               'build_host': lock['build_host'], 'build_host_id': image_info['Id'],
+              'shared_application_sources': {'gunyahvm': gunyahvm},
               'device_packages': selected, 'dependency_packages': dependencies,
               'runtime_packages': lock['runtime_packages'],
               'requested_packages': seeds}
