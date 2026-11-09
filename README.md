@@ -110,7 +110,7 @@
 | 启动与存储 | SM8750P / UFS | ✅ | Ubuntu 启动与存储读写可用；双系统切换限上述分区布局。 |
 | 内置显示 | 双 DSI / DSC | ✅ | 3392 × 2400，仅提供 120 Hz。 |
 | 触控 | Novatek NT36536 | ✅ | 支持手指触控、桌面操作与登录；手写笔单独列项。 |
-| GPU 与桌面 | Adreno 830 / Freedreno / Turnip / Mesa | ✅ | GNOME 桌面、OpenGL 与 Vulkan 硬件渲染可用，Vulkan 使用 Turnip。 |
+| GPU 与桌面 | Adreno 830 / Freedreno / Turnip / Mesa | ✅ | GNOME 桌面、OpenGL 与 Vulkan 硬件渲染可用，Vulkan 使用 Turnip。 GPU 故障恢复失败时，应用可能无法退出，需要重启恢复。 |
 | 手动亮度 | 双 KTZ8868 / 统一背光接口 | ✅ | 支持统一背光控制、手动亮度调节与熄屏。 |
 | 磁吸键盘 | Pogo 键盘 / 触控板 | ✅ | 键盘输入可用，闲置和系统休眠后保持连接；键盘拔下时触控唤出屏幕键盘，吸附后隐藏。按住放大镜键时顶排为 F1～F12。 |
 | 手写笔 | NT36536 笔输入 | 🟡 | 笔输入暂未开放：驱动已具备，默认关闭。 |

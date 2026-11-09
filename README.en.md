@@ -125,7 +125,7 @@ Features under development are not included in the supported feature set.
 | Boot and storage | SM8750P / UFS | ✅ | Ubuntu boot and storage access work. Dual-boot switching is limited to the partition layout described above. |
 | Internal display | Dual DSI / DSC | ✅ | 3392 × 2400 at 120 Hz only. |
 | Touch | Novatek NT36536 | ✅ | Finger input, desktop interaction and login work. Pen support is listed separately. |
-| GPU and desktop | Adreno 830 / Freedreno / Turnip / Mesa | ✅ | GNOME, OpenGL and Vulkan hardware rendering work. Vulkan uses Turnip. |
+| GPU and desktop | Adreno 830 / Freedreno / Turnip / Mesa | ✅ | GNOME, OpenGL and Vulkan hardware rendering work. Vulkan uses Turnip. If GPU recovery fails, applications can remain stuck during exit and a reboot may be needed. |
 | Brightness | Dual KTZ8868 / one backlight interface | ✅ | Unified backlight control supports manual brightness adjustment and screen blanking. |
 | Magnetic keyboard | Pogo keyboard / touchpad | ✅ | Keyboard input works and stays connected while idle and after system sleep. The on-screen keyboard appears for touch input when detached and hides when attached. Holding the magnifier key turns the top row into F1 to F12. |
 | Active pen | NT36536 pen input | 🟡 | Pen input is not enabled yet: the driver is present but off by default. |
