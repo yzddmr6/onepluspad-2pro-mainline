@@ -39,7 +39,7 @@ ncm) init_src="$repo/initramfs/init-ncm"; usb_src="$repo/initramfs/usb-ncm"
 	# workspace kernel uapi headers. Skipped in standalone checkouts that
 	# have no kernel tree; WB_CAPTURE=on makes it a hard requirement.
 	wb_src="$repo/tools/wb-capture.c"
-	wb_inc="$ws/kernel/linux"
+	wb_inc=${KERNEL_SOURCE:-"$ws/kernel/linux"}
 	if [[ -f $wb_src && -d $wb_inc/include/uapi/drm ]]; then
 		wb_bin="$out/wb-capture"
 		"${CROSS_COMPILE:-aarch64-linux-gnu-}"gcc -static -O2 -Wall -Wextra \
