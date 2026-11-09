@@ -31,5 +31,12 @@
   "recipe_paths": [
     "apps/resources",
     "ubuntu/resources"
-  ]
+  ],
+  "binary": {
+    "package": "resources",
+    "version": "1.10.2-0ubuntu3.1+piano2",
+    "file": "resources_1.10.2-0ubuntu3.1+piano2_arm64.deb",
+    "sha256": "4a160730e341fbc84dffcf0e1a81016e8036cb78bef5e7b0dbd9b832fcea46eb",
+    "archive_url": "https://github.com/yzddmr6/xiaomipad-8pro-mainline/releases/download/v1.1.1/piano-ubuntu-v1.1.1-packages.zip"
+  }
 }

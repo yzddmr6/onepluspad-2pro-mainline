@@ -68,7 +68,12 @@ def main():
         if name in selected:
             parser.error(f'duplicate package input: {name}')
         selected_paths[name] = path
-        selected[name] = {'file': path.name, 'sha256': sha256(path), **info}
+        digest = sha256(path)
+        if name == 'resources':
+            resource = json.loads((REPO / 'packaging/resources/source.json').read_text())['binary']
+            if info['Version'] != resource['version'] or digest != resource['sha256']:
+                parser.error('Resources differs from the pinned shared binary input')
+        selected[name] = {'file': path.name, 'sha256': digest, **info}
     dependencies = {}
     for path in args.dependency_deb:
         path = path.resolve()
