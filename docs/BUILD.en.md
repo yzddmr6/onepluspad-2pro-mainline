@@ -302,8 +302,11 @@ python3 tools/package-mesa.py --shared-package out/shared-mesa/piano-mesa_*_arm6
 python3 tools/build-sensors.py --output out/sensor-debs
 
 args=()
-for deb in out/device-packages/*.deb out/mesa-debs/*.deb out/sensor-debs/*.deb; do
+for deb in out/device-packages/*.deb out/mesa-debs/*.deb out/sensor-debs/*.deb out/shared-apps/*.deb; do
   args+=(--device-deb "$deb")
+done
+for deb in out/app-dependencies/*.deb; do
+  args+=(--dependency-deb "$deb")
 done
 python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper" \
   --output out/desktop-root "${args[@]}"
@@ -340,3 +343,23 @@ lists `boot` as a chain partition, so a missing footer is malformed metadata
 that even an unlocked bootloader refuses. See [the switcher reference](../switch/README.md).
 
 Use `--layer-cache` to reuse read-only mounts of the original Ubuntu layers without unpacking the desktop again. The cache directories `minimal/` and `standard/` must mount the two original layers read-only, and `layers.json` must match the `layers` array in `packaging/desktop/source.json`; the original compressed inputs are still verified. A previous product root is not a layer cache. Pass the shared `piano-mesa` library package together with the `erhai-mesa` transition package as device package inputs.
+
+### v0.8.0 application inputs
+
+⟦DRAFT:G-RELEASE⟧
+
+Put the shared `piano-snap-graphics` provider, the Resources package pinned in
+[packaging/resources/source.json](../packaging/resources/source.json), and the
+`gunyahvm`, `gunyahvm-runtime`, `gunyahvm-guest-kernel`, `gunyahvm-guest-mesa`
+packages from [GunyahVM 1.0.0](https://github.com/yzddmr6/GunyahVM) into
+`out/shared-apps`. The Snap provider must use the same pinned Mesa source as
+`packaging/mesa/shared/mesa/source.json`. Put any additional Ubuntu dependency
+debs into `out/app-dependencies`; keep one version per package. Obtain these
+from the pinned Ubuntu snapshot, retaining the repository URLs and SHA-256
+values. `--dependency-deb` makes an archive available to APT without forcing
+its installation. The assembler runs without a network, so its local package
+set must contain the complete dependency closure.
+
+Assembly removes generic Ubuntu kernels and kdump while keeping the device
+kernel packages. Existing installations use the same cleanup command in the
+[upgrade instructions](UPGRADE.en.md).

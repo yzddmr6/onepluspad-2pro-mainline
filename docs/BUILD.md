@@ -156,8 +156,11 @@ python3 tools/package-mesa.py --shared-package out/shared-mesa/piano-mesa_*_arm6
 python3 tools/build-sensors.py --output out/sensor-debs
 
 args=()
-for deb in out/device-packages/*.deb out/mesa-debs/*.deb out/sensor-debs/*.deb; do
+for deb in out/device-packages/*.deb out/mesa-debs/*.deb out/sensor-debs/*.deb out/shared-apps/*.deb; do
   args+=(--device-deb "$deb")
+done
+for deb in out/app-dependencies/*.deb; do
+  args+=(--dependency-deb "$deb")
 done
 python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper" \
   --output out/desktop-root "${args[@]}"
@@ -174,3 +177,18 @@ Mozilla 不再提供已钉住的版本时，改钉当前版本。
 构建清单记录本次选定的输入；请将启动镜像、根系统与校验和作为一套使用。
 
 原始 Ubuntu 层可通过 `--layer-cache` 复用只读挂载，避免每次解包整套桌面。缓存目录的 `minimal/` 和 `standard/` 必须分别为原始两层的只读挂载，`layers.json` 必须与 `packaging/desktop/source.json` 的 `layers` 数组一致；原始压缩输入仍会校验。缓存不接受旧产品根树。共享图形库由 `piano-mesa` 提供，与 `erhai-mesa` 过渡包一起作为设备包输入。
+
+### v0.8.0 应用输入
+
+⟦DRAFT:G-RELEASE⟧
+
+把共用 `piano-snap-graphics` 提供者、[固定的 Resources 包](../packaging/resources/source.json)，
+以及 [GunyahVM 1.0.0](https://github.com/yzddmr6/GunyahVM) 的 `gunyahvm`、
+`gunyahvm-runtime`、`gunyahvm-guest-kernel`、`gunyahvm-guest-mesa` 四包放进
+`out/shared-apps`。Snap 提供者使用与 `packaging/mesa/shared/mesa/source.json` 一致的
+Mesa 来源。额外的 Ubuntu 依赖 deb 放进 `out/app-dependencies`，每个包只留一个版本；
+从固定 Ubuntu snapshot 获取，并保留索引中的 URL 与 SHA-256。
+`--dependency-deb` 只把包交给 APT 求解，不强制安装。装配容器不联网，输入必须包含完整依赖闭包。
+
+装配会清除 Ubuntu generic 内核与 kdump，并保留设备内核包。已安装系统的[升级说明](UPGRADE.md)
+调用同一清理命令。
