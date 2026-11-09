@@ -184,7 +184,7 @@ Mozilla 不再提供已钉住的版本时，改钉当前版本。
 ⟦DRAFT:G-RELEASE⟧
 
 把共用 `piano-snap-graphics` 提供者、[固定的 Resources 包](../packaging/resources/source.json)，
-以及 [GunyahVM 1.0.0](https://github.com/yzddmr6/GunyahVM) 的 `gunyahvm`、
+以及 [GunyahVM 1.0.1](https://github.com/yzddmr6/GunyahVM) 的 `gunyahvm`、
 `gunyahvm-runtime`、`gunyahvm-guest-kernel`、`gunyahvm-guest-mesa` 四包放进
 `out/shared-apps`。四包的发布 URL、版本与 SHA-256 固定在
 [packaging/gunyahvm/source.json](../packaging/gunyahvm/source.json)，产品镜像装配会检查四包齐全且内容匹配。Snap 提供者使用与 `packaging/mesa/shared/mesa/source.json` 一致的

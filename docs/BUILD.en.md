@@ -352,7 +352,7 @@ Use `--layer-cache` to reuse read-only mounts of the original Ubuntu layers with
 Put the shared `piano-snap-graphics` provider, the Resources package pinned in
 [packaging/resources/source.json](../packaging/resources/source.json), and the
 `gunyahvm`, `gunyahvm-runtime`, `gunyahvm-guest-kernel`, `gunyahvm-guest-mesa`
-packages from [GunyahVM 1.0.0](https://github.com/yzddmr6/GunyahVM) into
+packages from [GunyahVM 1.0.1](https://github.com/yzddmr6/GunyahVM) into
 `out/shared-apps`. Release URLs, versions and SHA-256 values are pinned in
 [packaging/gunyahvm/source.json](../packaging/gunyahvm/source.json); product image assembly requires all four matching packages. The Snap provider must use the same pinned Mesa source as
 `packaging/mesa/shared/mesa/source.json`. Ubuntu dependencies for GunyahVM are

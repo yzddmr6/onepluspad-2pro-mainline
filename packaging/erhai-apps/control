@@ -5,7 +5,7 @@ Maintainer: @MAINTAINER@
 Installed-Size: @INSTALLED_SIZE@
 Section: metapackages
 Priority: optional
-Depends: erhai-kernel (>= 0.8.0~), resources (= 1.10.2-0ubuntu3.1+piano2), erhai-snap-graphics (>= 0.8.0~), gunyahvm (>= 1.0.0-1)
+Depends: erhai-kernel (>= 0.8.0~), resources (= 1.10.2-0ubuntu3.1+piano2), erhai-snap-graphics (>= 0.8.0~), gunyahvm (>= 1.0.1-1)
 Description: Desktop applications for the OnePlus Pad 2 Pro
  Hardware resource monitoring, shared Snap graphics and Gunyah virtual machines.
  Waydroid can be installed separately using the documented official repository.
