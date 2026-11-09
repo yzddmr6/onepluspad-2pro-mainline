@@ -21,6 +21,8 @@ sudo erhai-remove-generic-kernels
 清理命令移除这台平板不用的 Ubuntu generic 内核及 kdump；保留 `erhai-kernel-image-*`、当前内核、回退内核和 `linux-firmware`。确认命令成功后重启；无需重新分区或重装。
 共用包与其依赖须和设备包一起安装。保留开发调试通道时使用同版调试包集合；普通归档重启后关闭调试通道。
 
+升级会安装 GunyahVM 及其运行时、来宾载荷包。重新登录后，默认 Dock 包含 GunyahVM；用户已自定义的收藏列表保持原样。本机活动桌面用户的设备访问权限由 GunyahVM 自带的 udev 与 polkit 规则授予，无需手动修改用户组。
+
 ## v0.7.1 → v0.7.2
 
 v0.7.2 更新内核、匹配模块与启动镜像，同时更新图形驱动、设备支持包和传感器包，具体修正见[发布说明](https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/tag/v0.7.2)。
