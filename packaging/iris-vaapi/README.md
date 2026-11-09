@@ -27,11 +27,11 @@ VP9 path can stop producing frames across an initial flush/restart, so it
 is no longer promoted by this package. The package leaves decoder selection
 to playbin and respects an explicit `GST_PLUGIN_FEATURE_RANK` override.
 It also enables VA-API defaults for native Firefox installed in `/usr/lib/firefox` or `/usr/lib/firefox-esr`. User preferences take
-precedence. Hardware video decoding is force-enabled for this candidate; the
+precedence. Hardware video decoding is force-enabled by these defaults; the
 Vulkan Video path is disabled to keep the browser on VA-API. Log out and back in after installing or removing it. The package
 does not modify profiles, policies, application launchers or sandbox settings.
 Snap/Flatpak Firefox cannot use this host driver through this deb alone and is
-outside this candidate. A native Firefox build with HEVC support is required
+not configured by this package. A native Firefox build with HEVC support is required
 for the HEVC browser check; codec availability must be checked on the device.
 
 Remove with `apt remove erhai-video-defaults erhai-iris-vaapi`. This removes all
