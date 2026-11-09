@@ -34,7 +34,7 @@ if (REPO.parent.parent / 'AGENTS.md').is_file() and (REPO.parent.parent / 'kerne
     WS = Path(os.environ.get('ERHAI_WORKSPACE', REPO.parent.parent)).resolve()
 else:
     WS = Path(os.environ.get('ERHAI_WORKSPACE', str(REPO))).resolve()
-KERNEL_GIT = WS / 'kernel/linux'
+KERNEL_GIT = Path(os.environ.get('KERNEL_SOURCE', WS / 'kernel/linux')).resolve()
 DEFAULT_OUT = WS / 'out/kernel-firstboot'
 # AOSP mkbootimg, vendored at cache/tools/mkbootimg.py (see README inputs).
 MKBOOT = Path(os.environ.get('MKBOOTIMG', str(WS / 'cache/tools/mkbootimg.py')))

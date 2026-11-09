@@ -874,7 +874,7 @@ def stage_kernel(root, args, work, release):
         die('versioned module payloads require a fresh source-bound triplet')
     modules_stage = work / 'modules'
     run([sys.executable, REPO / 'tools/stage-kernel-modules.py',
-         '--kernel-source', WS / 'kernel/linux', '--kernel-out', args.kernel_out,
+         '--kernel-source', Path(os.environ.get('KERNEL_SOURCE', WS / 'kernel/linux')), '--kernel-out', args.kernel_out,
          '--output', modules_stage])
     module_meta = json.loads((modules_stage / 'modules-manifest.json').read_text())
     if module_meta['kernel_release'] != release:
@@ -1059,7 +1059,7 @@ def source_date_epoch(kernel_out=None):
     """
     if 'SOURCE_DATE_EPOCH' in os.environ:
         return os.environ['SOURCE_DATE_EPOCH']
-    git = WS / 'kernel/linux' if kernel_out is not None else REPO
+    git = Path(os.environ.get('KERNEL_SOURCE', WS / 'kernel/linux')) if kernel_out is not None else REPO
     if (git / '.git').exists():
         result = subprocess.run(['git', '-C', str(git), 'show', '-s', '--format=%ct', 'HEAD'],
                                 capture_output=True, text=True)
