@@ -1,0 +1,29 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# Package selection follows the shared Ubuntu root-image cleanup recipe.
+set -eu
+case "${1:-}" in
+    --image) shift ;; # Called only in an offline Ubuntu image by the assembler.
+    '')
+        case "$(uname -r)" in *erhai*) ;; *) echo 'Run this on the installed erhai kernel.' >&2; exit 1;; esac
+        [ "$(dpkg-query -W -f '${Status}' erhai-kernel)" = 'install ok installed' ] ;;
+    *) echo "Usage: $0 [--image]" >&2; exit 2 ;;
+esac
+packages() {
+    dpkg-query -W -f '${db:Status-Abbrev} ${Package}\n' | awk '
+        substr($1, 2, 1) != "i" && substr($1, 2, 1) != "c" { next }
+        $2 ~ /^linux-(generic|image-generic|headers-generic|tools-generic)(-|$)/ ||
+        $2 ~ /^linux-(image|image-unsigned|modules|modules-extra|main-modules-[a-z0-9]+|headers|tools)-[0-9].*-generic$/ ||
+        $2 == "kdump-tools" { print $2 }'
+}
+# Package names contain no shell whitespace or metacharacters.
+set -- $(packages)
+if [ "$#" -gt 0 ]; then
+    # The device still needs the distribution firmware and its browser.
+    apt-mark manual linux-firmware firefox
+    apt-get --yes --purge remove "$@"
+fi
+left=$(packages)
+[ -z "$left" ] || { echo "Generic kernel packages remain: $left" >&2; exit 1; }
+audit=$(dpkg --audit)
+[ -z "$audit" ] || { printf '%s\n' "$audit" >&2; exit 1; }

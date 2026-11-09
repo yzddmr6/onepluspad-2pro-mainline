@@ -18,7 +18,8 @@ with tempfile.TemporaryDirectory(prefix='erhai-kernel-input-') as temporary:
     fragment = source / 'arch/arm64/configs/erhai-firstboot.config'
     fragment.parent.mkdir(parents=True)
     fragment.write_text('# unrelated fixture\n')
-    (fragment.parent / 'sm8750-peripherals.config').write_text('# unrelated peripherals\n')
+    for name in ['sm8750-netfilter.config', 'sm8750-peripherals.config', 'sm8750-waydroid.config', 'sm8750-snap.config', 'sm8750-virt.config']:
+        (fragment.parent / name).write_text('# unrelated feature\n')
     git('add', '.')
     git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
         'commit', '-qm', 'Unrelated input fixture')

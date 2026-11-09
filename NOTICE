@@ -101,3 +101,12 @@ selects this repository and product name. The Xiaomi repository is the canonical
 implementation. The MIT text is preserved in packaging/erhai-release-notifier/copyright.
 The separate erhai-release-notifier package and release-version build input are
 local packaging integration.
+
+Desktop feature reuse
+---------------------
+Resources: Ubuntu 1.10.2-0ubuntu3.1 with the five generic patches and backport
+from yzddmr6/xiaomipad-8pro-mainline, commit 80010271a747207751a8d11cf1553abb204c685d.
+The application and patches retain GPL-3.0-or-later and their original authors.
+The authoritative source recipe is referenced by packaging/resources/source.json.
+Waydroid installation documentation and the UPower CHARGE_LIMIT integration
+follow yzddmr6/xiaomipad-8pro-mainline v1.1.1 (MIT); hardware matching is local.

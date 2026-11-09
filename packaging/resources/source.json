@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "base_version": "1.10.2-0ubuntu3.1",
+  "local_version": "1.10.2-0ubuntu3.1+piano2",
+  "files": [
+    {
+      "file": "resources_1.10.2.orig.tar.gz",
+      "sha256": "aeaa9440831d1a2b839b5f005854a11d0becc9f2fc14e997b7f4166bf27b4c41",
+      "bytes": 1229094,
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261024T000000Z/pool/main/r/resources/resources_1.10.2.orig.tar.gz"
+    },
+    {
+      "file": "resources_1.10.2-0ubuntu3.1.debian.tar.xz",
+      "sha256": "c974baa8daf5b7869e9780f471e56b7d49e9c7ffa537187950b24f865bc1eb6f",
+      "bytes": 16415876,
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261024T000000Z/pool/main/r/resources/resources_1.10.2-0ubuntu3.1.debian.tar.xz"
+    },
+    {
+      "file": "resources_1.10.2-0ubuntu3.1.dsc",
+      "sha256": "77f66037d178add27fd461e3d5babdf6c9e0c0ec5fca69fb1672a14299629c82",
+      "bytes": 4873,
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261024T000000Z/pool/main/r/resources/resources_1.10.2-0ubuntu3.1.dsc"
+    }
+  ],
+  "patch_source": "apps/resources/patches in recipe_repository at recipe_commit",
+  "backport": "ubuntu/resources/backport.patch in recipe_repository at recipe_commit",
+  "license": "GPL-3.0-or-later",
+  "exit_condition": "Remove patches, exact desktop dependency and APT pin together when Ubuntu provides equivalent telemetry.",
+  "recipe_repository": "https://github.com/yzddmr6/xiaomipad-8pro-mainline",
+  "recipe_commit": "80010271a747207751a8d11cf1553abb204c685d",
+  "recipe_paths": [
+    "apps/resources",
+    "ubuntu/resources"
+  ]
+}

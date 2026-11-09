@@ -2,6 +2,25 @@
 
 [中文](UPGRADE.md) · [Installation and recovery](FLASHING.en.md)
 
+## v0.7.2 → v0.8.0
+
+⟦DRAFT:G-RELEASE⟧
+
+v0.8.0 keeps Linux 7.2.15 and adds Gunyah virtual machines, Waydroid kernel support, Snap graphics, Resources hardware monitoring and an 80% battery charge limit, together with interrupt and UART suspend fixes.
+GunyahVM and Resources are preinstalled. Install Waydroid separately using the [guide](WAYDROID.en.md); it uses software rendering and Android Data Saver is unavailable. Snap graphics use the shared `piano-snap-graphics` package; strict confinement remains affected by snapd feature detection.
+Enable battery protection in GNOME Settings → Power to stop charging at 80% and resume at 75%; it is off by default.
+
+After checking `SHA256SUMS`, run on the tablet:
+
+```sh
+tar xf erhai-device-packages-v0.8.0.tar
+sudo apt install ./erhai-device-packages-v0.8.0/*.deb
+sudo erhai-remove-generic-kernels
+```
+
+The cleanup command removes unused Ubuntu generic kernels and kdump, retaining `erhai-kernel-image-*`, the running and rollback kernels, and `linux-firmware`. Reboot after both commands succeed; no repartitioning or reinstallation is needed.
+Install the shared packages and their dependencies together with the device packages. Use the matching debug set to retain development access; the normal archive disables debug access after reboot.
+
 ## v0.7.1 → v0.7.2
 
 v0.7.2 updates the kernel, matching modules and boot images, together with the

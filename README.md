@@ -155,8 +155,11 @@
 | Linux 充电 | USB 供电 / 厂商固件 / SC8547A 电荷泵 | ✅ | 支持 PPS 的充电器经电荷泵快充，最高约 39 W（电量 80% 以下、电池 12–44 °C）；其他 PD 充电器请求 9 V 档，输入上限 18 W。插电脑 USB 口（约 2.5 W）亮屏时，电量仍以每小时约 2–3% 下降。原厂 SUPERVOOC 私有快充协议不可用。 |
 | 挂起与恢复 | Linux 电源管理 | ✅ | 默认使用 s2idle，支持 CX 断电、DDR 自刷新，以及开盖、电源键和 RTC 定时唤醒；恢复后可继续使用 Wi-Fi、键盘与摄像头。固件提供的 `deep` 状态默认不使用。详见[系统休眠](docs/SUSPEND.md)。 |
 | RTC | Qualcomm PMIC RTC | ✅ | 支持时间读写。强制复位后 RTC 时间会丢失，联网后自动重新校准：证书时间检查不会阻止校时，网络拦截加密校时（NTS）时改用网络自带的时间源。校准后写回 RTC，普通重启后时间保持正确。 |
-| Snap 应用 | AppArmor / snapd / 图形运行库 | ❌ | 本版不支持完整沙箱与 Snap 图形应用；所选内核未启用 AppArmor。 |
-| Android 应用 | Android 运行时 | ❌ | 尚未集成 Waydroid。 |
+| Snap 应用 | AppArmor / snapd / 图形运行库 | 🟡 | ⟦DRAFT:G-SNAP⟧ 共用 Adreno 830 图形运行库；strict 隔离仍受 snapd 能力检测问题影响。 |
+| Android 应用 | Waydroid | 🟡 | ⟦DRAFT:G-WAYDROID⟧ 软件渲染下运行应用和联网；Android“省流量”不可用。见[安装指南](docs/WAYDROID.md)。 |
+| 虚拟机 | Gunyah / GunyahVM | ✅ | ⟦DRAFT:G-VM⟧ 预装虚拟机管理器，运行 ARM64 Linux 客体。 |
+| 硬件监控 | Resources | ✅ | ⟦DRAFT:G-RESOURCES⟧ 显示 CPU、GPU、电池与可用温度传感器。 |
+| 电池保护 | power_supply / UPower / GNOME | ✅ | ⟦DRAFT:G-CHARGE⟧ 可选 80% 充电上限，降至 75% 复充，默认关闭。 |
 
 ## 使用与维护
 

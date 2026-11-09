@@ -16,7 +16,11 @@ out=${OUT_DIR:-"$ws/out/kernel-dev"}
 jobs=${JOBS:-$(nproc)}
 cross=${CROSS_COMPILE:-aarch64-linux-gnu-}
 fragments=(
+	"$src/arch/arm64/configs/sm8750-netfilter.config"
 	"$src/arch/arm64/configs/sm8750-peripherals.config"
+	"$src/arch/arm64/configs/sm8750-waydroid.config"
+	"$src/arch/arm64/configs/sm8750-snap.config"
+	"$src/arch/arm64/configs/sm8750-virt.config"
 	"$src/arch/arm64/configs/erhai-firstboot.config"
 )
 

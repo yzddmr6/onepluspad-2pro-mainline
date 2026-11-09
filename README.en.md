@@ -170,8 +170,11 @@ Features under development are not included in the supported feature set.
 | Charging in Linux | USB power / vendor firmware / SC8547A charge pump | ✅ | A PPS charger fast-charges through the charge pump at up to about 39 W (below 80 % charge, battery between 12 and 44 °C); other PD chargers get the 9 V contract, up to 18 W input. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock SUPERVOOC protocol is not available. |
 | Suspend and resume | Linux power management | ✅ | Defaults to s2idle, with CX power collapse and DDR self-refresh. Cover, power-button and RTC wake are supported; Wi-Fi, keyboard and cameras remain usable after resume. The firmware-provided `deep` state is not used by default. See [System suspend](docs/SUSPEND.en.md). |
 | RTC | Qualcomm PMIC RTC | ✅ | Time read/write works. A forced reset loses the RTC time; it is set again once online. Certificate time checks do not block initial synchronization, and networks blocking authenticated time (NTS) use their own time server. Synchronized time is written back to the RTC and survives a normal restart. |
-| Snap applications | AppArmor / snapd / graphics runtime | ❌ | Full confinement and graphical Snap apps are unsupported in this release. The selected kernel does not enable AppArmor. |
-| Android applications | Android runtime | ❌ | Waydroid is not integrated. |
+| Snap applications | AppArmor / snapd / GPU content provider | 🟡 | ⟦DRAFT:G-SNAP⟧ Shared Adreno 830 graphics runtime; strict confinement remains affected by snapd feature detection. |
+| Android applications | Waydroid | 🟡 | ⟦DRAFT:G-WAYDROID⟧ Applications and networking with software rendering; Android Data Saver is unavailable. [Installation](docs/WAYDROID.en.md). |
+| Virtual machines | Gunyah / GunyahVM | ✅ | ⟦DRAFT:G-VM⟧ Preinstalled virtual machine manager for ARM64 Linux guests. |
+| Hardware monitoring | Resources | ✅ | ⟦DRAFT:G-RESOURCES⟧ CPU, GPU and battery telemetry, with available temperature sensors. |
+| Battery protection | power_supply / UPower / GNOME | ✅ | ⟦DRAFT:G-CHARGE⟧ Optional 80% charge limit; charging resumes at 75%. Off by default. |
 
 ## Use and Maintenance
 

@@ -6,3 +6,11 @@
 - [English support table](../README.en.md#hardware-support)
 
 ✅ 可用 / Working · 🟡 部分支持 / Partial · ❌ 尚不支持 / Unsupported
+
+### v0.8.0
+
+⟦DRAFT:G-RELEASE⟧
+
+Linux 7.2.15：GunyahVM、Waydroid 安装支持、共用 Snap 图形提供者、Resources、80/75% 电池保护；中断与串口挂起修复；根镜像与升级路径移除 generic 内核和 kdump。
+
+Linux 7.2.15: GunyahVM, Waydroid installation support, shared Snap graphics, Resources and 80/75% battery protection; interrupt and UART suspend fixes; generic kernels and kdump removed from images and through the upgrade path.

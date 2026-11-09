@@ -30,6 +30,8 @@ def main():
                         help='Original ISO casper directory, containing the two pinned squashfs files')
     parser.add_argument('--device-deb', type=Path, action='append', required=True,
                         help='Explicit erhai package from a matching component build; repeat as needed')
+    parser.add_argument('--dependency-deb', type=Path, action='append', default=[],
+                        help='Explicit arm64/all dependency archive; made available to APT without forcing installation')
     parser.add_argument('--output', type=Path, required=True, help='New output directory')
     parser.add_argument('--cache', type=Path, default=WS / 'cache/desktop-rootfs')
     parser.add_argument('--layer-cache', type=Path,
@@ -60,18 +62,30 @@ def main():
         path = path.resolve()
         info = metadata(path)
         name = info['Package']
-        if not (name.startswith('erhai-') or name == 'piano-mesa') or info['Architecture'] not in ('arm64', 'all'):
-            parser.error(f'{path}: expected an arm64/all erhai device package or the shared piano-mesa package')
+        if not (name.startswith('erhai-') or name in ('piano-mesa', 'piano-snap-graphics', 'resources', 'gunyahvm',
+                                                     'gunyahvm-runtime', 'gunyahvm-guest-kernel', 'gunyahvm-guest-mesa')) or info['Architecture'] not in ('arm64', 'all'):
+            parser.error(f'{path}: expected an arm64/all device or shared application package')
         if name in selected:
             parser.error(f'duplicate package input: {name}')
         selected_paths[name] = path
         selected[name] = {'file': path.name, 'sha256': sha256(path), **info}
+    dependencies = {}
+    for path in args.dependency_deb:
+        path = path.resolve()
+        info = metadata(path)
+        if info['Architecture'] not in ('arm64', 'all'):
+            parser.error(f'{path}: dependency is not arm64/all')
+        if info['Package'] in selected or info['Package'] in dependencies:
+            parser.error(f'duplicate package input: {info["Package"]}')
+        dependencies[info['Package']] = {'file': path.name, 'sha256': sha256(path), **info}
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     (out / 'repo').mkdir()
     (out / 'native').mkdir()
     assembly_script = out / 'assemble.local.sh'
     assembly_script.write_bytes((REPO / 'tools/lib/desktop-rootfs.sh').read_bytes())
+    shutil.copyfile(REPO / 'packaging/erhai-device-support/tree/usr/sbin/erhai-remove-generic-kernels',
+                    out / 'remove-generic-kernels')
     cache = args.cache.resolve()
     runtime = [fetch(p['url'], cache / p['file'], p['sha256'])
                for p in lock['runtime_packages']]
@@ -88,7 +102,7 @@ def main():
                 raise
             shutil.copyfile(source, destination)
 
-    for i, path in enumerate(runtime + list(selected_paths.values())):
+    for i, path in enumerate(runtime + list(selected_paths.values()) + args.dependency_deb):
         stage(path, out / 'repo' / f'{i:04d}.deb')
     for i, path in enumerate(native):
         stage(path, out / 'native' / f'{i:04d}.deb')
@@ -107,7 +121,8 @@ def main():
                   ['git', '-C', str(REPO), 'status', '--porcelain'], text=True)),
               'ubuntu': {'iso': lock['iso'], 'layers': lock['layers']},
               'build_host': lock['build_host'], 'build_host_id': image_info['Id'],
-              'device_packages': selected, 'runtime_packages': lock['runtime_packages'],
+              'device_packages': selected, 'dependency_packages': dependencies,
+              'runtime_packages': lock['runtime_packages'],
               'requested_packages': seeds}
     (out / 'inputs.json').write_text(json.dumps(inputs, indent=2) + '\n')
     name = 'erhai-desktop-build-' + uuid.uuid4().hex[:12]

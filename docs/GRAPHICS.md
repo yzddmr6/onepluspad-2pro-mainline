@@ -37,3 +37,21 @@ supported upgrades have migrated and desktop metapackages depend directly on
 Build the `gpu-2404` profile and package it with `tools/package-mesa-snap.py`
 using the pinned stock provider and SDK inputs. The provider is named
 `piano-mesa-2404`; a desktop deb upgrade does not update it.
+
+## Snap 图形应用 / Snap graphics applications
+
+`erhai-snap-graphics` 依赖共用 `piano-snap-graphics`，不再安装第二份内容运行库。
+一并安装两个 deb，关闭正在运行的 Snap 图形应用，然后执行：
+
+```sh
+sudo piano-snap-graphics-connect --install
+```
+
+该包提供 core24 的 `gpu-2404` 内容，服务在首次启动时安装并连接提供者。
+它不修正 snapd 的 strict 隔离能力检测。Firefox snap 的硬件 GL 与 strict 隔离分别验收。
+现有 Firefox deb 保留；启用 Snap 图形不更换浏览器。
+
+The metapackage selects the shared core24 GPU content provider. Install both
+packages and close GPU Snap applications before running the command above.
+This does not repair snapd's strict-confinement feature detection. The existing
+Firefox deb remains installed.

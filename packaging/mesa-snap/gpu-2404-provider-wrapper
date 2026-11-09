@@ -1,0 +1,14 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+# gpu-2404's consumer invokes this from the connected content mount.
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
+lib=$root/usr/lib/aarch64-linux-gnu
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$lib:$lib/dri"
+export LIBGL_DRIVERS_PATH="$lib/dri"
+export GBM_BACKENDS_PATH="$lib/gbm"
+export __EGL_VENDOR_LIBRARY_DIRS="$root/usr/share/glvnd/egl_vendor.d${__EGL_VENDOR_LIBRARY_DIRS:+:$__EGL_VENDOR_LIBRARY_DIRS}"
+export XDG_DATA_DIRS="$root/usr/share${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}"
+export DRIRC_CONFIGDIR="$root/drirc.d"
+export XLOCALEDIR="$root/X11/locale"
+exec "$@"

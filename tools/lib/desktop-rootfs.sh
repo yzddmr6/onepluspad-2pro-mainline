@@ -75,6 +75,10 @@ target apt-get "${apt_options[@]}" update
 # tuned-ppd takes over, so the image retains no removed-package configuration.
 target apt-get "${apt_options[@]}" --no-install-recommends --assume-yes \
     --allow-downgrades --purge install "$@"
+# Device support has disabled flash-kernel before distribution kernel hooks run.
+# Share the exact package selector and assertion with installed-system upgrades.
+cp /work/remove-generic-kernels "$root/.erhai-build/remove-generic-kernels"
+target sh /.erhai-build/remove-generic-kernels --image
 cleanup_policy
 rm -rf "$build"
 # The ISO lists its own medium as a package source. An installed system has no

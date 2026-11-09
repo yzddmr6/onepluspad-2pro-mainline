@@ -118,7 +118,7 @@ MAINTAINER = 'yzddmr6 <46088090+yzddmr6@users.noreply.github.com>'
 DEBIAN_SCRIPTS = ('preinst', 'postinst', 'prerm', 'postrm')
 PACKAGES = ('erhai-display-power', 'erhai-device-support', 'erhai-firmware', 'erhai-audio',
             'erhai-firefox', 'erhai-release-notifier', 'erhai-settings', 'erhai-kernel', 'erhai-debug', 'erhai-device',
-            'erhai-snap-graphics')
+            'erhai-snap-graphics', 'erhai-apps')
 PARTS = ('boot', 'init_boot', 'vendor_boot')
 SWITCHER_PROGRAMS = ('erhai-switch', 'erhai-switch-install-ubuntu-images')
 
@@ -1124,8 +1124,7 @@ def main():
     if shutil.which('dpkg-deb') is None:
         die('dpkg-deb is required')
     wanted = tuple(args.only) if args.only else tuple(
-        package for package in PACKAGES if (args.debug or package != 'erhai-debug')
-        and package != 'erhai-snap-graphics')
+        package for package in PACKAGES if args.debug or package != 'erhai-debug')
 
     if 'erhai-device-support' in wanted:
         if not args.release_version or not re.fullmatch(r'[0-9][0-9A-Za-z.+~\-]*', args.release_version):
@@ -1168,7 +1167,7 @@ def main():
                              root / 'usr/share/doc' / package / 'copyright', 0o644)
             elif package == 'erhai-display-power':
                 stage_display_power(root)
-            elif package in ('erhai-debug', 'erhai-firefox', 'erhai-snap-graphics'):
+            elif package in ('erhai-debug', 'erhai-firefox', 'erhai-snap-graphics', 'erhai-apps'):
                 copy_tree(PACKAGING / package / 'tree', root)
             elif package == 'erhai-firmware':
                 stage_firmware(root, manifest)
