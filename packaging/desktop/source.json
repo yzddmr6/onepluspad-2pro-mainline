@@ -1104,6 +1104,132 @@
       "file": "python3-pyasyncore_1.0.2-3build1_all.deb",
       "bytes": 10420,
       "sha256": "659dd1a0070679231f0331c3794b0f1f55b4843d4c1f340105e10a36be657033"
+    },
+    {
+      "package": "7zip",
+      "version": "26.00+dfsg-1",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/universe/7/7zip/7zip_26.00%2bdfsg-1_arm64.deb",
+      "file": "7zip_26.00+dfsg-1_arm64.deb",
+      "bytes": 1896900,
+      "sha256": "3a12fa72e9f10440da7460144bbd25623f4884a7902d0d54d6beabe56aef2708"
+    },
+    {
+      "package": "genisoimage",
+      "version": "9:1.1.11-5",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/c/cdrkit/genisoimage_1.1.11-5_arm64.deb",
+      "file": "genisoimage_9%3a1.1.11-5_arm64.deb",
+      "bytes": 289986,
+      "sha256": "4bdb32bb950a2ba553eb47d2fccbe3a52d2116373e83089fa33a7afba9493430"
+    },
+    {
+      "package": "libaio1t64",
+      "version": "0.3.113-8build1",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/liba/libaio/libaio1t64_0.3.113-8build1_arm64.deb",
+      "file": "libaio1t64_0.3.113-8build1_arm64.deb",
+      "bytes": 7466,
+      "sha256": "51e8269d1a3d2fec54a9393d77d4f8f4a4163f1e8acca3416e977c231cb7a41c"
+    },
+    {
+      "package": "libdrm-freedreno1",
+      "version": "2.4.131-1",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/libd/libdrm/libdrm-freedreno1_2.4.131-1_arm64.deb",
+      "file": "libdrm-freedreno1_2.4.131-1_arm64.deb",
+      "bytes": 20252,
+      "sha256": "01a405dff1ae71f7d26fd11e1c88851c5b7fb393f1d9e572aa4da748e77c8c44"
+    },
+    {
+      "package": "libvncclient1",
+      "version": "0.9.15+dfsg-3ubuntu0.2",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/libv/libvncserver/libvncclient1_0.9.15%2bdfsg-3ubuntu0.2_arm64.deb",
+      "file": "libvncclient1_0.9.15+dfsg-3ubuntu0.2_arm64.deb",
+      "bytes": 76256,
+      "sha256": "2ab351f2b1c095640301481abfd518a0d69126ed050ee21b5dbf636226881729"
+    },
+    {
+      "package": "libvncserver1",
+      "version": "0.9.15+dfsg-3ubuntu0.2",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/libv/libvncserver/libvncserver1_0.9.15%2bdfsg-3ubuntu0.2_arm64.deb",
+      "file": "libvncserver1_0.9.15+dfsg-3ubuntu0.2_arm64.deb",
+      "bytes": 130102,
+      "sha256": "28827bcb2e82bc4f2453b856554cc4b319ebd38d7f073624c08f31a91cdc6750"
+    },
+    {
+      "package": "libwim15t64",
+      "version": "1.14.5-1",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/universe/w/wimlib/libwim15t64_1.14.5-1_arm64.deb",
+      "file": "libwim15t64_1.14.5-1_arm64.deb",
+      "bytes": 193528,
+      "sha256": "86f39fbe54b1bb01779493fc925b4bded00a4aa355cf27a74e9aae7627c55f6f"
+    },
+    {
+      "package": "mtools",
+      "version": "4.0.49-1",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/m/mtools/mtools_4.0.49-1_arm64.deb",
+      "file": "mtools_4.0.49-1_arm64.deb",
+      "bytes": 200900,
+      "sha256": "c47494b20d041ed1c1b988cf06d957c742c9bbcdfc7e5da0086bdd21c56b5ccb"
+    },
+    {
+      "package": "ubuntu-helper-virt-hwe",
+      "version": "1:10.2.1+ds-1ubuntu4.3",
+      "architecture": "all",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/q/qemu-hwe/ubuntu-helper-virt-hwe_10.2.1%2bds-1ubuntu4.3_all.deb",
+      "file": "ubuntu-helper-virt-hwe_1%3a10.2.1+ds-1ubuntu4.3_all.deb",
+      "bytes": 45416,
+      "sha256": "9c37656c46d7d39cbaf1863c0876695f1d67612c3654b7a9e2d2ef9f161ce8c7"
+    },
+    {
+      "package": "ubuntu-virt",
+      "version": "1:10.2.1+ds-1ubuntu3.2",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/q/qemu/ubuntu-virt_10.2.1%2bds-1ubuntu3.2_arm64.deb",
+      "file": "ubuntu-virt_1%3a10.2.1+ds-1ubuntu3.2_arm64.deb",
+      "bytes": 40744,
+      "sha256": "1d3b8db7a09322cf9c833d605497955516047db1c208ad84b32c82479f4c679b"
+    },
+    {
+      "package": "qemu-utils",
+      "version": "1:10.2.1+ds-1ubuntu3.2",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/main/q/qemu/qemu-utils_10.2.1%2bds-1ubuntu3.2_arm64.deb",
+      "file": "qemu-utils_1%3a10.2.1+ds-1ubuntu3.2_arm64.deb",
+      "bytes": 2078834,
+      "sha256": "01321c90398a4df562fe700d42ab39e7bc99b1583050a6ae87dc8fae2a4e3dfd"
+    },
+    {
+      "package": "wimtools",
+      "version": "1.14.5-1",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/universe/w/wimlib/wimtools_1.14.5-1_arm64.deb",
+      "file": "wimtools_1.14.5-1_arm64.deb",
+      "bytes": 106616,
+      "sha256": "2a2d33757b63c9b8c7242324f66b00088fcaa20791965c36630f439069dfa637"
+    },
+    {
+      "package": "libhivex0",
+      "version": "1.3.24-2.1build2",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/universe/h/hivex/libhivex0_1.3.24-2.1build2_arm64.deb",
+      "file": "libhivex0_1.3.24-2.1build2_arm64.deb",
+      "bytes": 26106,
+      "sha256": "910463f05fb66f7eb29d84c04b3894b8c26c12527c64d3c0458aefcf5d4c7b04"
+    },
+    {
+      "package": "python3-hivex",
+      "version": "1.3.24-2.1build2",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20260924T000000Z/pool/universe/h/hivex/python3-hivex_1.3.24-2.1build2_arm64.deb",
+      "file": "python3-hivex_1.3.24-2.1build2_arm64.deb",
+      "bytes": 11178,
+      "sha256": "9bbd7e96e1ac0dde4d045c491c1f387b3d9d985a32a36d0a4da2e91ff05d8ee6"
     }
   ],
   "runtime_snapshot": "20260924T000000Z",
