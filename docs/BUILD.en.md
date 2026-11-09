@@ -363,3 +363,6 @@ set must contain the complete dependency closure.
 Assembly removes generic Ubuntu kernels and kdump while keeping the device
 kernel packages. Existing installations use the same cleanup command in the
 [upgrade instructions](UPGRADE.en.md).
+
+The assembly container defaults to 4096 MiB RAM and 8192 MiB total RAM plus swap.
+Use `--memory-mib` together with `--jobs` to fit the host and concurrent builds.

@@ -37,10 +37,12 @@ def main():
     parser.add_argument('--layer-cache', type=Path,
                         help='Read-only mounts of the pinned original layers with layers.json')
     parser.add_argument('--jobs', type=int, default=4)
+    parser.add_argument('--memory-mib', type=int, default=4096,
+                        help='Container RAM limit in MiB; total RAM plus swap is limited to twice this value')
     parser.add_argument('--timeout', type=int, default=1800, help='Container assembly limit in seconds')
     args = parser.parse_args()
-    if args.jobs < 1 or args.timeout < 1:
-        parser.error('--jobs and --timeout must be positive')
+    if args.jobs < 1 or args.timeout < 1 or args.memory_mib < 512:
+        parser.error('--jobs and --timeout must be positive; --memory-mib must be at least 512')
     lock_path = REPO / 'packaging/desktop/source.json'
     lock = json.loads(lock_path.read_text())
     for spec in lock['layers']:
@@ -132,6 +134,8 @@ def main():
     (out / 'inputs.json').write_text(json.dumps(inputs, indent=2) + '\n')
     name = 'erhai-desktop-build-' + uuid.uuid4().hex[:12]
     command = ['docker', 'run', '--rm', '--name', name, '--network', 'none',
+               # The rootful Docker daemon does not inherit the caller's user slice.
+               '--memory', f'{args.memory_mib}m', '--memory-swap', f'{args.memory_mib * 2}m',
                '--env', 'QEMU_CPU=max,pauth-impdef=on', '--cap-add', 'SYS_ADMIN', '--security-opt', 'apparmor=unconfined',
                '--volume', f'{out}:/work',
                '--volume', f'{args.layers.resolve()}:/layers:ro',

@@ -192,3 +192,6 @@ Mesa 来源。额外的 Ubuntu 依赖 deb 放进 `out/app-dependencies`，每个
 
 装配会清除 Ubuntu generic 内核与 kdump，并保留设备内核包。已安装系统的[升级说明](UPGRADE.md)
 调用同一清理命令。
+
+装配容器默认限 4096 MiB 内存、8192 MiB 内存加交换空间；用 `--memory-mib` 和 `--jobs`
+按主机余量及同时运行的构建调整。Docker 守护进程不继承调用者的用户 slice。
