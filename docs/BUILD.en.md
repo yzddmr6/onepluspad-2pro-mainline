@@ -306,6 +306,7 @@ for deb in out/device-packages/*.deb out/mesa-debs/*.deb out/sensor-debs/*.deb o
   args+=(--device-deb "$deb")
 done
 for deb in out/app-dependencies/*.deb; do
+  [ -f "$deb" ] || continue
   args+=(--dependency-deb "$deb")
 done
 python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper" \
@@ -353,7 +354,9 @@ Put the shared `piano-snap-graphics` provider, the Resources package pinned in
 `gunyahvm`, `gunyahvm-runtime`, `gunyahvm-guest-kernel`, `gunyahvm-guest-mesa`
 packages from [GunyahVM 1.0.0](https://github.com/yzddmr6/GunyahVM) into
 `out/shared-apps`. The Snap provider must use the same pinned Mesa source as
-`packaging/mesa/shared/mesa/source.json`. Put any additional Ubuntu dependency
+`packaging/mesa/shared/mesa/source.json`. Ubuntu dependencies for GunyahVM are
+already pinned in `packaging/desktop/source.json` and fetched by the assembler.
+Put any other additional Ubuntu dependency
 debs into `out/app-dependencies`; keep one version per package. Obtain these
 from the pinned Ubuntu snapshot, retaining the repository URLs and SHA-256
 values. `--dependency-deb` makes an archive available to APT without forcing

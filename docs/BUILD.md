@@ -160,6 +160,7 @@ for deb in out/device-packages/*.deb out/mesa-debs/*.deb out/sensor-debs/*.deb o
   args+=(--device-deb "$deb")
 done
 for deb in out/app-dependencies/*.deb; do
+  [ -f "$deb" ] || continue
   args+=(--dependency-deb "$deb")
 done
 python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper" \
@@ -186,7 +187,8 @@ Mozilla 不再提供已钉住的版本时，改钉当前版本。
 以及 [GunyahVM 1.0.0](https://github.com/yzddmr6/GunyahVM) 的 `gunyahvm`、
 `gunyahvm-runtime`、`gunyahvm-guest-kernel`、`gunyahvm-guest-mesa` 四包放进
 `out/shared-apps`。Snap 提供者使用与 `packaging/mesa/shared/mesa/source.json` 一致的
-Mesa 来源。额外的 Ubuntu 依赖 deb 放进 `out/app-dependencies`，每个包只留一个版本；
+Mesa 来源。GunyahVM 所需的 Ubuntu 依赖已钉在 `packaging/desktop/source.json`，由装配器获取。
+其他额外的 Ubuntu 依赖 deb 才放进 `out/app-dependencies`，每个包只留一个版本；
 从固定 Ubuntu snapshot 获取，并保留索引中的 URL 与 SHA-256。
 `--dependency-deb` 只把包交给 APT 求解，不强制安装。装配容器不联网，输入必须包含完整依赖闭包。
 
