@@ -181,8 +181,6 @@ Mozilla 不再提供已钉住的版本时，改钉当前版本。
 
 ### v0.8.0 应用输入
 
-⟦DRAFT:G-RELEASE⟧
-
 把共用 `piano-snap-graphics` 提供者、[固定的 Resources 包](../packaging/resources/source.json)，
 以及 [GunyahVM 1.0.1](https://github.com/yzddmr6/GunyahVM) 的 `gunyahvm`、
 `gunyahvm-runtime`、`gunyahvm-guest-kernel`、`gunyahvm-guest-mesa` 四包放进

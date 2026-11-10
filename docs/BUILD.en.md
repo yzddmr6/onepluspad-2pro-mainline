@@ -347,8 +347,6 @@ Use `--layer-cache` to reuse read-only mounts of the original Ubuntu layers with
 
 ### v0.8.0 application inputs
 
-⟦DRAFT:G-RELEASE⟧
-
 Put the shared `piano-snap-graphics` provider, the Resources package pinned in
 [packaging/resources/source.json](../packaging/resources/source.json), and the
 `gunyahvm`, `gunyahvm-runtime`, `gunyahvm-guest-kernel`, `gunyahvm-guest-mesa`

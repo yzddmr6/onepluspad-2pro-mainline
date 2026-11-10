@@ -174,7 +174,7 @@ Features under development are not included in the supported feature set.
 | Android applications | Waydroid | 🟡 | Applications and networking with software rendering; Android Data Saver is unavailable. [Installation](docs/WAYDROID.en.md). |
 | Virtual machines | Gunyah / GunyahVM | ✅ | Preinstalled virtual machine manager for ARM64 Linux guests. |
 | Hardware monitoring | Resources | ✅ | CPU, GPU and battery telemetry, with available temperature sensors. |
-| Battery protection | power_supply / UPower / GNOME | ✅ | ⟦DRAFT:G-CHARGE⟧ Optional 80% charge limit and 75% restart threshold, off by default. Protected charging keeps the system awake until charging stops; a sleeping system resumes charging after it wakes. |
+| Battery protection | power_supply / UPower / GNOME | ✅ | Optional 80% charge limit and 75% restart threshold, off by default. Protected charging keeps the system awake until charging stops; a sleeping system resumes charging after it wakes. |
 
 ## Use and Maintenance
 
