@@ -156,7 +156,7 @@
 | 挂起与恢复 | Linux 电源管理 | ✅ | 默认使用 s2idle，支持 CX 断电、DDR 自刷新，以及开盖、电源键和 RTC 定时唤醒；恢复后可继续使用 Wi-Fi、键盘与摄像头。固件提供的 `deep` 状态默认不使用。详见[系统休眠](docs/SUSPEND.md)。 |
 | RTC | Qualcomm PMIC RTC | ✅ | 支持时间读写。强制复位后 RTC 时间会丢失，联网后自动重新校准：证书时间检查不会阻止校时，网络拦截加密校时（NTS）时改用网络自带的时间源。校准后写回 RTC，普通重启后时间保持正确。 |
 | Snap 应用 | AppArmor / snapd / 图形运行库 | 🟡 | 共用 Adreno 830 图形运行库；strict 隔离仍受 snapd 能力检测问题影响。 |
-| Android 应用 | Waydroid | 🟡 | ⟦DRAFT:G-WAYDROID⟧ 软件渲染下运行应用和联网；Android“省流量”不可用。见[安装指南](docs/WAYDROID.md)。 |
+| Android 应用 | Waydroid | 🟡 | 软件渲染下运行应用和联网；Android“省流量”不可用。见[安装指南](docs/WAYDROID.md)。 |
 | 虚拟机 | Gunyah / GunyahVM | ✅ | 预装虚拟机管理器，运行 ARM64 Linux 客体。 |
 | 硬件监控 | Resources | ✅ | 显示 CPU、GPU、电池与可用温度传感器。 |
 | 电池保护 | power_supply / UPower / GNOME | ✅ | ⟦DRAFT:G-CHARGE⟧ 可选 80% 充电上限、75% 复充，默认关闭。保护开启且正在充电时保持系统唤醒，停充后允许挂起；睡眠中降至下限需唤醒后复充。 |
