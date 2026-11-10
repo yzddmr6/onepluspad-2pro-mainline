@@ -8,6 +8,14 @@ v0.8.0 keeps Linux 7.2.15 and adds Gunyah virtual machines, Waydroid kernel supp
 GunyahVM and Resources are preinstalled. Install Waydroid separately using the [guide](WAYDROID.en.md); it uses software rendering and Android Data Saver is unavailable. Snap graphics use the shared `piano-snap-graphics` package; strict confinement remains affected by snapd feature detection.
 Enable battery protection in GNOME Settings → Power to stop charging at 80% and resume at 75%; it is off by default. Protected charging keeps the system awake until charging stops. If the battery reaches the lower threshold during sleep, charging resumes after the system wakes.
 
+Before upgrading, while still running v0.7.2, save an independent boot-set copy. If the destination already exists, inspect it instead of overwriting it:
+
+```sh
+sudo test ! -e /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 &&
+sudo cp -a --reflink=never /var/lib/erhai/switch/ubuntu /var/lib/erhai/rollback-v0.7.2-before-v0.8.0
+sudo sh -c 'cd /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 && sha256sum -c SHA256SUMS'
+```
+
 After checking `SHA256SUMS`, run on the tablet:
 
 ```sh
@@ -20,6 +28,24 @@ The cleanup command removes unused Ubuntu generic kernels and kdump, retaining `
 Install the shared packages and their dependencies together with the device packages. Use the matching debug set to retain development access; the normal archive disables debug access after reboot.
 
 GunyahVM and its runtime and guest payload packages are installed by this upgrade. At the first login after upgrading, the default Dock includes GunyahVM; existing customized favorites receive it once at the end, preserving their entries and order. Later user removals are respected. Device access for the active local desktop user comes from GunyahVM’s own udev and polkit rules, with no manual group changes.
+
+### Kernel rollback and upgrading again
+
+Keep this copy and the v0.7.2 kernel/module packages until the new version is confirmed usable. To roll back while Ubuntu is still accessible, run:
+
+```sh
+sudo erhai-switch-install-ubuntu-images /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 && sudo reboot
+```
+
+The installer verifies all three images, promotes the specified copy to the current Ubuntu boot set, and writes the current active slot. A copy matching `ubuntu.prev` is also promoted. After rebooting, `uname -r` should report `7.2.15-erhai-dev-g870167fad062-a359a9829`. This restores the kernel and boot set only; it does not downgrade applications or restore user data.
+
+To select v0.8.0 again after rollback, reinstall the package set so the kernel postinst activates the candidate again. A plain `apt install` may skip maintenance scripts because those versions are already installed:
+
+```sh
+sudo apt install --reinstall ./erhai-device-packages-v0.8.0/*.deb
+sudo erhai-remove-generic-kernels
+sudo reboot
+```
 
 ## v0.7.1 → v0.7.2
 

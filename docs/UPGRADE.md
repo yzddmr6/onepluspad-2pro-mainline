@@ -8,6 +8,14 @@ v0.8.0 保留 Linux 7.2.15，增加 Gunyah 虚拟机、Waydroid 内核支持、S
 GunyahVM 与 Resources 随系统预装；Waydroid 按[安装指南](WAYDROID.md)单独安装，使用软件渲染，Android“省流量”不可用。Snap 图形使用共用 `piano-snap-graphics` 包；strict 隔离仍受 snapd 能力检测问题影响。
 电池保护在 GNOME 设置 → 电源中开启，到 80% 停充、降至 75% 复充；默认关闭。开启保护且充电尚未停止时保持系统唤醒，停充后允许挂起；睡眠中降至下限时在唤醒后复充。
 
+升级前，在仍运行 v0.7.2 时保存独立启动组副本；若目标目录已经存在，先核实它，勿覆盖：
+
+```sh
+sudo test ! -e /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 &&
+sudo cp -a --reflink=never /var/lib/erhai/switch/ubuntu /var/lib/erhai/rollback-v0.7.2-before-v0.8.0
+sudo sh -c 'cd /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 && sha256sum -c SHA256SUMS'
+```
+
 核对 `SHA256SUMS` 后在平板上执行：
 
 ```sh
@@ -20,6 +28,24 @@ sudo erhai-remove-generic-kernels
 共用包与其依赖须和设备包一起安装。保留开发调试通道时使用同版调试包集合；普通归档重启后关闭调试通道。
 
 升级会安装 GunyahVM 及其运行时、来宾载荷包。升级后首次登录时，默认 Dock 包含 GunyahVM；已有自定义收藏只在末尾追加一次，保留原有项目和顺序。之后用户删除该图标，不会再次追加。本机活动桌面用户的设备访问权限由 GunyahVM 自带的 udev 与 polkit 规则授予，无需手动修改用户组。
+
+### 回退内核与再次升级
+
+保留上述副本及 v0.7.2 内核/模块包，直到新版本确认可用。需要回退且仍能进入 Ubuntu 时，执行：
+
+```sh
+sudo erhai-switch-install-ubuntu-images /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 && sudo reboot
+```
+
+安装器校验三个镜像，将指定副本提升为当前 Ubuntu 启动组，并写入当前活动槽；即使它与 `ubuntu.prev` 相同，也会完成提升。重启后 `uname -r` 应回到 `7.2.15-erhai-dev-g870167fad062-a359a9829`。这只回退内核与启动组，不会降级应用包或还原用户数据。
+
+回退后再次选择 v0.8.0，需要重新配置已安装的包，使内核 postinst 再次激活候选；普通 `apt install` 可能因版本已安装而不执行维护脚本：
+
+```sh
+sudo apt install --reinstall ./erhai-device-packages-v0.8.0/*.deb
+sudo erhai-remove-generic-kernels
+sudo reboot
+```
 
 ## v0.7.1 → v0.7.2
 
