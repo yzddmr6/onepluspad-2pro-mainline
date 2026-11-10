@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
-  <schema id="io.github.yzddmr6.piano.desktop" path="/io/github/yzddmr6/piano/desktop/">
+  <schema id="io.github.yzddmr6.erhai.desktop" path="/io/github/yzddmr6/erhai/desktop/">
     <key name="gunyahvm-favorite-added" type="b">
       <default>false</default>
       <summary>GunyahVM favorite migration completed</summary>

@@ -21,7 +21,7 @@ sudo erhai-remove-generic-kernels
 The cleanup command removes unused Ubuntu generic kernels and kdump, retaining `erhai-kernel-image-*`, the running and rollback kernels, and `linux-firmware`. Reboot after both commands succeed; no repartitioning or reinstallation is needed.
 Install the shared packages and their dependencies together with the device packages. Use the matching debug set to retain development access; the normal archive disables debug access after reboot.
 
-GunyahVM and its runtime and guest payload packages are installed by this upgrade. After logging in again, the default Dock includes GunyahVM; explicitly customized favorites remain unchanged. Device access for the active local desktop user comes from GunyahVM’s own udev and polkit rules, with no manual group changes.
+GunyahVM and its runtime and guest payload packages are installed by this upgrade. At the first login after upgrading, the default Dock includes GunyahVM; existing customized favorites receive it once at the end, preserving their entries and order. Later user removals are respected. Device access for the active local desktop user comes from GunyahVM’s own udev and polkit rules, with no manual group changes.
 
 ## v0.7.1 → v0.7.2
 

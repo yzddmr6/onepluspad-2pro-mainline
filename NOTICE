@@ -110,3 +110,14 @@ The application and patches retain GPL-3.0-or-later and their original authors.
 The authoritative source recipe is referenced by packaging/resources/source.json.
 Waydroid installation documentation and the UPower CHARGE_LIMIT integration
 follow yzddmr6/xiaomipad-8pro-mainline v1.1.1 (MIT); hardware matching is local.
+
+GunyahVM favorite migration
+---------------------------
+The favorite helper, GSettings migration key and autostart entry originate in
+https://github.com/yzddmr6/xiaomipad-8pro-mainline
+commits 6f377053a29fcc5688fe10bd84ab55f111a1013e and
+71342ec3392264261e4cdca0f71c83ebe44d336e (MIT, Copyright 2026 yzddmr6).
+The append-once algorithm is retained. Device integration changes the schema
+and installed path to erhai, declares the Python introspection dependencies,
+and omits the legacy autostart phase so the systemd XDG generator can launch it.
+The MIT license is shipped as gunyahvm-favorite.COPYING in the support package.
