@@ -121,3 +121,11 @@ The append-once algorithm is retained. Device integration changes the schema
 and installed path to erhai, declares the Python introspection dependencies,
 and omits the legacy autostart phase so the systemd XDG generator can launch it.
 The MIT license is shipped as gunyahvm-favorite.COPYING in the support package.
+
+Snap prompting capability condition
+-----------------------------------
+The user-service condition is reused from
+https://github.com/yzddmr6/xiaomipad-6pro-mainline
+commit 0124be288244f9018b8ee10617df3d0a5bf5f789. Only the device-specific
+drop-in filename changes. The daemon is skipped when the kernel does not
+provide the AppArmor notification socket.
