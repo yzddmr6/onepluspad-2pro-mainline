@@ -24,7 +24,7 @@ including all Mesa development and OpenCL packages; only the required runtime
 subset is installed by default. libdrm consists of original Ubuntu binaries and
 is not pinned, allowing normal Ubuntu updates.
 
-Verify the release attachment checksums and extract both batches. The previous
+Verify the release attachment checksums and extract both batches into a new empty directory, without overwriting an earlier repository with the same name. The previous
 batch must contain the exact installed release packages and their Mesa/libdrm
 versions; the tool refuses an incomplete rollback inventory. Copy both repository
 directories to the tablet, then run there:
