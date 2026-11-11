@@ -31,6 +31,9 @@ trap 'rm -rf "$work"' EXIT
 dev=$work/dev
 store=$work/store
 mkdir -p "$dev" "$store"
+mkdir -p "$dev/power_supply/battery"
+printf 'Battery\n' > "$dev/power_supply/battery/type"
+printf '80\n' > "$dev/power_supply/battery/capacity"
 
 pass=0
 fail=0

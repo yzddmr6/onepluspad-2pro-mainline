@@ -16,4 +16,5 @@ with zipfile.ZipFile(args.output, 'w', zipfile.ZIP_DEFLATED) as archive:
         if path.is_file():
             archive.write(path, path.relative_to(source))
     archive.write(root / 'switch/erhai-switch', 'erhai-switch')
+    archive.write(root / 'switch/switch-common.sh', 'switch-common.sh')
 print(args.output)

@@ -30,8 +30,12 @@ class SwitchFailureTest(unittest.TestCase):
                 if kind == 'android':
                     (self.dev / (name + '_a')).write_bytes(data)
             self.sums(kind)
+        battery = self.dev / 'power_supply/battery'
+        battery.mkdir(parents=True)
+        (battery / 'type').write_text('Battery\n')
+        (battery / 'capacity').write_text('80\n')
         self.backup = {p.name: p.read_bytes() for p in (self.store / 'android').iterdir()}
-        self.original = {p.name: p.read_bytes() for p in self.dev.iterdir()}
+        self.original = {p.name: p.read_bytes() for p in self.dev.iterdir() if p.is_file()}
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -56,7 +60,7 @@ class SwitchFailureTest(unittest.TestCase):
         (self.store / 'ubuntu/vendor_boot.img').write_bytes(b'short')
         self.sums('ubuntu')
         self.assertNotEqual(self.switch('to-ubuntu').returncode, 0)
-        self.assertEqual({p.name: p.read_bytes() for p in self.dev.iterdir()}, self.original)
+        self.assertEqual({p.name: p.read_bytes() for p in self.dev.iterdir() if p.is_file()}, self.original)
 
     def test_unknown_mixed_triplet_does_not_replace_backup(self):
         (self.dev / 'vendor_boot_a').write_bytes(b'other'.ljust(4096, b'\0'))
@@ -64,19 +68,17 @@ class SwitchFailureTest(unittest.TestCase):
         self.assertNotEqual(self.switch('stash-android').returncode, 0)
         self.assertEqual({p.name: p.read_bytes() for p in (self.store / 'android').iterdir()}, self.backup)
 
-    def test_failed_write_stops_without_automatic_rollback(self):
-        self.wrapper('dd', 'for arg in "$@"; do case "$arg" in of=*/init_boot_a) exit 1;; esac; done; exec /usr/bin/dd "$@"')
+    def test_failed_rollback_keeps_recovery_copy_and_stops(self):
+        self.wrapper('dd', 'for arg in "$@"; do case "$arg" in of=*/init_boot_a) echo broken >&2; exit 1;; esac; done; exec /usr/bin/dd "$@"')
         result = self.switch('to-ubuntu')
         self.assertNotEqual(result.returncode, 0)
+        self.assertIn('rollback-failed', result.stderr)
         self.assertTrue((self.store / '.switch-incomplete').exists())
-        self.assertEqual((self.dev / 'boot_a').read_bytes(), (self.store / 'ubuntu/boot.img').read_bytes())
+        self.assertEqual((self.dev / 'boot_a').read_bytes(), self.original['boot_a'])
         self.assertEqual((self.dev / 'vendor_boot_a').read_bytes(), self.original['vendor_boot_a'])
         self.assertNotEqual(self.switch('stash-android').returncode, 0)
         self.assertEqual({p.name: p.read_bytes() for p in (self.store / 'android').iterdir()}, self.backup)
-        (self.bin / 'dd').unlink()
-        self.assertEqual(self.switch('to-android').returncode, 0)
-        self.assertFalse((self.store / '.switch-incomplete').exists())
-        self.assertEqual({p.name: p.read_bytes() for p in self.dev.iterdir()}, self.original)
+        self.assertTrue((self.store / '.switch-rollback/boot.img').exists())
 
     def test_kernel_update_reuses_parent_lock(self):
         import shlex
@@ -103,7 +105,7 @@ class SwitchFailureTest(unittest.TestCase):
         with (self.store / '.lock').open('w') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             self.assertNotEqual(self.switch('to-ubuntu').returncode, 0)
-        self.assertEqual({p.name: p.read_bytes() for p in self.dev.iterdir()}, self.original)
+        self.assertEqual({p.name: p.read_bytes() for p in self.dev.iterdir() if p.is_file()}, self.original)
 
 
 if __name__ == '__main__':

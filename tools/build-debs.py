@@ -120,7 +120,7 @@ PACKAGES = ('erhai-display-power', 'erhai-device-support', 'erhai-firmware', 'er
             'erhai-firefox', 'erhai-release-notifier', 'erhai-settings', 'erhai-kernel', 'erhai-debug', 'erhai-device',
             'erhai-snap-graphics', 'erhai-apps')
 PARTS = ('boot', 'init_boot', 'vendor_boot')
-SWITCHER_PROGRAMS = ('erhai-switch', 'erhai-switch-install-ubuntu-images')
+SWITCHER_PROGRAMS = ('switch-common.sh', 'erhai-switch', 'erhai-switch-install-ubuntu-images')
 
 
 def die(message):

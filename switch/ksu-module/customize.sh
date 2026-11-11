@@ -19,6 +19,8 @@ fi
 # One unit under test: the same script the Ubuntu side runs.
 mkdir -p "$MODPATH/system/bin"
 mv -f "$MODPATH/erhai-switch" "$MODPATH/system/bin/erhai-switch"
+mv -f "$MODPATH/switch-common.sh" "$MODPATH/system/bin/switch-common.sh"
+set_perm "$MODPATH/system/bin/switch-common.sh" 0 0 0644
 set_perm "$MODPATH/system/bin/erhai-switch" 0 0 0755
 set_perm_recursive "$MODPATH/webroot" 0 0 0755 0644
 

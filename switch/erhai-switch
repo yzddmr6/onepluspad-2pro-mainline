@@ -42,6 +42,8 @@ fi
 
 set -u
 
+. "$(dirname -- "$0")/switch-common.sh"
+
 PROG=erhai-switch
 PARTS='boot init_boot vendor_boot'
 ROOT_LABEL=linux_rootfs
@@ -62,13 +64,15 @@ MOUNTED_HERE=0
 die() {
 	printf '%s: %s\n' "$PROG" "$*" >&2
 	log "ERROR $*"
+	switch_notify_failure "$*"
 	cleanup
 	exit 1
 }
 
-warn() { printf '%s: %s\n' "$PROG" "$*" >&2; }
+warn() { printf '%s: %s\n' "$PROG" "$*" >&2; log "WARNING $*"; }
 
 log() {
+	if [ -z "$DEV_DIR" ] && ! is_android; then logger -t "$PROG" -- "$*"; fi
 	[ -n "$STORE" ] && [ -d "$STORE" ] || return 0
 	printf '%s %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || echo unknown)" "$*" \
 		>> "$STORE/switch.log" 2>/dev/null || true
@@ -91,15 +95,14 @@ is_android() { [ -e /system/build.prop ] || [ -d /system/bin ]; }
 # but no androidboot.slot_suffix at all, and leaves /proc/bootconfig empty
 # -- measured on the device, 2026-09-21. So Linux falls back to the GPT
 # attribute the bootloader itself uses to pick a slot (bit 50, "active", the
-# same bit `fastboot --set-active` writes), and finally to what the Android
-# side last recorded in the store.
+# same bit `fastboot --set-active` writes). Saved state is not slot evidence.
 GPT_ACTIVE_BIT=0x0004000000000000
 GPT_UNBOOTABLE_BIT=0x0080000000000000
 
 slot_from_bootargs() {
 	[ -r "$1" ] || return 1
 	tr -d '\000' < "$1" | tr ' ' '\n' |
-		sed -n 's/^androidboot\.slot_suffix=//p' | head -n 1
+		sed -n 's/^androidboot\.slot_suffix=//p' | sed 's/^$/invalid/'
 }
 
 part_flags() {
@@ -117,8 +120,8 @@ slot_from_gpt() {
 		# but a value in any other shape is a fatal arithmetic error in
 		# dash rather than a failed command, so check the shape first.
 		case $gp_flags in
-		0x[0-9a-fA-F]*|[0-9]*) ;;
-		*) continue ;;
+		0x*) gp_digits=${gp_flags#0x}; case $gp_digits in ''|*[!0-9a-fA-F]*) return 1 ;; esac ;;
+		*) case $gp_flags in ''|*[!0-9]*) return 1 ;; esac ;;
 		esac
 		gp_active=$((gp_flags & GPT_ACTIVE_BIT))
 		gp_dead=$((gp_flags & GPT_UNBOOTABLE_BIT))
@@ -132,18 +135,26 @@ slot_from_gpt() {
 }
 
 detect_slot() {
-	ds_suffix=
+	if [ -n "$DEV_DIR" ]; then
+		cat "$DEV_DIR/slot" 2>/dev/null
+		return
+	fi
+	ds_values=
 	if [ -r /proc/bootconfig ]; then
-		ds_suffix=$(sed -n 's/.*androidboot\.slot_suffix *= *"\{0,1\}\([^" ]*\)"\{0,1\}.*/\1/p' \
-			/proc/bootconfig | head -n 1)
+		ds_values=$(switch_bootconfig_slots /proc/bootconfig)
 	fi
-	[ -n "$ds_suffix" ] || ds_suffix=$(slot_from_bootargs /proc/cmdline)
-	[ -n "$ds_suffix" ] || ds_suffix=$(slot_from_bootargs /proc/device-tree/chosen/bootargs)
+	for ds_file in /proc/cmdline /proc/device-tree/chosen/bootargs; do
+		ds_values="$ds_values $(slot_from_bootargs "$ds_file")"
+	done
+	ds_suffix=
+	set -f
+	for ds_value in $ds_values; do
+		case $ds_value in _a|_b) ;; *) set +f; return 1 ;; esac
+		[ -z "$ds_suffix" ] || [ "$ds_suffix" = "$ds_value" ] || { set +f; return 1; }
+		ds_suffix=$ds_value
+	done
+	set +f
 	[ -n "$ds_suffix" ] || ds_suffix=$(slot_from_gpt)
-	if [ -z "$ds_suffix" ] && [ -f "$STORE_DEFAULT/state.json" ]; then
-		ds_suffix=$(sed -n 's/.*"slot_suffix": *"\([^"]*\)".*/\1/p' \
-			"$STORE_DEFAULT/state.json" | head -n 1)
-	fi
 	printf '%s' "$ds_suffix"
 }
 
@@ -301,37 +312,84 @@ validate_target() {
 	done
 }
 
+# Snapshot the exact preimage, including an older Ubuntu build whose store
+# was already replaced by the kernel installer. Never substitute another set.
+prepare_rollback() {
+	[ ! -e "$STORE/.switch-incomplete" ] ||
+		die 'an earlier switch is incomplete; recover the saved .switch-rollback before switching'
+	rm -rf "$STORE/.switch-rollback"
+	mkdir -m 700 "$STORE/.switch-rollback" || die 'cannot create rollback directory'
+	for pr_name in $PARTS; do
+		pr_dev=$(resolve_part "$pr_name$SLOT") || die "no $pr_name$SLOT partition"
+		pr_size=$(stat -c %s "$is_dir/$pr_name.img")
+		run_logged dd if="$pr_dev" of="$STORE/.switch-rollback/$pr_name.img" bs=1048576 ||
+			die "cannot save $pr_name$SLOT before writing"
+		[ "$(stat -c %s "$STORE/.switch-rollback/$pr_name.img")" = "$pr_size" ] ||
+			die "short rollback copy of $pr_name$SLOT"
+		pr_sum=$(sha_of_file "$STORE/.switch-rollback/$pr_name.img")
+		[ "$pr_sum" = "$(sha_of_part "$pr_dev" "$pr_size")" ] ||
+			die "rollback copy differs from $pr_name$SLOT"
+		printf '%s  %s.img\n' "$pr_sum" "$pr_name" >> "$STORE/.switch-rollback/SHA256SUMS" ||
+			die 'cannot save rollback checksums'
+	done
+	sync
+}
+
+restore_written() {
+	rw_ok=1
+	for rw_name in $is_attempted; do
+		rw_dev=$(resolve_part "$rw_name$SLOT") || { rw_ok=0; continue; }
+		rw_src=$STORE/.switch-rollback/$rw_name.img
+		rw_want=$(sums_lookup "$STORE/.switch-rollback" "$rw_name")
+		if [ "$(sha_of_file "$rw_src")" != "$rw_want" ]; then
+			warn "rollback source corrupt: $rw_name"; rw_ok=0; continue
+		fi
+		run_logged dd if="$rw_src" of="$rw_dev" bs=1048576 conv=notrunc,fsync || rw_ok=0
+		if [ -z "$DEV_DIR" ]; then run_logged blockdev --flushbufs "$rw_dev" || rw_ok=0; fi
+		[ "$(sha_of_part "$rw_dev" "$(stat -c %s "$rw_src")")" = "$rw_want" ] || rw_ok=0
+	done
+	if [ "$rw_ok" = 1 ]; then
+		rm -f "$STORE/.switch-incomplete"
+		rm -rf "$STORE/.switch-rollback"
+		sync
+		die 'result=rolled-back: switch failed; the original partitions were restored and verified. Not rebooting.'
+	fi
+	die 'result=rollback-failed: switch and rollback failed. Do not reboot; recover with Fastboot. The preimage remains in .switch-rollback.'
+}
+
 install_set() {
 	is_dir=$1 is_label=$2
-	if [ "$DRY_RUN" = 0 ]; then
-		printf '%s\n' "$is_label" > "$STORE/.switch-incomplete" || die 'cannot record the pending switch'
-		sync
+	if [ "$DRY_RUN" = 1 ]; then
+		say "dry-run: would write $is_label to slot$SLOT"
+		return 0
 	fi
+	prepare_rollback
+	# Ignore termination during writes AND rollback, including dd children.
+	trap '' HUP INT TERM
+	printf '%s\n' "$is_label" > "$STORE/.switch-incomplete" || die 'cannot record the pending switch'
+	sync
+	is_attempted=
 	for is_name in $PARTS; do
-		is_dev=$(resolve_part "$is_name$SLOT") ||
-			die "no $is_name$SLOT partition on this device"
+		is_dev=$(resolve_part "$is_name$SLOT") || restore_written
 		is_src=$is_dir/$is_name.img
 		is_bytes=$(stat -c %s "$is_src")
 		is_want=$(sums_lookup "$is_dir" "$is_name")
-		if [ "$DRY_RUN" = 1 ]; then
-			say "dry-run: would write $is_src ($is_bytes bytes, $is_want) to $is_dev"
-			continue
-		fi
+		is_attempted="$is_attempted $is_name"
 		say "writing $is_name$SLOT <- $is_label/$is_name.img ($is_bytes bytes)"
-		dd if="$is_src" of="$is_dev" bs=1048576 conv=fsync 2>/dev/null ||
-			die "write to $is_dev failed; keep the backup and restore Android before rebooting"
+		run_logged dd if="$is_src" of="$is_dev" bs=1048576 conv=notrunc,fsync || restore_written
+		if [ -z "$DEV_DIR" ]; then run_logged blockdev --flushbufs "$is_dev" || restore_written; fi
 		sync
 		is_got=$(sha_of_part "$is_dev" "$is_bytes")
 		if [ "$is_got" != "$is_want" ]; then
 			warn "$is_name$SLOT reads back as $is_got, expected $is_want"
-			die "read-back mismatch on $is_name$SLOT; the tablet was NOT rebooted"
+			restore_written
 		fi
 		say "verified $is_name$SLOT = $is_got"
 	done
-	if [ "$DRY_RUN" = 0 ]; then
-		rm -f "$STORE/.switch-incomplete"
-		sync
-	fi
+	rm -f "$STORE/.switch-incomplete"
+	rm -rf "$STORE/.switch-rollback"
+	sync
+	trap 'exit 1' HUP INT TERM
 }
 
 stash_set() {
@@ -390,7 +448,8 @@ write_state() {
 			"$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || echo unknown)"
 		printf '  "boot_sha256": "%s"\n' "$(sums_lookup "$STORE/$ws_kind" boot)"
 		printf '}\n'
-	} > "$STORE/state.json"
+	} > "$STORE/state.json.new" && mv "$STORE/state.json.new" "$STORE/state.json" ||
+		die "images installed, but cannot record final state; not rebooting"
 	sync
 }
 
@@ -400,14 +459,16 @@ do_reboot() {
 		return 0
 	fi
 	say "rebooting"
-	cleanup
 	sync
-	# svc is Android's own path and survives a locked-down init; reboot(8)
-	# covers the Linux side and Android recovery shells.
-	if command -v svc >/dev/null 2>&1; then
-		svc power reboot && return 0
+	if [ -n "$DEV_DIR" ]; then
+		: > "$DEV_DIR/.rebooted"
+		return 0
 	fi
-	reboot || reboot -f
+	if is_android; then
+		run_logged svc power reboot || die 'Images installed, but reboot failed; save your work and reboot manually.'
+	else
+		run_logged systemctl reboot || die 'Images installed, but reboot failed; save your work and reboot manually.'
+	fi
 }
 
 # --------------------------------------------------------------------------
@@ -463,13 +524,15 @@ cmd_stash() {
 }
 
 cmd_to_ubuntu() {
+	require_switch_battery
 	[ ! -f "$STORE/.switch-incomplete" ] || die 'a switch was interrupted; restore Android first'
 	validate_target "$STORE/ubuntu" ubuntu
 	tu_who=$(occupant)
 	if [ "$tu_who" = ubuntu ]; then
 		say "the Ubuntu triplet is already installed; nothing to write"
 		write_state ubuntu
-		return 0
+		do_reboot
+		return $?
 	fi
 	if has_ubuntu_marker; then
 		say 'refreshing Ubuntu without replacing the Android backup'
@@ -485,13 +548,15 @@ cmd_to_ubuntu() {
 }
 
 cmd_to_android() {
+	require_switch_battery
 	validate_target "$STORE/android" android
 	ta_who=$(occupant)
 	if [ "$ta_who" = android ]; then
 		[ "$DRY_RUN" = 1 ] || rm -f "$STORE/.switch-incomplete"
 		say "the Android triplet is already installed; nothing to write"
 		write_state android
-		return 0
+		do_reboot
+		return $?
 	fi
 	install_set "$STORE/android" android
 	write_state android
@@ -515,7 +580,7 @@ Subcommands:
 Options:
   --no-reboot     do everything but the reboot
   --dry-run       report what would be written; touches no partition
-  --slot _a|_b    override the detected active slot
+  --slot _a|_b    require this slot to match the detected active slot
   --store DIR     use this store instead of /var/lib/erhai/switch
   --dev-dir DIR   resolve partitions as plain files in DIR (tests only)
 
@@ -549,15 +614,21 @@ if [ "$(id -u)" != 0 ]; then
 	die 'must run as root (Ubuntu: sudo/pkexec; Android: a KernelSU root shell)'
 fi
 
-if [ -z "$SLOT" ]; then
-	SLOT=$(detect_slot)
-	[ -n "$SLOT" ] ||
-		die 'cannot tell which slot is active; pass --slot _a or --slot _b'
+if [ -n "$DEV_DIR" ]; then
+	[ -d "$DEV_DIR" ] && [ -n "$STORE" ] || die '--dev-dir needs a directory and --store'
+	# Fixtures cannot reach real partitions, stores or reboot commands.
+	[ -n "$SLOT" ] || SLOT=$(detect_slot)
+else
+	detected=$(detect_slot)
+	case $detected in _a|_b) ;; *) die 'cannot determine the active slot; nothing was written' ;; esac
+	case $SLOT in a|b) SLOT=_$SLOT ;; esac
+	[ -z "$SLOT" ] || [ "$SLOT" = "$detected" ] || die '--slot disagrees with the detected active slot'
+	SLOT=$detected
 fi
 case $SLOT in
-_a|_b|'') ;;
+_a|_b) ;;
 a|b) SLOT=_$SLOT ;;
-*) die "implausible slot suffix: $SLOT" ;;
+*) die "cannot determine the active slot: $SLOT" ;;
 esac
 
 if [ -n "$STORE" ]; then

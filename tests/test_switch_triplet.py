@@ -22,6 +22,10 @@ class TripletTest(unittest.TestCase):
             # this regression run without privileges or access to real disks.
             (commands / 'id').write_text('#!/bin/sh\n[ "$1" = -u ] && { echo 0; exit; }\nexec /usr/bin/id "$@"\n')
             (commands / 'id').chmod(0o755)
+            battery = devices / 'power_supply/battery'
+            battery.mkdir(parents=True)
+            (battery / 'type').write_text('Battery\n')
+            (battery / 'capacity').write_text('80\n')
             originals = {}
             for kind in ('ubuntu', 'android'):
                 sums = []
