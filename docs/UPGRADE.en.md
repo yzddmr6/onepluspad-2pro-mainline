@@ -3,9 +3,11 @@
 [中文](UPGRADE.md) · [Installation and recovery](FLASHING.en.md)
 
 
-## 0.8.0 → 0.8.1
+## v0.8.0 → v0.8.1
 
 ⟦DRAFT:complete offline APT and device migration/rollback gates⟧
+
+The power button now locks the screen by default instead of directly suspending. Change its action in Settings > Power. Settings is updated to 50.3 and retains the port author in About. Install the complete batch to migrate both graphics and settings components.
 
 Host Mesa now uses Ubuntu package names and standard multiarch directories, so
 sandboxed web processes can discover the device drivers. The driver version and
