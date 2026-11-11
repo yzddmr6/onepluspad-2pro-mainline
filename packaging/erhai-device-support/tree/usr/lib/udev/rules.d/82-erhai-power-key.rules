@@ -1,2 +1,0 @@
-# SPDX-License-Identifier: GPL-2.0-only
-ACTION=="add", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="pmic_pwrkey", TAG+="systemd", ENV{SYSTEMD_WANTS}+="erhai-power-key@%k.service"

@@ -1,0 +1,43 @@
+Description: Add a power-button lock action using the existing GNOME screen saver
+Author: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Based-on: Phoebe Harris <phoebe.harris.2024@proton.me>, GSD !448
+ https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/commit/b80693acdce2931550081b8d27550e19c9eed36d
+Based-on: Cédric Bellegarde <cedric.bellegarde@adishatz.org>, GSD !320 (design reference only)
+ https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/commit/89f1042d9068ba5ea2f51fa846fcac148a490479
+Forwarded: no
+Last-Update: 2026-10-16
+License: GPL-2.0-or-later
+ .
+ Retain media-keys ownership and inhibitor. No timer, polling, GnomeRR,
+ new daemon or suspend policy is added. Shell retains its native animation.
+ .
+--- a/panels/power/cc-power-panel.c
++++ b/panels/power/cc-power-panel.c
+@@ -568,8 +568,6 @@
+ {
+   static const char *hidden_on_chassis[] = {
+     "vm", /* Hard-coded to shutdown via logind (not interactive, as below!) */
+-    "tablet", /* Should be left to the default action of suspending */
+-    "handset", /* This means phone. Similar to tablet */
+     NULL
+   };
+   static const struct {
+@@ -580,7 +578,8 @@
+     { N_("Suspend"), GSD_POWER_BUTTON_ACTION_SUSPEND, offsetof (CcPowerPanel, can_suspend) },
+     { N_("Power Off"), GSD_POWER_BUTTON_ACTION_INTERACTIVE, offsetof (CcPowerPanel, can_shutdown) },
+     { N_("Hibernate"), GSD_POWER_BUTTON_ACTION_HIBERNATE, offsetof (CcPowerPanel, can_hibernate) },
+-    { N_("Nothing"), GSD_POWER_BUTTON_ACTION_NOTHING, 0 }
++    { N_("Nothing"), GSD_POWER_BUTTON_ACTION_NOTHING, 0 },
++    { N_("Lock Screen"), GSD_POWER_BUTTON_ACTION_LOCK, 0 }
+   };
+   guint n_options = 0;
+   guint i;
+@@ -593,7 +592,7 @@
+       const char *name = actions[i].name;
+       const int value = actions[i].value;
+ 
+-      if (value != GSD_POWER_BUTTON_ACTION_NOTHING)
++      if (actions[i].availability != 0)
+         {
+           const size_t offset = actions[i].availability;
+           ActionAvailability availability = G_STRUCT_MEMBER (ActionAvailability,

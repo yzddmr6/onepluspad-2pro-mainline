@@ -25,6 +25,7 @@ def metadata(path):
 
 
 def main():
+    from shared_gnome import load as load_shared_gnome
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--layers', type=Path, required=True,
                         help='Original ISO casper directory, containing the two pinned squashfs files')
@@ -41,6 +42,7 @@ def main():
                         help='Container RAM limit in MiB; total RAM plus swap is limited to twice this value')
     parser.add_argument('--timeout', type=int, default=1800, help='Container assembly limit in seconds')
     args = parser.parse_args()
+    shared_gnome = load_shared_gnome()
     if args.jobs < 1 or args.timeout < 1 or args.memory_mib < 512:
         parser.error('--jobs and --timeout must be positive; --memory-mib must be at least 512')
     lock_path = REPO / 'packaging/desktop/source.json'
@@ -66,13 +68,17 @@ def main():
         path = path.resolve()
         info = metadata(path)
         name = info['Package']
-        if not (name.startswith('erhai-') or name in ('piano-mesa', 'piano-snap-graphics', 'resources', 'gunyahvm',
+        if not (name.startswith('erhai-') or name in shared_gnome or name in ('piano-mesa', 'piano-snap-graphics', 'resources', 'gunyahvm',
                                                      'gunyahvm-runtime', 'gunyahvm-guest-kernel', 'gunyahvm-guest-mesa')) or info['Architecture'] not in ('arm64', 'all'):
             parser.error(f'{path}: expected an arm64/all device or shared application package')
         if name in selected:
             parser.error(f'duplicate package input: {name}')
         selected_paths[name] = path
         digest = sha256(path)
+        if name in shared_gnome:
+            pin = shared_gnome[name]
+            if info['Version'] != pin['version'] or digest != pin['sha256']:
+                parser.error(f'{name} differs from the pinned shared GNOME package')
         if name in gunyahvm_pins:
             pin = gunyahvm_pins[name]
             if info['Version'] != pin['version'] or digest != pin['sha256']:
@@ -82,6 +88,10 @@ def main():
             if info['Version'] != resource['version'] or digest != resource['sha256']:
                 parser.error('Resources differs from the pinned shared binary input')
         selected[name] = {'file': path.name, 'sha256': digest, **info}
+    if {'erhai-settings', 'erhai-device'} & selected.keys():
+        missing = shared_gnome.keys() - selected.keys()
+        if missing:
+            parser.error('The product image requires all shared GNOME packages: ' + ', '.join(sorted(missing)))
     if {'erhai-apps', 'erhai-device'} & selected.keys():
         missing = gunyahvm_pins.keys() - selected.keys()
         if missing:
@@ -138,7 +148,7 @@ def main():
                   ['git', '-C', str(REPO), 'status', '--porcelain'], text=True)),
               'ubuntu': {'iso': lock['iso'], 'layers': lock['layers']},
               'build_host': lock['build_host'], 'build_host_id': image_info['Id'],
-              'shared_application_sources': {'gunyahvm': gunyahvm},
+              'shared_application_sources': {'gunyahvm': gunyahvm, 'gnome': shared_gnome},
               'device_packages': selected, 'dependency_packages': dependencies,
               'runtime_packages': lock['runtime_packages'],
               'requested_packages': seeds}

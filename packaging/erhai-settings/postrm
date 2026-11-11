@@ -1,11 +1,55 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-only
 set -e
+file=/usr/bin/gnome-control-center
 case "$1" in
-remove | disappear | abort-install)
-    if [ "$(dpkg-divert --listpackage /usr/bin/gnome-control-center)" = erhai-settings ]; then
-        dpkg-divert --package erhai-settings --remove --rename \
-            --divert /usr/bin/gnome-control-center.distrib /usr/bin/gnome-control-center
+upgrade)
+    # Older releases do not know this conffile. Do not leave the new package
+    # pins active after a downgrade; retain any administrator edit as a backup.
+    if dpkg --compare-versions "$2" lt 0.8.1~; then
+        pin=/etc/apt/preferences.d/erhai-shared-gnome
+        if [ -f "$pin" ]; then
+            expected=$(dpkg-query -W -f='${Conffiles}' erhai-settings | \
+                awk -v path="$pin" '$1 == path {print $2}')
+            actual=$(md5sum "$pin" | cut -d ' ' -f 1)
+            if [ -n "$expected" ] && [ "$actual" = "$expected" ]; then
+                rm -f "$pin"
+            else
+                mv "$pin" "$pin.dpkg-bak"
+            fi
+        fi
     fi
     ;;
+abort-upgrade | abort-install)
+    if [ -f "$file.erhai-settings-old" ]; then
+        owner=$(dpkg-divert --listpackage "$file")
+        if [ -z "$owner" ]; then
+            if [ ! -e "$file" ] && [ -f "$file.erhai-settings-restore" ]; then
+                mv "$file.erhai-settings-restore" "$file"
+            fi
+            dpkg-divert --package erhai-settings --add --rename \
+                --divert "$file.distrib" "$file"
+            mv "$file.erhai-settings-old" "$file"
+            rm -f "$file.erhai-settings-restore"
+        elif [ "$owner" = erhai-settings ]; then
+            if [ ! -e "$file.distrib" ] && [ -f "$file.erhai-settings-restore" ]; then
+                mv "$file.erhai-settings-restore" "$file.distrib"
+            fi
+            if [ ! -e "$file" ]; then
+                mv "$file.erhai-settings-old" "$file"
+            fi
+        fi
+    fi
+    ;;
+remove | purge)
+    if [ -f "$file.erhai-settings-restore" ] && [ -z "$(dpkg-divert --listpackage "$file")" ]; then
+        if [ ! -e "$file" ]; then
+            mv "$file.erhai-settings-restore" "$file"
+        else
+            rm -f "$file.erhai-settings-restore"
+        fi
+    fi
+    rm -f "$file.erhai-settings-old"
+    ;;
+
 esac

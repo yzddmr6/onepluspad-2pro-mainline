@@ -1,0 +1,18 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-2.0-only
+set -e
+case "$1" in
+configure)
+    file=/usr/bin/gnome-control-center
+    if [ -f "$file.erhai-settings-restore" ]; then
+        # If GCC unpacked later, its newly installed executable wins.
+        if [ ! -e "$file" ]; then
+            mv "$file.erhai-settings-restore" "$file"
+        else
+            rm -f "$file.erhai-settings-restore"
+        fi
+    fi
+    test -x "$file"
+    rm -f "$file.erhai-settings-old"
+    ;;
+esac

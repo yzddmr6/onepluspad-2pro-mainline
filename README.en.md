@@ -57,11 +57,11 @@ primarily in Chinese.
   the tablet uses more than the port supplies and the battery still drains slowly. The
   stock SUPERVOOC protocol is not available under Linux. Fastboot is not a
   charging fallback.
-  Closing the keyboard cover or a case suspends the tablet; the power button locks the
-  screen and suspends, and the next press wakes it. In suspend the SoC reaches its deepest
+  ⟦DRAFT:电源键锁屏候选验收⟧ Closing the keyboard cover or a case suspends the tablet; the power button defaults to locking the
+  screen and can be configured in Settings > Power. In suspend the SoC reaches its deepest
   power states. When idle, the screen dims and blanks with Ubuntu's defaults and the tablet
   suspends on battery.
-  See [System suspend](docs/SUSPEND.en.md) for timings and the blank-only opt-out.
+  See [System suspend](docs/SUSPEND.en.md) for timings and power-button settings.
 - **Data and recovery:** unlocking the bootloader erases user data. Back up
   personal files and obtain matching stock firmware before changing the device.
   Keep factory calibration and device addresses specific to each tablet.
@@ -162,8 +162,8 @@ Features under development are not included in the supported feature set.
 
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
-| Cover | Hall switch / logind | ✅ | Closing the keyboard cover or a case suspends the tablet within about a second; opening it wakes the tablet and lights up the screen. Touch input is ignored while the cover is closed. Closing and opening the cover does not wake a suspend entered with the cover open (for example with the power button); press the power button instead. |
-| Power button | Linux input / GNOME | ✅ | A press locks the screen and enters s2idle suspend; the next press wakes the tablet to the lock screen. Set `/etc/erhai/power-key-action` to `blank` for lock-and-blank only. |
+| Cover | Hall switch / logind | ✅ | Closing the keyboard cover or a case suspends the tablet within about a second; opening it wakes the tablet and lights up the screen. Touch input is ignored while the cover is closed. Closing and opening the cover does not wake a suspend entered with the cover open (for example through idle suspend); press the power button instead. |
+| Power button | Linux input / GNOME | ✅ | ⟦DRAFT:电源键锁屏候选验收⟧ GNOME handles the key; its default action is to lock the screen and can be changed in Settings > Power. The old `power-key-action` files no longer apply. |
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up and down report `KEY_VOLUMEUP` and `KEY_VOLUMEDOWN`, respectively. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management are incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |

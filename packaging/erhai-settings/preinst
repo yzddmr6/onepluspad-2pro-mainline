@@ -3,7 +3,29 @@
 set -e
 case "$1" in
 install | upgrade)
-    dpkg-divert --package erhai-settings --add --rename \
-        --divert /usr/bin/gnome-control-center.distrib /usr/bin/gnome-control-center
+    file=/usr/bin/gnome-control-center
+    owner=$(dpkg-divert --listpackage "$file")
+    if [ "$owner" = erhai-settings ]; then
+        # dpkg removes our obsolete executable after preinst. Keep GCC's
+        # original aside until configure so that removal cannot delete it.
+        test -f "$file.distrib" || test -f "$file.erhai-settings-restore"
+        if [ -e "$file" ]; then
+            dpkg-query -L erhai-settings | grep -Fxq "$file"
+            mv "$file" "$file.erhai-settings-old"
+        fi
+        if [ -f "$file.distrib" ]; then
+            mv "$file.distrib" "$file.erhai-settings-restore"
+        fi
+        dpkg-divert --package erhai-settings --remove --no-rename \
+            --divert "$file.distrib" "$file"
+    elif [ -n "$owner" ]; then
+        echo "erhai-settings: refusing to remove diversion owned by $owner" >&2
+        exit 1
+    elif [ -f "$file.erhai-settings-restore" ] && [ -e "$file" ]; then
+        # Resume after preinst was interrupted: GCC may have unpacked a new
+        # executable since the diversion was removed. Preserve those newest
+        # bytes before dpkg again removes our old file-list entry.
+        mv "$file" "$file.erhai-settings-restore"
+    fi
     ;;
 esac

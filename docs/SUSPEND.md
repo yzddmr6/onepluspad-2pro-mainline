@@ -38,33 +38,15 @@ s2idle 处理这类中断时不会离开挂起。
 
 ## 电源键
 
-亮屏时，电源键现在默认先锁屏、确认锁屏已生效，再熄屏并请求系统挂起（默认 `s2idle`）。
-锁屏失败时不会熄屏或请求挂起。登录界面本来就要求认证，因此只熄屏并请求挂起，不改变登录界面。
-设备服务独占电源键；GNOME 的动作仍为 `nothing`，logind 的 `HandlePowerKey` 仍为 `ignore`。
+⟦DRAFT:电源键锁屏候选验收⟧
 
-如需恢复以前的仅锁屏熄屏行为，以管理员权限执行：
+电源键现在由配套 GNOME Settings Daemon 处理，默认 `power-button-action='lock'`。
+可在“设置 → 电源”中选择“锁定屏幕”或其他动作。锁屏动作不主动请求系统挂起；
+合盖与空闲自动挂起仍由各自策略处理，个人已有的 GNOME 设置不会被强制改写。
 
-```sh
-sudo mkdir -p /etc/erhai
-printf 'blank\n' | sudo tee /etc/erhai/power-key-action
-```
-
-每次按键都会读取文件，无需重启服务。删除文件可恢复默认值，也可显式写入 `suspend`。
-`/run/erhai/power-key-action` 支持相同取值，仅在本次启动内生效，优先于 `/etc`；
-采用第一个有效值，跳过不存在、不可读或无法识别的值，没有有效值时默认挂起。
-要清除两处覆盖：
-
-```sh
-sudo rm -f /run/erhai/power-key-action /etc/erhai/power-key-action
-```
-
-`blank` 退出开关只影响电源键，空闲与合盖挂起策略仍然生效。显示默认仍走兼容背光服务：
-单纯熄屏只关闭背光，系统与显示管线仍在运行。
-
-如果系统醒着但屏幕已熄灭，按键只恢复显示。恢复时送达的按键也只恢复显示、重置桌面空闲状态，
-不会立即再次挂起。保留原有挂起周期标记：挂起前设置、消费一次，并以恢复后 15 秒为窗口区分
-唤醒按键与后续按键。两种恢复路径都不会解除锁屏或绕过认证。
-**当前内核下电源键从 s2idle 唤醒及重新输入密码仍须真机验证**；早期唤醒记录不能代替当前内核验证。
+原先独占输入的设备按键服务已经撤去，`/etc/erhai/power-key-action` 和
+`/run/erhai/power-key-action` 不再生效。电源键动作统一通过 GNOME 电源设置管理。
+logind 保持 `HandlePowerKey=ignore`，避免在桌面未接管时重复处理按键。
 
 ## 空闲策略
 
@@ -102,7 +84,7 @@ done
 键盘套或保护套的磁铁正对一颗霍尔开关，内核把它报成合盖开关（`SW_LID`）。合上时 logind
 让系统挂起（`/etc/systemd/logind.conf.d/90-erhai-power.conf` 里的 `HandleLidSwitch=suspend`），
 打开时由同一开关唤醒，桌面随即点亮锁屏。接着外屏时，桌面/logind 的正常策略会阻止合盖触发挂起。
-外屏连接不会关闭电源键的显式挂起请求，也不会关闭上述空闲策略；这一组合下的显示恢复仍待真机验证。
+电源键动作由 GNOME 电源设置决定；外屏连接不改变上述空闲配置。
 
 * 合盖期间触摸屏与手写笔的输入被忽略（`erhai-cover` 服务对它们设内核的输入屏蔽）。盖板落到
   屏幕上会产生触摸，若不屏蔽，这些触摸会打断挂起前的锁屏，系统要等 logind 的延迟上限
@@ -135,7 +117,7 @@ aosd  Count: +0                                      ← 插着 USB 时 AOSS sle
 
 若要测挂起期间的耗电，请在 `/usr/lib/systemd/system-sleep/` 下放钩子，记录挂起前后电量。
 注意 `rtcwake` 直接写 `/sys/power/state`，**绕过 systemd**，因此那种挂起不会触发 sleep 钩子；
-请改用 `systemctl suspend`、电源键或已武装的 RTC 闹钟。
+请改用 `systemctl suspend`、设置为挂起的电源键或已武装的 RTC 闹钟。
 
 要判定"是谁唤醒的"，对比 `pm_wakeup_irq` 与上面各源计数即可：`wakeup_count` 没动的源，
 即使其中断触发过，也不是唤醒原因。

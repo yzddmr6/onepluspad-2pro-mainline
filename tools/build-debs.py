@@ -742,27 +742,9 @@ def describe_chmixer(params):
     return names
 
 
-def stage_settings(root, build):
-    """Accept only the ARM64 program built from the current locked inputs."""
-    inputs = PACKAGING / 'gnome-control-center'
-    lock = json.loads((inputs / 'source.json').read_text())
-    info_path = build / 'build-info.json'
-    binary = build / 'gnome-control-center'
-    if not info_path.is_file() or not binary.is_file() or binary.is_symlink():
-        die('build GNOME Settings with tools/build-settings.py first; use --settings-build')
-    info = json.loads(info_path.read_text())
-    if info['source'] != lock or info['build_root'] != json.loads((inputs / 'build-root.json').read_text()):
-        die('Settings build uses different source or build-root inputs')
-    for patch in lock['patches']:
-        if sha256_file(REPO / patch['path']) != patch['sha256']:
-            die('Settings patch differs from source.json: ' + patch['path'])
-    if sha256_file(binary) != info['binary_sha256']:
-        die('Settings binary identity mismatch')
-    with binary.open('rb') as stream:
-        header = stream.read(20)
-    if header[:6] != b'\x7fELF\x02\x01' or header[18:20] != b'\xb7\x00':
-        die('Settings binary is not an AArch64 ELF executable')
-    install_file(binary, root / 'usr/bin/gnome-control-center', 0o755)
+def stage_settings(root):
+    """Brand the shared packages without replacing any distribution binary."""
+    copy_tree(PACKAGING / 'erhai-settings' / 'tree', root)
 
 
 def stage_audio(root, archive):
@@ -1100,8 +1082,6 @@ def main():
     parser.add_argument('--debug', action='store_true',
                         help='Enable the debug channel in the packaged kernel command '
                              'line and mark the version ~dbg')
-    parser.add_argument('--settings-build', type=Path, default=WS / 'out/gnome-control-center',
-                        help='Output of tools/build-settings.py, including build-info.json')
     parser.add_argument('--audio-source', type=Path,
                         help='Pinned audioreach-topology source archive (defaults to the cache)')
     parser.add_argument('--refresh-from-rom', action='store_true',
@@ -1172,7 +1152,7 @@ def main():
             elif package == 'erhai-firmware':
                 stage_firmware(root, manifest)
             elif package == 'erhai-settings':
-                stage_settings(root, args.settings_build)
+                stage_settings(root)
             elif package == 'erhai-audio':
                 stage_audio(root, args.audio_source)
             elif package == 'erhai-kernel':
