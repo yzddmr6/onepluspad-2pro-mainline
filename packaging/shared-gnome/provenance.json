@@ -1,16 +1,16 @@
 {
   "repository": "https://github.com/yzddmr6/xiaomipad-8pro-mainline",
-  "commit": "7c6e5eb7b16d79cbf5a644de5dbbc2480ab2bd51",
+  "commit": "2a4d38e464b236291965bd9e2b22eff885b99455",
   "authority": "Sources, patches and build recipes are maintained only in the source repository. Import these files unchanged; device branding is supplied by erhai-settings.",
   "files_sha256": {
     "ubuntu/gnome-control-center/COPYING": "640d90f6ee401241ff62834d0d1b33f83049e99b8bfdfa04ed1b0a1635dde3e7",
-    "ubuntu/gnome-control-center/README.zh-CN.md": "4500d2df7729bd08c4ca8b0dcdccd3f0c15840180bed65be50a26f79892e5c47",
+    "ubuntu/gnome-control-center/README.zh-CN.md": "ed47a77271a9d7f1130ae6f4a09cae625e459db1192d3d76f52b57efd1604df4",
     "ubuntu/gnome-control-center/about-author.patch": "a39cabe28d8da185b6d9d6e05ba04b6d12cfcd5c5e9aaa5b0e93a98f0c7b6a5d",
     "ubuntu/gnome-control-center/build-root.json": "81b3c4f10dcbc816d60f59eb706bd93e636f17021764d6d6e4ddf99a61a5a902",
-    "ubuntu/gnome-control-center/changelog-entry": "988bca51e7016405ad741ac90d281fd7bea1995d86e7945aee514bb16b61cd64",
+    "ubuntu/gnome-control-center/changelog-entry": "0c187ff6e6bac5bbf9c43e406ef54eca4c9cdb415f651d16914183b676197d1f",
     "ubuntu/gnome-control-center/packaging-dependencies.patch": "b6194816800b024400611a4713c927b7e8a8aeeca883f18bb4713b910402cec0",
     "ubuntu/gnome-control-center/power-button-lock.patch": "0b107f0a1855361f1551df3bd50fbbce4b8d9b4072d9510bba6c34b6333a8135",
-    "ubuntu/gnome-control-center/source.json": "a4b27dbe94e1b38006f304e00a2c4e1a44983816c3160628f5b4b2f740dc1d35",
+    "ubuntu/gnome-control-center/source.json": "624a790a98548d47108f286185a343cb06851e01f1e0c758ab465389a7b23f5c",
     "ubuntu/gnome-settings-daemon/COPYING": "231f7edcc7352d7734a96eef0b8030f77982678c516876fcb81e25b32d68564c",
     "ubuntu/gnome-settings-daemon/README.zh-CN.md": "81d48c56908ddaeffaea3c7748dbac428af8cc485d644129b3634332f780e43a",
     "ubuntu/gnome-settings-daemon/ambient-zero.patch": "7433c04de915141ee1358aec5816974e6644419119e2236503d512c49d9b34e8",
@@ -18,6 +18,6 @@
     "ubuntu/gnome-settings-daemon/power-button-lock.patch": "bf44c2aa151eab024ee884a5a2c7ae7775697165d0a78252ec37938a548f44a2",
     "ubuntu/gnome-settings-daemon/source.json": "fa8e8883e36da44dfe40b482a57324b1ed8705d8d9c532b0c60f5de36effc5ff",
     "ubuntu/gnome-settings-daemon/test-inhibition-order.patch": "01ecad1e55dd495ee6d8f5434608c84ce8da8528ab4458522b93c6d0b6b40d1d",
-    "ubuntu/power-button-lock.SHA256SUMS": "dca4a3876aba86ad56fc9bbdce8f4ad212e20cc7484cb0fa715954d19cfb788e"
+    "ubuntu/power-button-lock.SHA256SUMS": "98caf491b9638ab3d9403ff5eab48ee6320424b465c2e73ca1e192c848282e24"
   }
 }
