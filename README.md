@@ -159,7 +159,6 @@
 | Android 应用 | Waydroid | 🟡 | 软件渲染下运行应用和联网；Android“省流量”不可用。见[安装指南](docs/WAYDROID.md)。 |
 | 虚拟机 | Gunyah / GunyahVM 1.1.0 | ✅ | 预装虚拟机管理器，运行 ARM64 Linux 客体。 |
 | 硬件监控 | Resources | ✅ | 显示 CPU、GPU、电池与可用温度传感器。 |
-| 电池保护 | power_supply / UPower / GNOME | ✅ | 可选 80% 充电上限、75% 复充，默认关闭。保护开启且正在充电时保持系统唤醒，停充后允许挂起；睡眠中降至下限需唤醒后复充。 |
 
 ## 使用与维护
 

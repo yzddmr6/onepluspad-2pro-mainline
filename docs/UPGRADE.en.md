@@ -4,9 +4,8 @@
 
 ## v0.7.2 → v0.8.0
 
-v0.8.0 keeps Linux 7.2.15 and adds Gunyah virtual machines, Waydroid kernel support, Snap graphics, Resources hardware monitoring and an 80% battery charge limit, together with interrupt and UART suspend fixes.
+v0.8.0 keeps Linux 7.2.15 and adds Gunyah virtual machines, Waydroid kernel support, Snap graphics, Resources hardware monitoring, together with interrupt and UART suspend fixes.
 GunyahVM and Resources are preinstalled. Install Waydroid separately using the [guide](WAYDROID.en.md); it uses software rendering and Android Data Saver is unavailable. Snap graphics use the shared `piano-snap-graphics` package; strict confinement remains affected by snapd feature detection.
-Enable battery protection in GNOME Settings → Power to stop charging at 80% and resume at 75%; it is off by default. Protected charging keeps the system awake until charging stops. If the battery reaches the lower threshold during sleep, charging resumes after the system wakes.
 
 Before upgrading, while still running v0.7.2, save an independent boot-set copy. If the destination already exists, inspect it instead of overwriting it:
 

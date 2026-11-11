@@ -4,9 +4,8 @@
 
 ## v0.7.2 → v0.8.0
 
-v0.8.0 保留 Linux 7.2.15，增加 Gunyah 虚拟机、Waydroid 内核支持、Snap 图形、Resources 硬件监控和 80% 电池保护，并修正中断与串口挂起行为。
+v0.8.0 保留 Linux 7.2.15，增加 Gunyah 虚拟机、Waydroid 内核支持、Snap 图形、Resources 硬件监控，并修正中断与串口挂起行为。
 GunyahVM 与 Resources 随系统预装；Waydroid 按[安装指南](WAYDROID.md)单独安装，使用软件渲染，Android“省流量”不可用。Snap 图形使用共用 `piano-snap-graphics` 包；strict 隔离仍受 snapd 能力检测问题影响。
-电池保护在 GNOME 设置 → 电源中开启，到 80% 停充、降至 75% 复充；默认关闭。开启保护且充电尚未停止时保持系统唤醒，停充后允许挂起；睡眠中降至下限时在唤醒后复充。
 
 升级前，在仍运行 v0.7.2 时保存独立启动组副本；若目标目录已经存在，先核实它，勿覆盖：
 
