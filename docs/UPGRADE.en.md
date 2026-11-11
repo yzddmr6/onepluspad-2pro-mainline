@@ -2,6 +2,61 @@
 
 [中文](UPGRADE.md) · [Installation and recovery](FLASHING.en.md)
 
+
+## 0.8.0 → 0.8.1
+
+⟦DRAFT:complete offline APT and device migration/rollback gates⟧
+
+Host Mesa now uses Ubuntu package names and standard multiarch directories, so
+sandboxed web processes can discover the device drivers. The driver version and
+six patches are unchanged; the Snap graphics provider stays separate. The
+`repositories/erhai-0.8.1/` attachment contains a complete release batch,
+including all Mesa development and OpenCL packages; only the required runtime
+subset is installed by default. libdrm consists of original Ubuntu binaries and
+is not pinned, allowing normal Ubuntu updates.
+
+Verify the release attachment checksums and extract both batches. The previous
+batch must contain the exact installed release packages and their Mesa/libdrm
+versions; the tool refuses an incomplete rollback inventory. Copy both repository
+directories to the tablet, then run there:
+
+```sh
+sudo systemd-run --unit=erhai-release-upgrade --setenv=DEBIAN_FRONTEND=noninteractive \
+  /usr/bin/python3 /home/<USER>/repositories/erhai-0.8.1/install.py upgrade \
+  /home/<USER>/repositories/erhai-0.8.1 \
+  --previous /home/<USER>/repositories/erhai-0.8.0
+journalctl -f -u erhai-release-upgrade
+sudo dpkg --audit
+sudo reboot
+```
+
+The tool retains both batches under `/var/lib/erhai/releases/` and saves the
+installed versions and current boot set before changing packages. Repeating the
+same batch is supported. After an interrupted installation, run
+`sudo dpkg --configure -a` and `sudo apt-get -f install`, then repeat the upgrade.
+Personal files and application data are outside package rollback scope.
+
+### Complete release rollback
+
+Use a terminal or developer SSH, including when the graphical desktop cannot
+start. Restore userspace before changing the kernel:
+
+```sh
+sudo systemd-run --unit=erhai-release-rollback --setenv=DEBIAN_FRONTEND=noninteractive \
+  /usr/bin/python3 /var/lib/erhai/releases/erhai-0.8.1/install.py rollback --product erhai
+journalctl -f -u erhai-release-rollback
+sudo dpkg --audit
+sudo reboot
+```
+
+This restores all release-managed packages to the previous exact versions, then
+restores the saved boot set. Mesa rollback reinstates its old `/opt` payload and
+registration and removes the new transition package's version policy. A failed
+step stops the transaction. Retain both repositories and boot sets until the new
+release is stable. Fastboot restores boot partitions only; it cannot restore
+userspace packages. When recovery is required, repair the root's packages before
+using the matching previous boot set.
+
 ## v0.7.2 → v0.8.0
 
 v0.8.0 keeps Linux 7.2.15 and adds Gunyah virtual machines, Waydroid kernel support, Snap graphics, Resources hardware monitoring, together with interrupt and UART suspend fixes.

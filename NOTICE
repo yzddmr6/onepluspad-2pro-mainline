@@ -129,3 +129,11 @@ https://github.com/yzddmr6/xiaomipad-6pro-mainline
 commit 0124be288244f9018b8ee10617df3d0a5bf5f789. Only the device-specific
 drop-in filename changes. The daemon is skipped when the kernel does not
 provide the AppArmor notification socket.
+
+Host Mesa packages and release transactions
+------------------------------------------
+The common Ubuntu Mesa packaging lock, build and transaction tools are imported
+from yzddmr6/xiaomipad-8pro-mainline, commit a1d1cf180487ec425c471cca7ea6f2b92958d724.
+File hashes and original licenses are retained in packaging/mesa/provenance.json
+and the imported source files. The OnePlus transition and image integration are
+maintained here; the common implementation is maintained in the source repository.

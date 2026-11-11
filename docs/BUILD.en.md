@@ -285,21 +285,22 @@ verifies the locked native tools and Ubuntu runtime dependencies itself.
 The desktop needs the Mesa package for hardware rendering and the sensor
 package for sensor integration. Build both, then assemble them with the device
 packages created above. Keep one selected version per component in these output
-directories. Both component builders use unprivileged `unshare`, so the host
-must permit user namespaces and provide ARM64 binfmt. `--native-nir` also needs
-Mako and MarkupSafe in the host Python (`python3-mako` and
-`python3-markupsafe` on Ubuntu). These builds run outside the assembly Docker
-container. The following example uses Bash.
+directories.
+
+⟦DRAFT:standard host Mesa packages and complete release repositories⟧
+
+Build host Mesa with the Ubuntu recipe in an isolated resolute root. Sensors
+retain their unprivileged `unshare` builder. Both use fixed inputs outside the
+assembly container. The following example uses Bash.
 
 ```sh
-# Shared source and recipe: packaging/mesa/shared/mesa/source.json
-python3 tools/build-mesa.py --profile desktop --source-archive <official-Mesa-archive> \
-  --cross-file <arm64-cross-file> --target-root <arm64-SDK> --output out/mesa-build
-python3 packaging/mesa/shared/tools/package-mesa.py --mesa-build out/mesa-build \
-  --output out/shared-mesa --version <package-version>
-python3 tools/package-mesa.py --shared-package out/shared-mesa/piano-mesa_*_arm64.deb \
-  --output out/mesa-debs
+# Build the shared Ubuntu cohort in an isolated resolute root first:
+# packaging/mesa/shared/mesa/README.md
 python3 tools/build-sensors.py --output out/sensor-debs
+python3 tools/package-mesa.py --shared-package <piano-mesa.deb> \
+  --shared-repository <complete-common-batch> --release-id erhai-<release> \
+  --release-packages out/device-packages --release-packages out/sensor-debs \
+  --release-packages out/shared-apps --output out/mesa-debs
 
 args=()
 for deb in out/device-packages/*.deb out/mesa-debs/*.deb out/sensor-debs/*.deb out/shared-apps/*.deb; do
@@ -310,7 +311,7 @@ for deb in out/app-dependencies/*.deb; do
   args+=(--dependency-deb "$deb")
 done
 python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper" \
-  --output out/desktop-root "${args[@]}"
+  --release-repository out/mesa-debs/erhai-<release> --output out/desktop-root "${args[@]}"
 ```
 
 Select one version of each desired device component, including the matching
@@ -368,3 +369,31 @@ kernel packages. Existing installations use the same cleanup command in the
 
 The assembly container defaults to 4096 MiB RAM and 8192 MiB total RAM plus swap.
 Use `--memory-mib` together with `--jobs` to fit the host and concurrent builds.
+
+## Host Mesa release batches
+
+⟦DRAFT:offline APT and device migration/rollback gates⟧
+
+The host uses shared Ubuntu-named Mesa packages, standard multiarch directories
+and GLVND. Keep all binaries from the source and the original Ubuntu libdrm
+archives in the release batch; libdrm is not pinned. The fixed import under
+`packaging/mesa/shared/` supplies upstream source, six unchanged patches and the
+Ubuntu packaging lock. `packaging/mesa/provenance.json` records its origin.
+The Snap provider retains its separate runtime.
+
+```sh
+python3 tools/package-mesa.py --shared-package <piano-mesa.deb> \
+  --shared-repository <verified-common-batch> --release-id erhai-<release> \
+  --release-packages <other-release-packages> --output out/host-mesa-release
+```
+
+`build-desktop-rootfs.py --release-repository BATCH` retains the complete batch
+and exposes packages not explicitly selected as dependencies to APT. Use
+`--device-deb` for transition and device packages; only needed dependencies are
+installed. Other archives can still use `--dependency-deb`. Explicit package
+hashes must match the batch. Ship the complete current and previous repositories
+with the release attachments.
+
+`install.py upgrade` retains exact preceding userspace versions and the boot set.
+`install.py rollback --product erhai` restores packages before calling the existing
+`erhai-switch-install-ubuntu-images`. See [UPGRADE](UPGRADE.en.md) for the order.
