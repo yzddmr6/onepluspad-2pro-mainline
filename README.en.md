@@ -172,7 +172,7 @@ Features under development are not included in the supported feature set.
 | RTC | Qualcomm PMIC RTC | ✅ | Time read/write works. A forced reset loses the RTC time; it is set again once online. Certificate time checks do not block initial synchronization, and networks blocking authenticated time (NTS) use their own time server. Synchronized time is written back to the RTC and survives a normal restart. |
 | Snap applications | AppArmor / snapd / GPU content provider | 🟡 | Shared Adreno 830 graphics runtime; strict confinement remains affected by snapd feature detection. |
 | Android applications | Waydroid | 🟡 | Applications and networking with software rendering; Android Data Saver is unavailable. [Installation](docs/WAYDROID.en.md). |
-| Virtual machines | Gunyah / GunyahVM | ✅ | Preinstalled virtual machine manager for ARM64 Linux guests. |
+| Virtual machines | Gunyah / GunyahVM 1.1.0 | ✅ | Preinstalled virtual machine manager for ARM64 Linux guests. |
 | Hardware monitoring | Resources | ✅ | CPU, GPU and battery telemetry, with available temperature sensors. |
 | Battery protection | power_supply / UPower / GNOME | ✅ | Optional 80% charge limit and 75% restart threshold, off by default. Protected charging keeps the system awake until charging stops; a sleeping system resumes charging after it wakes. |
 
