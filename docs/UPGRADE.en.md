@@ -7,6 +7,13 @@
 
 ⟦DRAFT:complete offline APT and device migration/rollback gates⟧
 
+The rollback tool preserves the Ubuntu library versions actually installed on this device. Install the distribution's repository-index tool before the first complete upgrade:
+
+```sh
+sudo apt install --no-install-recommends dpkg-dev
+```
+
+
 The power button now locks the screen by default instead of directly suspending. Change its action in Settings > Power. Settings is updated to 50.3 and retains the port author in About. Install the complete batch to migrate both graphics and settings components.
 
 Host Mesa now uses Ubuntu package names and standard multiarch directories, so
