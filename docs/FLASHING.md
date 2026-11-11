@@ -48,7 +48,7 @@ RAM 临时启动不替换启动分区，但使用已安装根系统的临时内�
 |---|---|
 | `ubuntu-pad2pro-版本-rootfs.squashfs.part*` 与 `…-rootfs.manifest.json` | 用于安装的根文件系统，不含 USB 调试通道；首次准备分区时也用它运行临时内存桌面 |
 | `ubuntu-pad2pro-版本-setup-boot.img` 与 `…-setup-boot.manifest.json` | 该临时内存桌面的启动镜像，从主机加载上述根文件系统，只为这次会话加入 USB 调试通道 |
-| `erhai-device-packages-版本.tar` | 升级已有安装用的软件包，均不含 USB 调试通道：`tools/build-debs.py` 构建的设备包（内核、固件、音频、显示电源、设备支持、Firefox 软件源与 `erhai-device` 元包），以及 `erhai-mesa` 与 `erhai-sensors` |
+| `erhai-device-packages-版本.tar` | 升级与整版回退用的新旧软件包仓库；含设备包、共享图形与桌面组件，不含 USB 调试通道 |
 | `erhai-switch-版本.zip` | Android 侧切换模块 |
 | `SHA256SUMS` | 所有附件及拼接后镜像的校验值 |
 
@@ -229,8 +229,9 @@ python3 tools/install.py --serial "$device_serial" --work "$install_work" --phas
 sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
 ```
 
-也可以直接用 Release 里的 `erhai-device-packages-版本.tar`：其中除上述包外还有 `erhai-mesa`，均不含 USB 调试通道，
-装上后调试安装也会变成普通安装（`tar xf erhai-device-packages-*.tar && sudo apt install ./erhai-device-packages-*/*.deb`）。
+发布附件 `erhai-device-packages-版本.tar` 包含 `repositories/` 下的新旧完整批次。
+校验并解压后，按[升级指南](UPGRADE.md)对应小节运行整版升级工具，不要把所有仓库中的 deb 混在一次通配符安装里。
+工具在修改包之前保留旧软件包与启动镜像组，以供整版回退。
 
 安装时内核包会把新的启动镜像写入活动槽，旧内核包仍保留；安装时导入的传感器注册表保持不变。
 新内核起不来时，按下文的恢复步骤处理。
