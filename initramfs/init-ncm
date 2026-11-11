@@ -260,24 +260,24 @@ if [ "$EARLY_DEBUG" = 0 ] || [ "$NCM_READY" = 1 ] || [ -n "$ROOT_SPEC" ]; then
 			# Stop only this RAM-root attempt. Diagnostics and the original
 			# watchdog remain available when download or verification fails.
 			[ -n "$ROOTFS_SHA" ] || { echo "ROOTFS_SHA256_REQUIRED"; exit 1; }
-			# The NCM data path stalls on very long transfers (~200MB in);
-			# chunked fetch from <image>.parts/partNN sidesteps it. Whole-file
-			# fetch with a timeout stays the fallback for small images.
-			rm -f /run/rpart00
-			if wget -q -T 10 -O /run/rpart00 "$ROOTFS_URL.parts/part00"; then
-				{ cat /run/rpart00
-				  i=1
-				  while wget -q -T 15 -O /run/rpart "$ROOTFS_URL.parts/part$(printf %02d $i)"; do
-					cat /run/rpart
-					i=$((i+1))
-				  done
-				} > /run/rootfs.sqfs
-				rm -f /run/rpart /run/rpart00
-				echo "chunked fetch parts=$i"
-			else
-				rm -f /run/rpart00
+			# A late USB-C role/mux initialization can re-enumerate NCM after
+			# its first DHCP lease. That destroys the in-flight TCP connection.
+			# Restart only when the kernel observed a carrier transition; do
+			# not disguise an ordinary transport or integrity error as EOF.
+			iface=$(/usr/libexec/erhai-ncm interface) || exit 1
+			carrier_changes=/sys/class/net/$iface/carrier_changes
+			before=$(cat "$carrier_changes") || exit 1
+			echo "root download: carrier_changes=$before"
+			if ! wget -q -T 60 -O /run/rootfs.sqfs "$ROOTFS_URL"; then
+				after=$(cat "$carrier_changes") || exit 1
+				[ "$after" -gt "$before" ] || {
+					echo 'fetch failed without a USB carrier transition'; exit 1;
+				}
+				echo "USB carrier changed $before -> $after; restarting root download"
+				# The host must regain its address after re-enumeration. The
+				# existing 60-second network bound covers its DHCP transaction.
 				wget -q -T 60 -O /run/rootfs.sqfs "$ROOTFS_URL" || {
-					echo "fetch failed: $?"; exit 1;
+					echo 'fetch failed after USB carrier recovery'; exit 1;
 				}
 			fi
 			got=$(sha256sum /run/rootfs.sqfs | cut -d' ' -f1)
