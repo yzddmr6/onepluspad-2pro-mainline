@@ -1,8 +1,8 @@
-# The device service locks the screen before requesting system suspend.
+# The shared GNOME Settings Daemon owns the power key.
 # Leave idle blanking, dimming and automatic suspend at distribution defaults.
 [org.gnome.settings-daemon.plugins.power]
-# Keep the desktop action inert so it does not compete for the key.
-power-button-action='nothing'
+# Lock by default; the Settings power panel can change the action.
+power-button-action='lock'
 
 [org.gnome.desktop.screensaver]
 lock-enabled=true

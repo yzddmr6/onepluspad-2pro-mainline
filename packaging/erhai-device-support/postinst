@@ -24,6 +24,10 @@ fi
 
 case "$1" in
 configure)
+	# Retire the exclusive evdev grab; shared GSD now owns this input.
+	if [ -d /run/systemd/system ]; then
+		systemctl stop 'erhai-power-key@*.service' || true
+	fi
 	# This migration also runs on ordinary upgrades that omit erhai-debug.
 	/usr/libexec/erhai-retire-legacy-debug
 	# Before there was a package the switcher was copied into /usr/local/sbin
@@ -52,7 +56,6 @@ configure)
 	# what puts it on the interface, because that is the only hook ordered
 	# ahead of NetworkManager.
 	if command -v deb-systemd-helper >/dev/null 2>&1; then
-		deb-systemd-helper unmask erhai-power-key@.service >/dev/null 2>&1 || true
 		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT; do
 			deb-systemd-helper unmask "$unit" >/dev/null 2>&1 || true
 			deb-systemd-helper enable "$unit" >/dev/null 2>&1 || true
@@ -113,17 +116,7 @@ configure)
 		systemctl start $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT || true
 		# The cover follower holds no state worth keeping across a version.
 		systemctl restart $COVER_UNIT || true
-		for path in /sys/class/input/event*/device/name; do
-			[ -f "$path" ] || continue
-			[ "$(cat "$path")" = pmic_pwrkey ] || continue
-			event=${path#/sys/class/input/}
-			event=${event%%/*}
-			# An existing input node needs the new systemd udev tag before
-			# the unit's device dependency can become active.
-			udevadm trigger --action=add --subsystem-match=input \
-				--sysname-match="$event" || true
-			systemctl --no-block start "erhai-power-key@$event.service" || true
-		done
+
 	fi
 
 	# Wi-Fi is the other half of the same idea, but it cannot be applied the

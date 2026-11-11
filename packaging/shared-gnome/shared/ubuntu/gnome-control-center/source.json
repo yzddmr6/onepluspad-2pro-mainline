@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "base_version": "1:50.3-0ubuntu0.2",
+  "local_version": "1:50.3-0ubuntu0.2+piano2",
+  "files": [
+    {
+      "file": "gnome-control-center_50.3.orig.tar.xz",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261111T000000Z/pool/main/g/gnome-control-center/gnome-control-center_50.3.orig.tar.xz",
+      "sha256": "06eebb0fd3056c4d8d78bbd3754c96108f381d70b760da423c5024946944287c",
+      "bytes": 7106028
+    },
+    {
+      "file": "gnome-control-center_50.3-0ubuntu0.2.debian.tar.xz",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261111T000000Z/pool/main/g/gnome-control-center/gnome-control-center_50.3-0ubuntu0.2.debian.tar.xz",
+      "sha256": "1a3f03ee31cad2a2652727919ce50ef41a3a71278ae565051444e765ea38150b",
+      "bytes": 115480
+    },
+    {
+      "file": "gnome-control-center_50.3-0ubuntu0.2.dsc",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261111T000000Z/pool/main/g/gnome-control-center/gnome-control-center_50.3-0ubuntu0.2.dsc",
+      "sha256": "5492fede7a7499080ef0b7f375c32c24894bad43504199229a1a68d564ab5562",
+      "bytes": 3947
+    }
+  ],
+  "authentication": {
+    "chain": "Ubuntu Archive InRelease -> Sources SHA256 -> DSC/orig/debian archives SHA256",
+    "inrelease_url": "https://snapshot.ubuntu.com/ubuntu/20261111T000000Z/dists/resolute-updates/InRelease",
+    "inrelease_sha256": "5c54e981d473b8619063ed17a8778eb44dcbc3a242a5e1bfc09c49d9360f5d43",
+    "sources_url": "https://snapshot.ubuntu.com/ubuntu/20261111T000000Z/dists/resolute-updates/main/source/Sources.xz",
+    "sources_sha256": "bf073cf682af8c8d8753ea32f5d4e6af225e24950ac7f77e715cd6486d164f4a",
+    "archive_key_fingerprint": "F6ECB3762474EDA9D21B7022871920D1991BC93C",
+    "keyring_sha256": "80a36b0a6de2f69f49d2df75ef473ccde121e9e190b9ea01d20a4f63778d5c31",
+    "dsc_maintainer_signature": "Not separately verified"
+  },
+  "state": "AUTHENTICATED_PATCHED_SOURCE_NOT_BINARY_OR_HARDWARE_VERIFIED",
+  "patches": [
+    {
+      "file": "packaging-dependencies.patch",
+      "sha256": "b6194816800b024400611a4713c927b7e8a8aeeca883f18bb4713b910402cec0",
+      "license": "GPL-2.0-or-later"
+    },
+    {
+      "file": "power-button-lock.patch",
+      "sha256": "0b107f0a1855361f1551df3bd50fbbce4b8d9b4072d9510bba6c34b6333a8135",
+      "license": "GPL-2.0-or-later"
+    },
+    {
+      "file": "about-author.patch",
+      "sha256": "a39cabe28d8da185b6d9d6e05ba04b6d12cfcd5c5e9aaa5b0e93a98f0c7b6a5d",
+      "license": "GPL-2.0-or-later"
+    }
+  ],
+  "changelog_entry_sha256": "0c187ff6e6bac5bbf9c43e406ef54eca4c9cdb415f651d16914183b676197d1f",
+  "exit_condition": "Drop when upstream or Ubuntu supplies equivalent functionality and native regression passes."
+}

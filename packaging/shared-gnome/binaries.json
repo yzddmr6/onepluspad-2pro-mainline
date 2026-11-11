@@ -1,0 +1,30 @@
+{
+  "source_repository": "https://github.com/yzddmr6/xiaomipad-8pro-mainline",
+  "source_commit": "2a4d38e464b236291965bd9e2b22eff885b99455",
+  "packages": {
+    "gnome-control-center-data": {
+      "file": "gnome-control-center-data_50.3-0ubuntu0.2+piano2_all.deb",
+      "version": "1:50.3-0ubuntu0.2+piano2",
+      "architecture": "all",
+      "sha256": "080bb6e6ddc7fc8c7b4523e976e12bab9187eea52cc765c3079f722f817a9eda"
+    },
+    "gnome-control-center": {
+      "file": "gnome-control-center_50.3-0ubuntu0.2+piano2_arm64.deb",
+      "version": "1:50.3-0ubuntu0.2+piano2",
+      "architecture": "arm64",
+      "sha256": "fc1e97667205a6c56a3fb963236435fd8386ca630dd46dc4b6689358016f9751"
+    },
+    "gnome-settings-daemon-common": {
+      "file": "gnome-settings-daemon-common_50.0-1ubuntu1+piano2_all.deb",
+      "version": "50.0-1ubuntu1+piano2",
+      "architecture": "all",
+      "sha256": "5e730d798c4443553f061294f1536190a04a3ba42ae1cdbe4a06a42b139f2c30"
+    },
+    "gnome-settings-daemon": {
+      "file": "gnome-settings-daemon_50.0-1ubuntu1+piano2_arm64.deb",
+      "version": "50.0-1ubuntu1+piano2",
+      "architecture": "arm64",
+      "sha256": "cdfc95e8a05aa28b53edceb4738a8c7b7ed7a5788c5d7636e6d5af9164583eb8"
+    }
+  }
+}

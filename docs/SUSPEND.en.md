@@ -40,41 +40,18 @@ full resume, which caused early wakes. s2idle handles such interrupts without le
 
 ## Power button
 
-When the display is on, the button now locks the screen, confirms that the lock is
-active, blanks the display and requests system suspend (`s2idle` by default). A lock
-failure prevents the blank and suspend request. At the login screen, authentication is
-already required, so the service blanks and requests suspend without changing the login
-screen. The device service owns the key; GNOME's action remains `nothing` and logind's
-`HandlePowerKey` remains `ignore`.
+⟦DRAFT:电源键锁屏候选验收⟧
 
-To keep the previous lock-and-blank behavior, run as an administrator:
+The matching GNOME Settings Daemon now handles the power key, with
+`power-button-action='lock'` as the default. Choose Lock Screen or another action
+in Settings > Power. Locking does not explicitly request system suspend; cover
+and idle suspend retain their own policies. Existing personal GNOME settings
+are not forcibly changed.
 
-```sh
-sudo mkdir -p /etc/erhai
-printf 'blank\n' | sudo tee /etc/erhai/power-key-action
-```
-
-The file is read on every press; no service restart is needed. Remove it to restore the
-default, or write `suspend` explicitly. `/run/erhai/power-key-action` supports the same
-values for the current boot and takes precedence over `/etc`; the first valid value
-wins, and missing, unreadable or unrecognized values are skipped. With no valid value,
-the action is suspend. To remove both overrides:
-
-```sh
-sudo rm -f /run/erhai/power-key-action /etc/erhai/power-key-action
-```
-
-The `blank` opt-out changes only the power button; idle and cover suspend policies still
-apply. The default display backend remains the compatibility backlight service: a blank
-alone turns off the backlight while the system and display pipeline remain running.
-
-If the display is already blank but the system is awake, a press only restores the display.
-A press delivered on resume also only restores the display and resets desktop idle state;
-it must not immediately suspend again. The existing suspend-cycle marker is set before
-suspend and consumed once, with a 15-second window after resume to distinguish a wake
-press from a later press. Neither path deactivates the lock screen or bypasses authentication.
-On the installed v0.6.0 system, all three attempts woke from s2idle on the power button and
-returned to the lock screen, which asked for the password again.
+The former device service that exclusively grabbed the input has been removed.
+`/etc/erhai/power-key-action` and `/run/erhai/power-key-action` no longer apply;
+manage the action through GNOME's power settings. logind keeps
+`HandlePowerKey=ignore` to avoid duplicate handling before the desktop takes over.
 
 ## Idle policy
 
@@ -115,9 +92,8 @@ The magnet of the keyboard cover or a case sits over a hall switch, which the ke
 a lid switch (`SW_LID`). Closing the cover makes logind suspend the system (`HandleLidSwitch=suspend`
 in `/etc/systemd/logind.conf.d/90-erhai-power.conf`); opening it wakes the system through the same
 switch, and the desktop lights up the lock screen. With an external display connected,
-the normal desktop/logind policy inhibits cover-triggered suspend. Connecting an external
-display does not disable the explicit power-button suspend request or the idle policy
-above; display recovery in that configuration still needs hardware verification.
+the normal desktop/logind policy inhibits cover-triggered suspend. GNOME power settings
+control the power-button action; an external display does not change the idle configuration above.
 
 * Touch and pen input are ignored while the cover is closed: the `erhai-cover` service sets the
   kernel's input inhibit on them. A cover landing on the panel touches it, and without the
@@ -155,7 +131,7 @@ aosd  Count: +0                                     ← no AOSS sleep with USB c
 To measure battery drain across a suspend, use a `systemd-sleep` hook under
 `/usr/lib/systemd/system-sleep/` and record the battery before and after. Note that
 `rtcwake` writes to `/sys/power/state` directly and therefore **bypasses systemd**, so
-sleep hooks do not run for those suspend cycles; use `systemctl suspend`, the power button
+sleep hooks do not run for those suspend cycles; use `systemctl suspend`, a power button configured for suspend,
 or an armed RTC alarm instead.
 
 To attribute a wake, compare `pm_wakeup_irq` and the per-source counters above. A source

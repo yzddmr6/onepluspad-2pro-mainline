@@ -1,0 +1,119 @@
+Description: Add a power-button lock action using the existing GNOME screen saver
+Author: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Based-on: Phoebe Harris <phoebe.harris.2024@proton.me>, GSD !448
+ https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/commit/b80693acdce2931550081b8d27550e19c9eed36d
+Based-on: Cédric Bellegarde <cedric.bellegarde@adishatz.org>, GSD !320 (design reference only)
+ https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/commit/89f1042d9068ba5ea2f51fa846fcac148a490479
+Forwarded: no
+Last-Update: 2026-10-16
+License: GPL-2.0-or-later
+ .
+ Retain media-keys ownership and inhibitor. No timer, polling, GnomeRR,
+ new daemon or suspend policy is added. Shell retains its native animation.
+ .
+--- a/data/gnome-settings-daemon/gsd-enums.h
++++ b/data/gnome-settings-daemon/gsd-enums.h
+@@ -107,7 +107,8 @@
+   GSD_POWER_BUTTON_ACTION_NOTHING,
+   GSD_POWER_BUTTON_ACTION_SUSPEND,
+   GSD_POWER_BUTTON_ACTION_HIBERNATE,
+-  GSD_POWER_BUTTON_ACTION_INTERACTIVE
++  GSD_POWER_BUTTON_ACTION_INTERACTIVE,
++  GSD_POWER_BUTTON_ACTION_LOCK
+ } GsdPowerButtonActionType;
+ 
+ typedef enum
+--- a/data/org.gnome.settings-daemon.plugins.power.gschema.xml.in
++++ b/data/org.gnome.settings-daemon.plugins.power.gschema.xml.in
+@@ -61,7 +61,7 @@
+     <key name="power-button-action" enum="org.gnome.settings-daemon.GsdPowerButtonActionType">
+       <default>'suspend'</default>
+       <summary>Power button action</summary>
+-      <description>The action to take when the system power button is pressed. Virtual machines only honor the 'nothing' action, and will shutdown otherwise. Tablets always suspend, ignoring all the other action options.</description>
++      <description>The action to take when the system power button is pressed. Virtual machines only honor the 'nothing' action, and will shutdown otherwise. The lock action locks and activates the screen saver without suspending; input on the lock screen wakes the display.</description>
+     </key>
+     <key name="power-saver-profile-on-low-battery" type="b">
+       <default>true</default>
+--- a/plugins/media-keys/gsd-media-keys-manager.c
++++ b/plugins/media-keys/gsd-media-keys-manager.c
+@@ -1396,6 +1396,70 @@
+                                     manager);
+ }
+ 
++/* SetActive alone does not lock GNOME Shell. Request Lock first, just as
++ * the screen-lock shortcut does, and never fall back to suspend on failure.
++ */
++static void
++on_power_screen_active (GObject      *source,
++                        GAsyncResult *result,
++                        gpointer      user_data)
++{
++        g_autoptr(GError) error = NULL;
++        g_autoptr(GVariant) reply = NULL;
++
++        reply = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), result, &error);
++        if (reply == NULL && !g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
++                g_warning ("Couldn't activate screen saver: %s", error->message);
++}
++
++static void
++on_power_screen_locked (GObject      *source,
++                        GAsyncResult *result,
++                        gpointer      user_data)
++{
++        g_autoptr(GCancellable) cancellable = user_data;
++        g_autoptr(GError) error = NULL;
++        g_autoptr(GVariant) reply = NULL;
++
++        reply = g_dbus_proxy_call_finish (G_DBUS_PROXY (source), result, &error);
++        if (reply == NULL) {
++                if (!g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
++                        g_warning ("Couldn't lock screen: %s", error->message);
++                return;
++        }
++
++        if (!g_cancellable_is_cancelled (cancellable))
++                g_dbus_proxy_call (G_DBUS_PROXY (source), "SetActive",
++                                   g_variant_new ("(b)", TRUE),
++                                   G_DBUS_CALL_FLAGS_NONE, -1, cancellable,
++                                   on_power_screen_active, NULL);
++}
++
++static void
++do_power_lock_action (GsdMediaKeysManager *manager,
++                      gboolean             in_lock_screen)
++{
++        GsdMediaKeysManagerPrivate *priv = GSD_MEDIA_KEYS_MANAGER_GET_PRIVATE (manager);
++        g_autoptr(GSettings) lockdown = NULL;
++
++        /* Mutter input activity and gsd-power's existing user-active watch
++         * wake a blank display. Do not re-activate or unlock the screen saver.
++         */
++        if (in_lock_screen)
++                return;
++
++        lockdown = g_settings_new ("org.gnome.desktop.lockdown");
++        if (g_settings_get_boolean (lockdown, "disable-lock-screen"))
++                return;
++
++        if (priv->screen_saver_proxy == NULL)
++                priv->screen_saver_proxy = gnome_settings_bus_get_screen_saver_proxy ();
++
++        g_dbus_proxy_call (G_DBUS_PROXY (priv->screen_saver_proxy), "Lock", NULL,
++                           G_DBUS_CALL_FLAGS_NONE, -1, priv->bus_cancellable,
++                           on_power_screen_locked, g_object_ref (priv->bus_cancellable));
++}
++
+ static void
+ allow_volume_above_100_percent_changed_cb (GSettings           *settings,
+                                            const char          *settings_key,
+@@ -2167,6 +2231,9 @@
+         }
+ 
+         switch (action_type) {
++        case GSD_POWER_BUTTON_ACTION_LOCK:
++                do_power_lock_action (manager, in_lock_screen);
++                return;
+         case GSD_POWER_BUTTON_ACTION_SUSPEND:
+                 action = GSD_POWER_ACTION_SUSPEND;
+                 break;

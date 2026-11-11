@@ -229,7 +229,7 @@ class ModeTest(unittest.TestCase):
         self.main(system, 'compat')
         start = next(present for argv, present in seen
                      if argv == ('systemctl', 'start', mode.UNITS[0]))
-        # The key handler keeps using Mutter until the socket is back.
+        # Keep the standard-mode marker until the compatibility socket is ready.
         self.assertTrue(start)
         self.assertFalse(marker.exists())
 
@@ -238,11 +238,6 @@ class ModeTest(unittest.TestCase):
         device.control().write_text('auto\n')
         _, text = self.main(system, 'status')
         self.assertEqual(self.field(text, 'mode'), 'mixed')
-
-    def test_key_handler_reads_the_same_marker(self):
-        handler = (PACKAGING / 'erhai-device-support/tree/usr/sbin/erhai-power-key').read_text()
-        for base in ('/run/', '/etc/'):
-            self.assertIn(f"Path('{base}{mode.MARKER}')", handler)
 
     def test_masks_name_the_packaged_files(self):
         self.assertTrue((PACKAGING / 'erhai-device-support/tree/usr/lib' / mode.UDEV_RULE)
@@ -258,11 +253,6 @@ class ModeTest(unittest.TestCase):
         for relative in (mode.MARKER, mode.UDEV_RULE, mode.GSD_DROPIN):
             self.assertIn(relative, postrm)
 
-    def test_key_service_survives_a_masked_socket(self):
-        unit = (PACKAGING / 'erhai-device-support/tree/usr/lib/systemd/system/'
-                'erhai-power-key@.service').read_text()
-        self.assertNotIn('Requires=erhai-display-power.socket', unit)
-        self.assertIn('Wants=erhai-display-power.socket', unit)
 
 
 if __name__ == '__main__':

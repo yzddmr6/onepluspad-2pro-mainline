@@ -1,0 +1,24 @@
+Description: Require the lock enum and matching runtime schema
+Author: yzddmr6 <46088090+yzddmr6@users.noreply.github.com>
+Forwarded: not-needed
+
+--- a/debian/control
++++ b/debian/control
+@@ -10,7 +10,7 @@
+                blueprint-compiler (>= 0.19.0),
+                desktop-file-utils,
+                dh-sequence-gnome (>= 0.22.2),
+-               gnome-settings-daemon-dev (>= 48~rc),
++               gnome-settings-daemon-dev (>= 50.0-1ubuntu1+piano1),
+                gobject-introspection (>= 1.80),
+                gsettings-desktop-schemas-dev (>= 50~alpha),
+                gtk-doc-tools,
+@@ -76,7 +76,7 @@
+          gnome-control-center-data (>= ${source:Version}),
+          gnome-desktop3-data,
+          gnome-online-accounts (>= 3.51.0),
+-         gnome-settings-daemon (>= 48~rc),
++         gnome-settings-daemon (>= 50.0-1ubuntu1+piano1),
+          gsettings-desktop-schemas (>= 50~alpha),
+          heif-gdk-pixbuf,
+          heif-thumbnailer,
