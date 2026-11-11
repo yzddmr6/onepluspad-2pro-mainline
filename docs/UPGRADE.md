@@ -39,7 +39,7 @@ sudo erhai-switch-install-ubuntu-images /var/lib/erhai/rollback-v0.7.2-before-v0
 
 安装器校验三个镜像，将指定副本提升为当前 Ubuntu 启动组，并写入当前活动槽；即使它与 `ubuntu.prev` 相同，也会完成提升。重启后 `uname -r` 应回到 `7.2.15-erhai-dev-g870167fad062-a359a9829`。这只回退内核与启动组，不会降级应用包或还原用户数据。
 
-回退后再次选择 v0.8.0，需要重新配置已安装的包，使内核 postinst 再次激活候选；普通 `apt install` 可能因版本已安装而不执行维护脚本：
+回退后再次选择 v0.8.0，需要重新配置已安装的包，使内核 postinst 再次激活 v0.8.0 内核；普通 `apt install` 可能因版本已安装而不执行维护脚本：
 
 ```sh
 sudo apt install --reinstall ./erhai-device-packages-v0.8.0/*.deb

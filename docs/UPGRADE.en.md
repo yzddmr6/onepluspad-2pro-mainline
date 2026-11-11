@@ -39,7 +39,7 @@ sudo erhai-switch-install-ubuntu-images /var/lib/erhai/rollback-v0.7.2-before-v0
 
 The installer verifies all three images, promotes the specified copy to the current Ubuntu boot set, and writes the current active slot. A copy matching `ubuntu.prev` is also promoted. After rebooting, `uname -r` should report `7.2.15-erhai-dev-g870167fad062-a359a9829`. This restores the kernel and boot set only; it does not downgrade applications or restore user data.
 
-To select v0.8.0 again after rollback, reinstall the package set so the kernel postinst activates the candidate again. A plain `apt install` may skip maintenance scripts because those versions are already installed:
+To select v0.8.0 again after rollback, reinstall the package set so the kernel postinst activates the v0.8.0 kernel again. A plain `apt install` may skip maintenance scripts because those versions are already installed:
 
 ```sh
 sudo apt install --reinstall ./erhai-device-packages-v0.8.0/*.deb
