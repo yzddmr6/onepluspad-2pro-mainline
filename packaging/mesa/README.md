@@ -1,9 +1,24 @@
 # 共用 Mesa / Shared Mesa
 
-`shared/` 原样导入小米集成仓的 Mesa 源码锁、补丁和构建工具，固定提交与每个文件的 SHA-256 见 `provenance.json`。修改在来源仓完成后整组更新，不能单独修改导入副本。
+⟦DRAFT:宿主 Mesa 标准包与真机门槛⟧
 
-桌面与 gpu-2404 均运行 `tools/build-mesa.py`；`tools/build-mesa-root.py` 是 gpu-2404 的 SDK 包装入口。桌面只构建一次 `piano-mesa`，然后由 `tools/package-mesa.py --shared-package ... --output ...` 同时收集这个驱动包和 `erhai-mesa` 过渡包。发布包集必须包含两者。过渡包保留原升级路径；所有支持的旧版本完成迁移、桌面元包直接依赖 `piano-mesa` 后，可移除过渡包。
+`shared/` 原样导入小米集成仓的源码锁、补丁与工具，提交和每个文件的 SHA-256 见
+`provenance.json`。修改在来源仓完成后整组更新，不单独修改导入副本。
 
-`shared/` is an unmodified import of the source lock, patches and tools from the Xiaomi integration repository. `provenance.json` pins its commit and file hashes. Make changes at the source, then refresh the import as a whole.
+宿主使用 `shared/tools/build-host-mesa.py` 构建 Ubuntu 同名包；六个驱动补丁保持原样，
+完整 arm64 驱动集和 GLVND 沿用发行版。`tools/package-mesa.py` 接收完整共用仓库及
+`piano-mesa` 过渡包，生成 `erhai-mesa` 过渡包和按整版组织的 APT 仓库。
+参数与装配方式见 [BUILD](../../docs/BUILD.md#宿主-mesa-发布批次)。
 
-Both profiles use `tools/build-mesa.py`; the SDK wrapper `tools/build-mesa-root.py` builds gpu-2404. Build `piano-mesa` once for the desktop, then collect it together with the `erhai-mesa` transition using `tools/package-mesa.py --shared-package ... --output ...`. Ship both debs. Retire the transition after all supported upgrades have migrated and desktop metapackages depend directly on `piano-mesa`.
+Snap 的 `build-mesa.py` / `build-mesa-root.py` 与 gpu-2404 SDK 配方保持独立。
+更换宿主包不会更新 Snap provider。过渡包只有在升级路径完成、桌面直接依赖相应
+发行版运行库后才能移除；交回 Ubuntu 前同时撤下精确 pin 和精确依赖。
+
+`shared/` is an unmodified import pinned by `provenance.json`. Make changes at the
+source and refresh the complete import. Host Mesa uses `build-host-mesa.py` and
+Ubuntu package names, the complete ARM64 driver set and GLVND. The local wrapper
+consumes the complete common repository and creates the OnePlus transition and
+release batch; see [BUILD](../../docs/BUILD.en.md#host-mesa-release-batches).
+The Snap build recipe and SDK remain separate. Retire transitions only after all
+upgrade paths have migrated; remove exact pins and exact dependencies when
+returning to Ubuntu's own Mesa packages.

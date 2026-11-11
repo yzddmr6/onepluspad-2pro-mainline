@@ -2,6 +2,54 @@
 
 [English](UPGRADE.en.md) · [安装与恢复](FLASHING.md)
 
+
+## 0.8.0 → 0.8.1
+
+⟦DRAFT:完整离线 APT 与真机迁移、回退门槛⟧
+
+宿主 Mesa 改为 Ubuntu 同名包，安装到标准多架构目录，使网页进程和其他沙箱
+能够使用设备驱动。保留原驱动版本和补丁；Snap 图形提供者不变。
+升级附件包含按整版组织的 `repositories/erhai-0.8.1/`，完整 Mesa 同源包
+供以后安装开发包和 OpenCL 使用，默认只安装桌面所需子集。
+libdrm 使用 Ubuntu 原样包，不钉版本，后续正常接收 Ubuntu 更新。
+
+先校验发布附件的校验文件，并解压新、旧两批仓库。旧批次必须包括已安装发布包
+及其 Mesa/libdrm 依赖的精确版本；缺包时升级工具会拒绝继续，不会仅保存启动镜像。
+把两个仓库目录传到平板后，在平板运行：
+
+```sh
+sudo systemd-run --unit=erhai-release-upgrade --setenv=DEBIAN_FRONTEND=noninteractive \
+  /usr/bin/python3 /home/<USER>/repositories/erhai-0.8.1/install.py upgrade \
+  /home/<USER>/repositories/erhai-0.8.1 \
+  --previous /home/<USER>/repositories/erhai-0.8.0
+journalctl -f -u erhai-release-upgrade
+sudo dpkg --audit
+sudo reboot
+```
+
+工具将完整批次保留在 `/var/lib/erhai/releases/`，在修改包之前保存当前启动
+镜像组及已安装包版本。相同批次可重复运行；若安装中断，先运行
+`sudo dpkg --configure -a`、`sudo apt-get -f install`，再重跑同一升级命令。
+已有个人文件和应用数据不在回退范围内。
+
+### 整版回退
+
+通过终端或开发者 SSH 通道运行；无图形界面时也可使用。不要先切回旧内核。
+
+```sh
+sudo systemd-run --unit=erhai-release-rollback --setenv=DEBIAN_FRONTEND=noninteractive \
+  /usr/bin/python3 /var/lib/erhai/releases/erhai-0.8.1/install.py rollback --product erhai
+journalctl -f -u erhai-release-rollback
+sudo dpkg --audit
+sudo reboot
+```
+
+回退先把发布管理的用户态包整组恢复为上一批精确版本，随后恢复已保存的启动镜像组。
+Mesa 回退会恢复旧的 `/opt` 库和注册，并移除新过渡包拥有的精确钉版本文件。
+任一步失败都会停止，不会宣布回退完成。新旧仓库及启动镜像组应保留到新版本稳定。
+Fastboot 仅恢复启动分区，不能恢复用户态包；只能进入恢复系统时，先修复根分区内的
+软件包，再使用对应旧启动组。不要把“换回启动镜像”当作整版回退。
+
 ## v0.7.2 → v0.8.0
 
 v0.8.0 保留 Linux 7.2.15，增加 Gunyah 虚拟机、Waydroid 内核支持、Snap 图形、Resources 硬件监控，并修正中断与串口挂起行为。

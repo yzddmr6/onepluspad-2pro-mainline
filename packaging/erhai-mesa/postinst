@@ -1,6 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-only
 set -e
+
 case "$1" in
 configure)
     for ICD in /usr/share/vulkan/icd.d/freedreno_icd.json \

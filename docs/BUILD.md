@@ -141,19 +141,19 @@ dpkg-dev。先拉取清单固定的容器镜像。装配期间容器需要额外
 
 桌面硬件加速和传感器需要各自的软件包。先完成这两个组件的构建，再将它们与
 前面生成的设备包一起装入根系统；每个输出目录只保留本次选定的一个版本。
-这两个组件通过非特权 `unshare` 构建，主机需允许 user namespace；`--native-nir`
-还要求主机 Python 可导入 Mako 与 MarkupSafe（Ubuntu：`python3-mako`、
-`python3-markupsafe`）。它们使用 ARM64 binfmt，不在装配用的 Docker 容器内构建：
+⟦DRAFT:宿主 Mesa 标准包与整版仓库门槛⟧
+
+宿主 Mesa 在独立 resolute 根中按 Ubuntu 配方构建；传感器沿用原非特权 `unshare`
+构建。两者使用各自的固定输入，不在装配用的 Docker 容器内构建：
 
 ```sh
-# Shared source and recipe: packaging/mesa/shared/mesa/source.json
-python3 tools/build-mesa.py --profile desktop --source-archive <official-Mesa-archive> \
-  --cross-file <arm64-cross-file> --target-root <arm64-SDK> --output out/mesa-build
-python3 packaging/mesa/shared/tools/package-mesa.py --mesa-build out/mesa-build \
-  --output out/shared-mesa --version <package-version>
-python3 tools/package-mesa.py --shared-package out/shared-mesa/piano-mesa_*_arm64.deb \
-  --output out/mesa-debs
+# Build the shared Ubuntu cohort in an isolated resolute root first:
+# packaging/mesa/shared/mesa/README.md
 python3 tools/build-sensors.py --output out/sensor-debs
+python3 tools/package-mesa.py --shared-package <piano-mesa.deb> \
+  --shared-repository <complete-common-batch> --release-id erhai-<release> \
+  --release-packages out/device-packages --release-packages out/sensor-debs \
+  --release-packages out/shared-apps --output out/mesa-debs
 
 args=()
 for deb in out/device-packages/*.deb out/mesa-debs/*.deb out/sensor-debs/*.deb out/shared-apps/*.deb; do
@@ -164,7 +164,7 @@ for deb in out/app-dependencies/*.deb; do
   args+=(--dependency-deb "$deb")
 done
 python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper" \
-  --output out/desktop-root "${args[@]}"
+  --release-repository out/mesa-debs/erhai-<release> --output out/desktop-root "${args[@]}"
 ```
 
 上述命令使用 Bash。输出包括 `rootfs.squashfs`、软件包列表、构建输入与日志。
@@ -196,3 +196,27 @@ Mesa 来源。GunyahVM 所需的 Ubuntu 依赖已钉在 `packaging/desktop/sourc
 
 装配容器默认限 4096 MiB 内存、8192 MiB 内存加交换空间；用 `--memory-mib` 和 `--jobs`
 按主机余量及同时运行的构建调整。Docker 守护进程不继承调用者的用户 slice。
+
+## 宿主 Mesa 发布批次
+
+⟦DRAFT:离线 APT 与真机迁移、回退门槛⟧
+
+宿主使用共用 Ubuntu 同名 Mesa 包、标准多架构路径和 GLVND。完整同源包与 Ubuntu
+原样 libdrm 保存在整版批次仓库中；libdrm 不钉版本。源码、六个原样补丁和打包锁由
+`packaging/mesa/shared/` 的固定导入提供；`packaging/mesa/provenance.json` 记录来源。
+Snap provider 继续使用既有独立运行时。
+
+```sh
+python3 tools/package-mesa.py --shared-package <piano-mesa.deb> \
+  --shared-repository <verified-common-batch> --release-id erhai-<release> \
+  --release-packages <other-release-packages> --output out/host-mesa-release
+```
+
+`build-desktop-rootfs.py --release-repository <批次目录>` 保留完整仓库并将其中未显式
+选择的包作为依赖提供给 APT。`--device-deb` 选择过渡包和设备包，只安装依赖需要的
+子集；其他依赖也可通过既有 `--dependency-deb` 提供。显式包须与批次哈希相同。
+发布附件同时包含整版仓库及上一批回退仓库。
+
+`install.py upgrade` 保存上一版精确用户态和启动组；
+`install.py rollback --product erhai` 先恢复包，再调用现有的
+`erhai-switch-install-ubuntu-images`。操作顺序见 [UPGRADE](UPGRADE.md)。
