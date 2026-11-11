@@ -1,7 +1,5 @@
 # 共用 Mesa 图形驱动 / Shared Mesa graphics
 
-⟦DRAFT:宿主 Mesa 离线 APT 与真机门槛⟧
-
 源码锁和六个驱动补丁由[小米集成仓](https://github.com/yzddmr6/xiaomipad-8pro-mainline)维护。
 `packaging/mesa/shared/` 原样导入，提交与文件摘要见
 [provenance.json](../packaging/mesa/provenance.json)。修改先进入来源仓，再更新导入。

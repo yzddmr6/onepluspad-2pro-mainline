@@ -1,12 +1,12 @@
 {
   "repository": "https://github.com/yzddmr6/xiaomipad-8pro-mainline",
   "commit": "a1d1cf180487ec425c471cca7ea6f2b92958d724",
-  "authority": "All shared source, patches and recipes are maintained in the source repository; import without edits.",
+  "authority": "Shared code, patches and recipes are imported without edits from commit; documentation_files are imported without edits from documentation_commit.",
   "files_sha256": {
     "LICENSE": "33d96d2967f46f71ad9c73587e2bd40b6d946f1c88fec30db7c95b94c8b9fe29",
     "LICENSES/oneplus-mesa-tools-GPL-2.0-only.txt": "8780e78a1a737e127f25a65f6d95269bffd36158dc261114de7859b490bfc5aa",
     "deps/sources.json": "c2e1d4c28ba54421cf198eceb5601f236721b6a0928e2d3789fc7b0474fcbf48",
-    "mesa/README.md": "0d33a02858c42d6c8560e6303935b035692ec216078c76617adcff5b164002b0",
+    "mesa/README.md": "f981594bbeae338a0a8830545a7ceae2cf4f3b4db72f65489410ebc735eb9a85",
     "mesa/check-device.c": "0c8b7e3c3465046e64c7ac50f989450554666e21cf1df4abc196b0cba8f2ec0f",
     "mesa/egl-smoke.c": "679373ef227bcce48197fbc6a78eeb3c5e32858dcdb55155bdbcd4a158f5babe",
     "mesa/freedreno-explicit-sync.patch": "72c3f2696ba5d18b5d56139bbfa0f7c9ddeb9567e6d4f56a4461caa84c929c6d",
@@ -43,5 +43,9 @@
     "tools/release-repository.py": "fa0405da38d723a1e51f10d05c04e282e27091af0a1761bbc9fe09c093227ebc",
     "tools/test-snap-graphics-glsl.py": "b1d5e79d5a1e0f72fc30b0bf90d1ad5384fef9c7c43a717aa01830b21927c3f5",
     "tools/validate-mesa-snap.py": "7d49b542852f578b9215eae8224010d5c32e8e037e7918649c8207e3cf559b81"
-  }
+  },
+  "documentation_commit": "d91782217b66d0739caddb5024e973a6e311e376",
+  "documentation_files": [
+    "mesa/README.md"
+  ]
 }

@@ -9,8 +9,6 @@
 
 ### v0.8.1
 
-⟦DRAFT:最终附件真机升级、全新安装和回退验收⟧
-
 Linux 7.2.15：沙箱程序使用宿主 GPU 加速，Vulkan 设备不再重复；控制中心 50.3，电源键默认锁屏；升级工具保留完整软件包与启动组，支持整版回退。
 
 Linux 7.2.15: host GPU acceleration for sandboxed programs, one Vulkan device registration, Settings 50.3, power-button screen locking, and complete package/boot-set rollback.

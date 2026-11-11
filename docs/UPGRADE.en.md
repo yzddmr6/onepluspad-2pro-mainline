@@ -5,8 +5,6 @@
 
 ## v0.8.0 → v0.8.1
 
-⟦DRAFT:complete offline APT and device migration/rollback gates⟧
-
 The rollback tool preserves the Ubuntu library versions actually installed on this device. Install the distribution's repository-index tool before the first complete upgrade:
 
 ```sh

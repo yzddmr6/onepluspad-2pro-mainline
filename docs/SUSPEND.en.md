@@ -40,8 +40,6 @@ full resume, which caused early wakes. s2idle handles such interrupts without le
 
 ## Power button
 
-⟦DRAFT:电源键锁屏候选验收⟧
-
 The matching GNOME Settings Daemon now handles the power key, with
 `power-button-action='lock'` as the default. Choose Lock Screen or another action
 in Settings > Power. Locking does not explicitly request system suspend; cover

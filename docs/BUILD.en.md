@@ -228,6 +228,10 @@ are tracked with the board recipe. Tool versions, hashes, source identity
 and the upstream BSD license are included in the audio package. No prebuilt
 reference-board topology is renamed or used as a build input.
 
+A package name, version and architecture must identify exactly one byte sequence.
+Reproduce a published package from its recorded build inputs. If documentation
+or provenance updates change its contents, use a new component version.
+
 Two builds of the same inputs produce the same bytes: the version carries a
 build id derived from payload and package metadata (`<release>[~dbg]+g<kernel>.b<id>`), the AVB footers
 use a salt derived from the image instead of avbtool's random default, and the
@@ -286,8 +290,6 @@ The desktop needs the Mesa package for hardware rendering and the sensor
 package for sensor integration. Build both, then assemble them with the device
 packages created above. Keep one selected version per component in these output
 directories.
-
-⟦DRAFT:standard host Mesa packages and complete release repositories⟧
 
 Build host Mesa with the Ubuntu recipe in an isolated resolute root. Sensors
 retain their unprivileged `unshare` builder. Both use fixed inputs outside the
@@ -371,8 +373,6 @@ The assembly container defaults to 4096 MiB RAM and 8192 MiB total RAM plus swap
 Use `--memory-mib` together with `--jobs` to fit the host and concurrent builds.
 
 ## Host Mesa release batches
-
-⟦DRAFT:offline APT and device migration/rollback gates⟧
 
 The host uses shared Ubuntu-named Mesa packages, standard multiarch directories
 and GLVND. Keep all binaries from the source and the original Ubuntu libdrm
