@@ -95,6 +95,16 @@ def main():
             shutil.copyfile(src, dest)
             defaults.add(module.metadata(src)['Package'])
     module.inventory(repository, args.release_id, 'erhai', defaults)
+    # The verification tool advances independently of immutable driver packages.
+    checker = REPO / 'tools/check-host-mesa.py'
+    checker_source = json.loads((REPO / 'packaging/mesa/checker-provenance.json').read_text())
+    if sha(checker) != checker_source['sha256']:
+        parser.error('host Mesa checker differs from its pinned source')
+    shutil.copyfile(checker, repository / checker.name)
+    (repository / checker.name).chmod(0o755)
+    (repository / 'SHA256SUMS').write_text(''.join(
+        f'{sha(p)}  {p.relative_to(repository)}\n' for p in sorted(repository.rglob('*'))
+        if p.is_file() and p.name != 'SHA256SUMS'))
     module.verify(repository)
     manifest = {'version': version, 'package': {'file': transition.name, 'sha256': sha(transition)},
                 'shared_package': {'file': package.name, 'sha256': sha(package)},

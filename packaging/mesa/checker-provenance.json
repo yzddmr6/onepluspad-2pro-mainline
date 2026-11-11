@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/yzddmr6/xiaomipad-8pro-mainline",
+  "commit": "fe553cd1c11f9e4bc3447f639f82ad4af212ed3f",
+  "path": "tools/check-host-mesa.py",
+  "sha256": "09fbfe886a1f23a82841e4c338110193c6b5eb497645644ba6235bdca5496ce3",
+  "scope": "Verification tool only; the Mesa binary source and transition packages retain their existing immutable inputs."
+}
