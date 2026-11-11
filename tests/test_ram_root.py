@@ -2,8 +2,8 @@
 """Exercise the initramfs HTTP/hash boundary before any mount or handoff.
 
 RAM_ROOT_SHELL may be a JSON command array, e.g. a qemu-aarch64 invocation
-of the pinned ARM64 BusyBox followed by 'sh'. Only mount is substituted;
-downloads, chunk assembly and hashing run in the selected real shell.
+of the pinned ARM64 BusyBox followed by 'sh'. Mount and USB setup are substituted;
+downloads and hashing run in the selected real shell.
 """
 import functools
 import hashlib
@@ -59,10 +59,12 @@ class RamRootIntegrityTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'run/evidence').mkdir(parents=True)
+            (root / 'net/test0').mkdir(parents=True)
+            (root / 'net/test0/carrier_changes').write_text('0\n')
             section = source[start:end].replace('/run/', f'{root}/run/').replace(
-                '/newroot', f'{root}/newroot')
+                '/newroot', f'{root}/newroot').replace('/usr/libexec/erhai-ncm', 'setup_ncm').replace('/sys/class/net/', str(root / 'net') + '/')
             script = root / 'fetch.sh'
-            script.write_text('mount() { echo "$*" >> ' +
+            script.write_text('setup_ncm() { echo test0; }\nmount() { echo "$*" >> ' +
                               shlex.quote(str(root / 'mounts')) + '; }\n' + section +
                               '\necho RETURNED_TO_INITRAMFS\n')
             shell = json.loads(os.environ.get('RAM_ROOT_SHELL', '["sh"]'))
@@ -82,8 +84,9 @@ class RamRootIntegrityTest(unittest.TestCase):
     def test_whole_file_with_matching_hash(self):
         self.fetch('root.squashfs', self.digest, True)
 
-    def test_complete_chunks_with_matching_hash(self):
-        self.fetch('chunked.squashfs', self.digest, True)
+    def test_chunk_directory_is_not_a_complete_image(self):
+        # The RAM-root contract downloads one complete image, not .parts.
+        self.fetch('chunked.squashfs', self.digest, False)
 
     def test_wrong_hash_never_reaches_mount(self):
         self.assertIn('SHA256 MISMATCH', self.fetch('root.squashfs', '0' * 64, False))
