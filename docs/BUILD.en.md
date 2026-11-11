@@ -87,7 +87,7 @@ overlay-merging experiments are not the desktop delivery recipe.
 ```sh
 kernel_out="$PWD/out/kernel"
 OUT_DIR="$kernel_out" tools/build-kernel.sh
-PROFILE=ncm OUT_DIR="$PWD/out/initramfs" \
+PROFILE=ncm ROOT_FSCK_ROOT="$ubuntu_root" OUT_DIR="$PWD/out/initramfs" \
   GEN_INIT_CPIO="$kernel_out/usr/gen_init_cpio" tools/build-initramfs.sh
 python3 tools/build-erhai-abl-symbols.py --output out/abl-dtb \
   --mainline-dtb "$kernel_out/arch/arm64/boot/dts/qcom/sm8750-erhai.dtb" \
@@ -98,6 +98,8 @@ python3 tools/build-mainline-boot.py --output out/mainline-boot \
   --kernel-out "$kernel_out" --dtb out/abl-dtb/erhai-abl.dtb \
   --initramfs out/initramfs/initramfs-ncm.cpio.gz
 ```
+
+NCM builds also require `ROOT_FSCK_ROOT` to name the verified ARM64 Ubuntu root used for this product build (an extracted directory or a read-only build mount). The builder carries the distribution e2fsck and its complete ELF closure, recording input hashes in `root-fsck-files.json`. Persistent roots run preen before the writable mount; errors requiring manual recovery stop boot and retain the check log in RAM.
 
 `build-erhai-abl-symbols.py` builds the contained overlay sink layout by
 default, the one daily deliveries use: the sink sits in a disabled container,
