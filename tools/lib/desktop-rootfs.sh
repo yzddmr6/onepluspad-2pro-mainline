@@ -84,7 +84,8 @@ if [ -d /work/release-repository ]; then
     mkdir -p "$root/var/lib/erhai/releases/$batch"
     cp -a /work/release-repository/. "$root/var/lib/erhai/releases/$batch/"
     printf 'deb [trusted=yes] file:/var/lib/erhai/releases/%s ./\n' "$batch" > "$root/etc/apt/sources.list.d/erhai-release.list"
-    target apt-get -o Dir::Etc::sourcelist=erhai-release.list -o Dir::Etc::sourceparts=- \
+    target apt-get -o Dir::Etc::sourcelist=/etc/apt/sources.list.d/erhai-release.list \
+        -o Dir::Etc::sourceparts=/.erhai-build/sourceparts \
         -o APT::Get::List-Cleanup=0 update
 fi
 cleanup_policy
