@@ -57,6 +57,17 @@ python3 tools/prepare-inputs.py
 原厂构建输入对应 OPD2413 ColorOS C.34；它们用于构建，不是通用恢复包。
 本机校准、设备地址和 Android 回退备份在安装时从用户自己的平板取得。
 
+## 内核 Rust 构建输入
+
+使用 `kernel/rust-toolchain.json` 锁定的归档和版本。将 Rust 编译器与宿主标准库
+安装到同一工具前缀，解包 rust-src、bindgen 和已锁定的 libclang/LLVM 包。每次
+内核与树外模块调用均设置 `RUSTC`、`BINDGEN`、`RUST_LIB_SRC`（源码中的
+`library/` 目录）和 `LIBCLANG_PATH`；把编译器前缀的 `bin/` 加入 `PATH`，
+共享库目录加入该构建进程的 `LD_LIBRARY_PATH`，并用 `BINDGEN_EXTRA_CLANG_ARGS`
+指定匹配的 Clang 18 头文件目录。发布入口在配置前拒绝不匹配的工具，并把身份
+写入 `build-result.json`；打包树外模块时保留同一环境。Linux 7.4 的
+`gen_init_cpio` 位于 `scripts/`，不再位于 `usr/`。
+
 ## 内核与 RAM 启动镜像
 
 ```sh
@@ -72,7 +83,7 @@ OUT_DIR="$kernel_out" tools/build-kernel.sh
 
 ```sh
 PROFILE=ncm ROOT_FSCK_ROOT="$ubuntu_root" OUT_DIR="$PWD/out/initramfs" \
-  GEN_INIT_CPIO="$kernel_out/usr/gen_init_cpio" tools/build-initramfs.sh
+  GEN_INIT_CPIO="$kernel_out/scripts/gen_init_cpio" tools/build-initramfs.sh
 python3 tools/build-erhai-abl-symbols.py --output out/abl-dtb \
   --mainline-dtb "$kernel_out/arch/arm64/boot/dts/qcom/sm8750-erhai.dtb" \
   --dtc "$kernel_out/scripts/dtc/dtc" \
@@ -203,7 +214,7 @@ Mesa 来源。GunyahVM 所需的 Ubuntu 依赖已钉在 `packaging/desktop/sourc
 ## 宿主 Mesa 发布批次
 
 宿主使用共用 Ubuntu 同名 Mesa 包、标准多架构路径和 GLVND。完整同源包与 Ubuntu
-原样 libdrm 保存在整版批次仓库中；libdrm 不钉版本。源码、六个原样补丁和打包锁由
+原样 libdrm 保存在整版批次仓库中；libdrm 不钉版本。源码、固定补丁集和打包锁由
 `packaging/mesa/shared/` 的固定导入提供；`packaging/mesa/provenance.json` 记录来源。
 Snap provider 继续使用既有独立运行时。
 

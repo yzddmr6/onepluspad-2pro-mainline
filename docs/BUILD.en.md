@@ -82,13 +82,26 @@ fallback backups must come from the user's own tablet during installation.
 Ubuntu Desktop uses the original ISO layers described below; Ubuntu Base and
 overlay-merging experiments are not the desktop delivery recipe.
 
+## Kernel Rust build inputs
+
+Use the archives and versions pinned in `kernel/rust-toolchain.json`. Install the
+Rust compiler and host standard library into one tool prefix, unpack rust-src and
+bindgen, and extract the pinned libclang/LLVM packages. Set `RUSTC`, `BINDGEN`,
+`RUST_LIB_SRC` (the source `library/` directory), and `LIBCLANG_PATH` for every
+kernel and external-module invocation. Put the compiler prefix's `bin/` in
+`PATH`, its shared libraries in the build process's `LD_LIBRARY_PATH`, and point
+`BINDGEN_EXTRA_CLANG_ARGS` at the matching Clang 18 include directory.
+The release entry point rejects mismatched tools before configuration and records
+their identity in `build-result.json`. Keep that environment for module packaging.
+Linux 7.4 builds `gen_init_cpio` under `scripts/`, rather than `usr/`.
+
 ## Build a RAM boot image
 
 ```sh
 kernel_out="$PWD/out/kernel"
 OUT_DIR="$kernel_out" tools/build-kernel.sh
 PROFILE=ncm ROOT_FSCK_ROOT="$ubuntu_root" OUT_DIR="$PWD/out/initramfs" \
-  GEN_INIT_CPIO="$kernel_out/usr/gen_init_cpio" tools/build-initramfs.sh
+  GEN_INIT_CPIO="$kernel_out/scripts/gen_init_cpio" tools/build-initramfs.sh
 python3 tools/build-erhai-abl-symbols.py --output out/abl-dtb \
   --mainline-dtb "$kernel_out/arch/arm64/boot/dts/qcom/sm8750-erhai.dtb" \
   --dtc "$kernel_out/scripts/dtc/dtc" \
@@ -379,7 +392,7 @@ Use `--memory-mib` together with `--jobs` to fit the host and concurrent builds.
 The host uses shared Ubuntu-named Mesa packages, standard multiarch directories
 and GLVND. Keep all binaries from the source and the original Ubuntu libdrm
 archives in the release batch; libdrm is not pinned. The fixed import under
-`packaging/mesa/shared/` supplies upstream source, six unchanged patches and the
+`packaging/mesa/shared/` supplies upstream source, the pinned patch set and the
 Ubuntu packaging lock. `packaging/mesa/provenance.json` records its origin.
 The Snap provider retains its separate runtime.
 

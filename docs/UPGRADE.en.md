@@ -3,6 +3,19 @@
 [中文](UPGRADE.md) · [Installation and recovery](FLASHING.en.md)
 
 
+## v0.8.1 → v0.9.0
+
+⟦DRAFT⟧
+
+Install the complete `erhai-0.9.0` package batch together with its matching
+boot images. Keep the supplied `erhai-0.8.1` batch for complete rollback.
+The kernel, standard Mesa packages and Snap graphics provider change together;
+close virtual machines before upgrading and reboot afterwards.
+The default NPU demo includes its runtime, model and board firmware.
+Follow the existing whole-release upgrade and rollback commands below, replacing
+the repository paths with this release's two batches.
+
+
 ## v0.8.0 → v0.8.1
 
 The rollback tool preserves the Ubuntu library versions actually installed on this device. Install the distribution's repository-index tool before the first complete upgrade:

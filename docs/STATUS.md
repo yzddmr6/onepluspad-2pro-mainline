@@ -18,3 +18,11 @@ Linux 7.2.15: host GPU acceleration for sandboxed programs, one Vulkan device re
 Linux 7.2.15：GunyahVM、Waydroid 安装支持、共用 Snap 图形提供者、Resources；中断与串口挂起修复；根镜像与升级路径移除 generic 内核和 kdump。
 
 Linux 7.2.15: GunyahVM, Waydroid installation support, shared Snap graphics, Resources; interrupt and UART suspend fixes; generic kernels and kdump removed from images and through the upgrade path.
+
+### v0.9.0
+
+⟦DRAFT⟧
+
+Linux 7.4、NPU 离线演示、Mesa 上游驱动修复与系统切换保护。
+
+Linux 7.4, an offline NPU demo, upstream Mesa driver fixes and system-switch safeguards.
