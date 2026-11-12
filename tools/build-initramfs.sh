@@ -89,11 +89,17 @@ exec 9>"$out/.build.lock"
 flock -n 9 || { echo 'Initramfs output is already in use.' >&2; exit 1; }
 stage=$(mktemp -d "$out/stage.XXXXXX")
 trap 'rm -rf -- "$stage"' EXIT
+if [[ $profile == ncm ]]; then
+	: "${ROOT_FSCK_ROOT:?set ROOT_FSCK_ROOT to the verified Ubuntu ARM64 root used for this build}"
+	python3 "$repo/tools/lib/build-root-fsck.py" --root "$ROOT_FSCK_ROOT" --out "$stage/fsck"
+	cp "$stage/fsck/root-fsck-files.json" "$out/root-fsck-files.json"
+fi
 {
 	sha256sum "$init_src" "$usb_src" | cut -d' ' -f1
 	[[ -z ${extra_bins:-} ]] || sha256sum "$wb_src" | cut -d' ' -f1
 	[[ -z ${identity_src:-} ]] || sha256sum "$identity_src" | cut -d' ' -f1
 	[[ -z ${ncm_helper:-} ]] || sha256sum "$ncm_helper" "$ncm_config" | cut -d' ' -f1
+	[[ $profile != ncm ]] || sha256sum "$repo/initramfs/root-fsck" "$stage/fsck/root-fsck-files.json" | cut -d' ' -f1
 	printf '%s\n' "$expected"
 } | sha256sum | cut -d' ' -f1 >"$stage/build-id"
 {
@@ -175,6 +181,22 @@ trap 'rm -rf -- "$stage"' EXIT
 		# is mounted.
 		[[ -f $adsp_src/soccp.mbn ]] || { echo "SoCCP firmware not found: $adsp_src/soccp.mbn" >&2; exit 1; }
 		printf 'file %s/soccp.mbn %s 0644 0 0\n' "$adsp_dst" "$adsp_src/soccp.mbn"
+	fi
+	if [[ $profile == ncm ]]; then
+		printf 'file /bin/root-fsck %s 0755 0 0\n' "$repo/initramfs/root-fsck"
+		python3 - "$stage/fsck" <<'FSCK_CPIO'
+import json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+files = json.loads((root / 'root-fsck-files.json').read_text())
+dirs = set()
+for name in files:
+    dirs.update(str(p) for p in pathlib.Path(name).parents if str(p) != '.')
+for name in sorted(dirs):
+    print(f'dir /{name} 0755 0 0')
+for name in files:
+    mode = '0644' if name.startswith('etc/') else '0755'
+    print(f'file /{name} {root / name} {mode} 0 0')
+FSCK_CPIO
 	fi
 	for app in $apps; do
 		printf 'slink /bin/%s busybox 0777 0 0\n' "$app"

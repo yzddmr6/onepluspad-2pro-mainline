@@ -71,7 +71,7 @@ OUT_DIR="$kernel_out" tools/build-kernel.sh
 内核生成的 `gen_init_cpio`，启动封装使用随附原厂输入：
 
 ```sh
-PROFILE=ncm OUT_DIR="$PWD/out/initramfs" \
+PROFILE=ncm ROOT_FSCK_ROOT="$ubuntu_root" OUT_DIR="$PWD/out/initramfs" \
   GEN_INIT_CPIO="$kernel_out/usr/gen_init_cpio" tools/build-initramfs.sh
 python3 tools/build-erhai-abl-symbols.py --output out/abl-dtb \
   --mainline-dtb "$kernel_out/arch/arm64/boot/dts/qcom/sm8750-erhai.dtb" \
@@ -82,6 +82,8 @@ python3 tools/build-mainline-boot.py --output out/mainline-boot \
   --kernel-out "$kernel_out" --dtb out/abl-dtb/erhai-abl.dtb \
   --initramfs out/initramfs/initramfs-ncm.cpio.gz
 ```
+
+NCM 构建还需要 `ROOT_FSCK_ROOT` 指向本次产品构建所用、已校验的 ARM64 Ubuntu 根目录（解包目录或构建时只读挂载点）。构建器从中携带发行版 e2fsck 及全部 ELF 依赖，并在 `root-fsck-files.json` 记录各输入哈希。持久根在 rw 挂载前执行 preen；需要人工处置的错误会停止启动并保留 RAM 中的检查日志。
 
 原厂输入必须匹配目标固件。当前封装逻辑根据已核对的 ColorOS C.34 输入选择原厂
 身份条目，不能假定其他版本相同。这些命令只生成开发镜像，不能据此认定已经可以

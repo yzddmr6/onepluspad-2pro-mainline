@@ -424,9 +424,17 @@ EOF
 			echo "label=$label device=${rootdev:-NOT-FOUND} waited=${waited}s"
 			if [ -n "$rootdev" ]; then
 				mkdir -p /newroot
-				mount -t ext4 -o rw "$rootdev" /newroot
-				echo "mount rc=$?"
-				grep ' /newroot ' /proc/mounts
+				# Never reset a filesystem while preen is writing metadata. On
+				# failure keep this RAM environment and its log for recovery.
+				kill "$WATCHDOG_PID" 2>/dev/null
+				wait "$WATCHDOG_PID" 2>/dev/null
+				if root-fsck "$rootdev" /run/evidence/root-fsck.log; then
+					mount -t ext4 -o rw "$rootdev" /newroot
+					echo "mount rc=$?"
+					grep ' /newroot ' /proc/mounts
+				else
+					echo 'Root fsck failed; read-write boot stopped. See /run/evidence/root-fsck.log in maintenance.' > /dev/console
+				fi
 			fi
 		} > /run/evidence/root.txt 2>&1
 	fi
