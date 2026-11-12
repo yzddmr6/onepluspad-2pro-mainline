@@ -16,6 +16,8 @@ Follow the existing whole-release upgrade and rollback commands below, replacing
 the repository paths with this release's two batches.
 
 
+Sensor shutdown detaches client callbacks before closing the drivers, fixing crashes when stopping or restarting the service.
+
 ## v0.8.0 → v0.8.1
 
 The rollback tool preserves the Ubuntu library versions actually installed on this device. Install the distribution's repository-index tool before the first complete upgrade:
