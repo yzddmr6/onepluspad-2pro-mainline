@@ -39,7 +39,8 @@
       "pkgconf",
       "protobuf-c-compiler",
       "protobuf-compiler",
-      "python3-dev"
+      "python3-dev",
+      "dbus-daemon"
     ]
   },
   "sources": [
@@ -290,6 +291,13 @@
           "sha256": "409a54b66b5c3822658db4addf7319e2ac5ad8c2c96f8b3229eaff18c22c97f0",
           "origin": "Local erhai bring-up: expose the Qualcomm Sensor Core gyroscope over D-Bus (HasGyroscope, AngularVelocityX/Y/Z, ClaimGyroscope/ReleaseGyroscope) using a new SSC gyroscope driver",
           "upstream_status": "not submitted; offline candidate"
+        },
+        {
+          "file": "patches/iio-sensor-proxy/0007-iio-sensor-proxy-quiesce-callbacks-before-close.patch",
+          "sha256": "2884c72f6285ce00af5bb3f9301e6648c7e3416081987e2529f09b2259eb0692",
+          "origin": "this project",
+          "upstream_status": "not submitted",
+          "note": "Detach D-Bus, client-name and udev callbacks before SSC close; preserve shared state until every driver is closed. Includes a private-bus shutdown regression."
         }
       ]
     }
