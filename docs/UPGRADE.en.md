@@ -18,6 +18,8 @@ the repository paths with this release's two batches.
 
 Sensor shutdown detaches client callbacks before closing the drivers, fixing crashes when stopping or restarting the service.
 
+After rebooting into a new session, GNOME uses the Iris hardware encoder for its built-in full-screen recorder. This reduces recorder CPU use; the default settings can produce larger files than software encoding.
+
 ## v0.8.0 → v0.8.1
 
 The rollback tool preserves the Ubuntu library versions actually installed on this device. Install the distribution's repository-index tool before the first complete upgrade:
