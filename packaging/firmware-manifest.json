@@ -653,6 +653,146 @@
       "member": "firmware/vpu35_4v.mbn",
       "sha256": "4fbe0a9709449bbb714a20acad9503b5e4e8feff51e0b76988370d1e753f9c65",
       "size": 2417352
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b00",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b00",
+      "size": 564,
+      "sha256": "b3cd72abd31e332db87a17bc845914c60dfab073cf5276a9a125461912e21933"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b01",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b01",
+      "size": 27644,
+      "sha256": "366ba8f6c1ef72e0841cc573beae6caf70a8fefd6440aa60cd490f98078eeb02"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b02",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b02",
+      "size": 79076,
+      "sha256": "e6ba949dd9eab6d979e7cc0c3f4d72c9208384f8e578044d5da6706bcdb629d3"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b03",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b03",
+      "size": 140303,
+      "sha256": "f0c2ad6458fad2f456fb429a65fe4cf2953cdd82950f6beb19e42ebfb1b2d378"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b04",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b04",
+      "size": 1376,
+      "sha256": "1a644f200134c0399830121eede772708f8e5ef35d322f8463ad22095e98e595"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b05",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b05",
+      "size": 2417924,
+      "sha256": "b69492ff2f9475bfeabeee28552a952815e688588bc62c002c966c74f17c87ad"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b06",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b06",
+      "size": 114696,
+      "sha256": "1f37c949c2c90d67759ed7c98798a2242f19c2cb516cfaf5eea49eb0197abf45"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b07",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b07",
+      "size": 2840,
+      "sha256": "29d2ed610274a11b9b94778d4c58c9de1eeffb13cc8717a1be917fc8ca5d2099"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b08",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b08",
+      "size": 124406,
+      "sha256": "157efa0a5d852a23a3f732dda398d819f0f314d75fd2e2f54e7d0943ec250ef6"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b09",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b09",
+      "size": 786332,
+      "sha256": "17d291ecf15be0d26cb8f98b57b8f33f017593c968073697a95d3600df9f2588"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b10",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b10",
+      "size": 14016,
+      "sha256": "a6679b4ec2fa151036370eb703a39365a2c1e58daacd1f7c9fdb28f3752b0245"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b11",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b11",
+      "size": 3184,
+      "sha256": "71599849808c3ba27f1feb9e8e584755914b9bf64027f542cd9ff4faea1af8fa"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b12",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b12",
+      "size": 114256,
+      "sha256": "ae9678ba0bd99b045e356e7b7296dd6e6ad14e8def23b359a4e6de9512a7adba"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b13",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b13",
+      "size": 5600,
+      "sha256": "6eb64e59fa121afb5cc1043d72016b50b1ea4ce77e911ae694fbdd3ecb349eac"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.b15",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.b15",
+      "size": 4520,
+      "sha256": "cedd1927a92f8af492d37635e66a4ef6274b5b22b6b9ba951a690e7c4131dd5f"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp.mdt",
+      "from": "stock-modem",
+      "member": "::/image/cdsp.mdt",
+      "size": 5084,
+      "sha256": "4daf87dfe4bd0b58356bbc18dce86258c6f47196b04862da510e6b27bd2f39b5"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp_dtb.b00",
+      "from": "stock-modem",
+      "member": "::/image/cdsp_dtb.b00",
+      "size": 148,
+      "sha256": "d1c170ee54f5c94712189107621cb63ece52f55735ee485e2ee806b40852b622"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp_dtb.b01",
+      "from": "stock-modem",
+      "member": "::/image/cdsp_dtb.b01",
+      "size": 29916,
+      "sha256": "cadea7e0797419aecbae57976b9c0abad9489b4de0c72033970661b6644815be"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp_dtb.b02",
+      "from": "stock-modem",
+      "member": "::/image/cdsp_dtb.b02",
+      "size": 3896,
+      "sha256": "58c1ae3a3890d32401bc83d412f95c2237ae76bd7a4ac161411c17bb5ce27f7d"
+    },
+    {
+      "install": "qcom/sm8750/erhai/cdsp_dtb.mdt",
+      "from": "stock-modem",
+      "member": "::/image/cdsp_dtb.mdt",
+      "size": 4044,
+      "sha256": "6e8f95f9bf041b855b57ac816de03996c5abb6de7e7b80216f8349db9d6d06ea"
     }
   ]
 }

@@ -54,15 +54,15 @@ ncm) init_src="$repo/initramfs/init-ncm"; usb_src="$repo/initramfs/usb-ncm"
 	fi
 	# Novatek NT36536 TDDI loses its RAM firmware on every panel prepare; the
 	# built-in touch driver requests it from the rootfs.
-	firmware="$repo/packaging/firmware"
+	firmware="${FIRMWARE_TREE:-$repo/packaging/firmware}"
 	# The initramfs and installed firmware package use the same original
 	# inputs. Never chain a new boot image from a previous OUT's blobs.
-	python3 - "$repo" <<'PY'
+	python3 - "$repo" "$firmware" <<'PY'
 import hashlib, json, pathlib, sys
 repo = pathlib.Path(sys.argv[1])
 manifest = json.loads((repo / 'packaging/firmware-manifest.json').read_text())
 for entry in manifest['files']:
-    path = repo / 'packaging/firmware' / entry['install']
+    path = pathlib.Path(sys.argv[2]) / entry['install']
     data = path.read_bytes()
     if len(data) != entry['size'] or hashlib.sha256(data).hexdigest() != entry['sha256']:
         raise SystemExit(f'Firmware does not match manifest: {entry["install"]}')
@@ -168,11 +168,16 @@ fi
 	fi
 	if [[ -n ${adsp_src:-} ]]; then
 		[[ -f $adsp_src/adsp.mdt ]] || { echo "ADSP mdt not found: $adsp_src/adsp.mdt" >&2; exit 1; }
+		for image in cdsp.mdt cdsp_dtb.mdt; do
+			[[ -f $adsp_src/$image ]] || { echo "CDSP firmware missing: $image" >&2; exit 1; }
+		done
 		for d in /lib/firmware/qcom /lib/firmware/qcom/sm8750 "$adsp_dst"; do
 			printf 'dir %s 0755 0 0\n' "$d"
 		done
 		for seg in "$adsp_src"/adsp.mdt "$adsp_src"/adsp.b* \
-			"$adsp_src"/adsp_dtb.mdt "$adsp_src"/adsp_dtb.b*; do
+			"$adsp_src"/adsp_dtb.mdt "$adsp_src"/adsp_dtb.b* \
+			"$adsp_src"/cdsp.mdt "$adsp_src"/cdsp.b* \
+			"$adsp_src"/cdsp_dtb.mdt "$adsp_src"/cdsp_dtb.b*; do
 			[[ -f $seg ]] || continue
 			printf 'file %s/%s %s 0644 0 0\n' "$adsp_dst" "$(basename -- "$seg")" "$seg"
 		done

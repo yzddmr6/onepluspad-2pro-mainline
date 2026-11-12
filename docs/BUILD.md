@@ -221,3 +221,14 @@ python3 tools/package-mesa.py --shared-package <piano-mesa.deb> \
 `install.py upgrade` 保存上一版精确用户态和启动组；
 `install.py rollback --product erhai` 先恢复包，再调用现有的
 `erhai-switch-install-ubuntu-images`。操作顺序见 [UPGRADE](UPGRADE.md)。
+
+## NPU 运行库和离线演示
+
+`python3 tools/build-npu.py --cache out/npu-cache --output out/npu-build --download`
+从固定源码构建 glibc FastRPC、llama.cpp 和 v79 DSP 计算库，并打包固定模型。
+复建时去掉 `--download` 可禁止联网。把生成的运行库、演示模型和本机型NPU固件包同时交给根镜像构建入口；用法见
+[运行库说明](../packaging/npu/README.md)。Hexagon SDK 仅用于构建，不随运行库分发。
+
+CDSP 固件和原厂 DSP 运行文件已随仓库提供，正常构建不需要原厂分区或安装时提取。
+来源和哈希见固件清单与 `firmware/npu/source.json`；未取得再分发许可，权利方要求时移除。
+根镜像同时收录 `qcom-npu-runtime`、`qcom-npu-demo-model` 和 `erhai-npu-firmware`。

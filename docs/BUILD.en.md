@@ -399,3 +399,17 @@ with the release attachments.
 `install.py upgrade` retains exact preceding userspace versions and the boot set.
 `install.py rollback --product erhai` restores packages before calling the existing
 `erhai-switch-install-ubuntu-images`. See [UPGRADE](UPGRADE.en.md) for the order.
+
+## NPU runtime and offline demonstration
+
+`python3 tools/build-npu.py --cache out/npu-cache --output out/npu-build --download`
+builds glibc FastRPC, llama.cpp and the v79 DSP computation library from pinned sources,
+and packages a pinned model. Omit `--download` to prohibit network access on a rebuild.
+Supply the runtime, demo model and device-specific NPU firmware package to the root-image builder.
+See the [runtime guide](../packaging/npu/README.md). Hexagon SDK is build-only.
+
+CDSP firmware and stock DSP runtime files are included in the repository. Normal builds
+need no stock partition or installation-time extraction. Origins and hashes are in the firmware
+locks and firmware/npu/source.json. No redistribution permission has been obtained; files
+will be removed upon rights-holder request. Include qcom-npu-runtime, qcom-npu-demo-model
+and erhai-npu-firmware together in the root image.
