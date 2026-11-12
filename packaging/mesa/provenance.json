@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/yzddmr6/xiaomipad-8pro-mainline",
-  "commit": "88df41c9514dd617dfb4b3164bd16f50afef5b4a",
+  "commit": "84829b0116251ed9f26f4b780a7878aabebde9f2",
   "authority": "Shared code, patches and recipes are imported without edits from commit; documentation_files are imported without edits from documentation_commit.",
   "files_sha256": {
     "LICENSE": "33d96d2967f46f71ad9c73587e2bd40b6d946f1c88fec30db7c95b94c8b9fe29",
@@ -16,14 +16,14 @@
     "mesa/snap/core24-sdk.json": "cc7b7fae3af447fbd3b55fb5f7718fbfff39318adda6c8c758487c21de4294a7",
     "mesa/snap/mesa-2404.json": "ff22005fd6f2dc98c34efd359e8c064b9f8831dabdcdabe6f4224a8cd3f9c927",
     "mesa/snap/provenance.json": "34c733ece2c6009ea7b825d129b0a723b4cd48e34021914d01bb00ba75ed2cd8",
-    "mesa/source.json": "20ce00bf028558394e71999daf33f06a34dbec8dd8d34019aa77954dfae9e79e",
+    "mesa/source.json": "e70fdc94b6f2eab5cb72a800fa964bfeb9a88e6b1314dbe50386206a18bbce24",
     "mesa/turnip-a8xx-runtime-unroll.patch": "87909ead37580758f277d171350d08551b03ca5e1439db91e9b7b8661a69ca96",
     "mesa/turnip-a8xx-word-reuse.patch": "3b51c78c0adeaedd441b53c91db9742754e6ca5d94ecd81e931d1812946a7475",
     "mesa/turnip-ssbo-wide-reads.patch": "db09cd21e029b2904ff9c4abd23877f03f6c75045a047b0ae24afd1ea6cf458e",
     "mesa/ubuntu/conffile-migration.sh": "bd144c69c307f53ea216dada3c15a92f357e4119c67206b90f04e065a574e4b9",
     "mesa/ubuntu/nir-test-algorithm.patch": "a795f792ba2a5a11e665fc829214ad4c0c1519eacbacd2897d0b216d8745804e",
-    "mesa/ubuntu/source.json": "cd7899c136624a9ed033626d7990c77686d24bd8f0d87593941ba47fc540ce43",
-    "packaging/mesa-snap/VERSION": "f0b5c2c2211c8d67ed15e75e656c7862d086e9245420892a7de62cd9ec582a06",
+    "mesa/ubuntu/source.json": "8a540090936f8e724e2f16fcf0ef93e0089a22234909921525f7b3da4d60c364",
+    "packaging/mesa-snap/VERSION": "06e9d52c1720fca412803e3b07c4b228ff113e303f4c7ab94665319d832bbfb7",
     "tools/build-host-mesa.py": "6e8a070da5894cdc16954d517f4313ccb95a8c063268c68e811b05240f4b6b78",
     "tools/build-mesa-root.py": "11ba6b83747f984f038fd52d697afde702865b45f6e8a9609ec279f9b88d5477",
     "tools/build-mesa.py": "d13f1541cfd30d4b03ba437fdacb008554bc765f7d231e0fd332d29e76e76ccd",
@@ -46,7 +46,8 @@
     "mesa/freedreno-a830v1.patch": "543a1fd4534c77e42ef1d2955d2853495ffa24ed22c4e36faaad8029a9296e49",
     "mesa/freedreno-syncobj-fd.patch": "838325a0963b3a24c8f0de57c96d05a2a4a89bb222fca5b58176604eb10847fd",
     "mesa/ir3-float-saturation.patch": "b6cb5c49d6c7598544ece0bae5eaeb2b16ed45a089c99c1c1aeb495963cc1b4b",
-    "mesa/ir3-relative-const-alias.patch": "9e49a4d98a4d61a324bea58633329f959f9e463720e50572af19e9b89da31e4f"
+    "mesa/ir3-relative-const-alias.patch": "9e49a4d98a4d61a324bea58633329f959f9e463720e50572af19e9b89da31e4f",
+    "mesa/ir3-float-helper-order.patch": "f5b5faa8b571e88d7faf634259cd131c79c2b360eba291ec0872b4a311f83e56"
   },
   "documentation_commit": "88df41c9514dd617dfb4b3164bd16f50afef5b4a",
   "documentation_files": [
