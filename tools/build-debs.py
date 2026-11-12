@@ -1037,13 +1037,17 @@ def source_date_epoch(kernel_out=None):
     dpkg-deb clamps every mtime newer than SOURCE_DATE_EPOCH to it, and the
     staged files are all newer, so the whole archive lands on one timestamp.
     Kernel sets use the kernel commit; component-only builds use this
-    integration repository. An exported tree can supply SOURCE_DATE_EPOCH.
+    release-counter commit, so documentation-only commits do not change the
+    bytes of an otherwise identical component. An exported tree can supply
+    SOURCE_DATE_EPOCH.
     """
     if 'SOURCE_DATE_EPOCH' in os.environ:
         return os.environ['SOURCE_DATE_EPOCH']
     git = Path(os.environ.get('KERNEL_SOURCE', WS / 'kernel/linux')) if kernel_out is not None else REPO
     if (git / '.git').exists():
-        result = subprocess.run(['git', '-C', str(git), 'show', '-s', '--format=%ct', 'HEAD'],
+        revision = ['show', '-s', '--format=%ct', 'HEAD'] if kernel_out is not None else [
+            'log', '-1', '--format=%ct', '--', 'packaging/VERSION']
+        result = subprocess.run(['git', '-C', str(git), *revision],
                                 capture_output=True, text=True)
         if result.returncode == 0 and result.stdout.strip().isdigit():
             return result.stdout.strip()
