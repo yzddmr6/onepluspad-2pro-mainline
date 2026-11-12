@@ -4,7 +4,7 @@
 `provenance.json`。共享文档按其中的独立文档提交同步；源码、补丁与配方仍按主提交锁定。
 修改在来源仓完成，不单独修改导入副本。
 
-宿主使用 `shared/tools/build-host-mesa.py` 构建 Ubuntu 同名包；六个驱动补丁保持原样，
+宿主使用 `shared/tools/build-host-mesa.py` 构建 Ubuntu 同名包；固定驱动补丁集保持原样，
 完整 arm64 驱动集和 GLVND 沿用发行版。`tools/package-mesa.py` 接收完整共用仓库及
 `piano-mesa` 过渡包，生成 `erhai-mesa` 过渡包和按整版组织的 APT 仓库。
 参数与装配方式见 [BUILD](../../docs/BUILD.md#宿主-mesa-发布批次)。

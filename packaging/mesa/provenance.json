@@ -6,7 +6,7 @@
     "LICENSE": "33d96d2967f46f71ad9c73587e2bd40b6d946f1c88fec30db7c95b94c8b9fe29",
     "LICENSES/oneplus-mesa-tools-GPL-2.0-only.txt": "8780e78a1a737e127f25a65f6d95269bffd36158dc261114de7859b490bfc5aa",
     "deps/sources.json": "99dab7a6c6c99ae6852ba6842fa0b40837040aea495acd28bd9ba710577cee80",
-    "mesa/README.md": "baf3a5e91eea69e828e33088e8c7becacac1c0a675555ea5e55cf4062fdce0f4",
+    "mesa/README.md": "ab7a96e14ab698e6e8ecc2bf986117c4c3846dfea1abdebdc7b73b05019a3a24",
     "mesa/check-device.c": "51ccc55da402df6623489c271de75778dd7fcd9f44b962b742691656e9c69ae3",
     "mesa/egl-smoke.c": "679373ef227bcce48197fbc6a78eeb3c5e32858dcdb55155bdbcd4a158f5babe",
     "mesa/freedreno-explicit-sync.patch": "72c3f2696ba5d18b5d56139bbfa0f7c9ddeb9567e6d4f56a4461caa84c929c6d",
@@ -49,7 +49,7 @@
     "mesa/ir3-relative-const-alias.patch": "9e49a4d98a4d61a324bea58633329f959f9e463720e50572af19e9b89da31e4f",
     "mesa/ir3-float-helper-order.patch": "f5b5faa8b571e88d7faf634259cd131c79c2b360eba291ec0872b4a311f83e56"
   },
-  "documentation_commit": "88df41c9514dd617dfb4b3164bd16f50afef5b4a",
+  "documentation_commit": "bf0c0e2edd9bea9491527b082e927401e733c95c",
   "documentation_files": [
     "mesa/README.md"
   ]

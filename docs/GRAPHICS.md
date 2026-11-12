@@ -1,6 +1,6 @@
 # 共用 Mesa 图形驱动 / Shared Mesa graphics
 
-源码锁和六个驱动补丁由[小米集成仓](https://github.com/yzddmr6/xiaomipad-8pro-mainline)维护。
+源码锁和固定驱动补丁集由[小米集成仓](https://github.com/yzddmr6/xiaomipad-8pro-mainline)维护。
 `packaging/mesa/shared/` 原样导入，提交与文件摘要见
 [provenance.json](../packaging/mesa/provenance.json)。修改先进入来源仓，再更新导入。
 
@@ -13,7 +13,7 @@
 Snap provider 继续使用独立的 gpu-2404 配方与 SDK，来源同样由锁文件固定。
 宿主 deb 升级不更新 Snap provider，也不替代 Flatpak 或 Android 的独立运行时。
 
-The Xiaomi repository maintains the source lock and six driver patches. The
+The Xiaomi repository maintains the source lock and the pinned driver patch set. The
 unmodified import is recorded in `provenance.json`; update it after the source.
 Host packages use Canonical's resolute backport packaging, Ubuntu's complete
 ARM64 driver selection and GLVND in standard multiarch paths. libdrm archives
