@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 /kernel/*
 !/kernel/source.json
+!/kernel/rust-toolchain.json
