@@ -2,9 +2,9 @@
   "kernel": {
     "repository_layout": "Separate Git checkout at kernel/linux under ERHAI_WORKSPACE (the integration checkout by default)",
     "upstream": "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git",
-    "baseline_tag": "v7.2.15",
-    "branch": "erhai/v0.8-features",
-    "commit": "9e815bd9d56a133646cdf5e1e039ec65e8bc478f",
+    "baseline_tag": "v7.4-rc2",
+    "branch": "sm8750/k74-product",
+    "commit": "354650b9da9e34233b25492cb082d047c9c999a2",
     "board_dts": "arch/arm64/boot/dts/qcom/sm8750-erhai.dts",
     "toolchain": "aarch64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1)",
     "repository": "https://github.com/yzddmr6/linux-sm8750-erhai",

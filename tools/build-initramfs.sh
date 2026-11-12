@@ -13,7 +13,7 @@ else
 fi
 busybox=${BUSYBOX:-"$ws/cache/busybox-arm64"}
 out=${OUT_DIR:-"$ws/out/initramfs-dev"}
-gen_init_cpio=${GEN_INIT_CPIO:-"$ws/out/kernel-firstboot/usr/gen_init_cpio"}
+gen_init_cpio=${GEN_INIT_CPIO:-"$ws/out/kernel/scripts/gen_init_cpio"}
 expected=52151e7f322f926b64049cdaa1410dc3ea6485525e0624b05813791c219ae933
 [[ $(sha256sum "$busybox" | cut -d' ' -f1) == "$expected" ]] || {
 	echo 'Expected the pinned Ubuntu ARM64 static BusyBox; see README.en.md (inputs).' >&2

@@ -65,8 +65,10 @@ if command -v ccache >/dev/null; then
 fi
 args=(-C "$src" O="$out" "CC=$cc")
 recipe=$(cat "$src/arch/arm64/configs/defconfig" "${fragments[@]}" | sha256sum | cut -d' ' -f1)
+rust_identity=$(python3 "$repo/tools/kernel-rust-identity.py")
+printf '%s\n' "$rust_identity" >"$out/rust-toolchain.json"
 toolchain=$("${cross}gcc" --version | head -1)
-identity=$(printf '%s\n' "$src" "$base" "$toolchain" "$cross" "$KCFLAGS" "$KAFLAGS" | sha256sum | cut -d' ' -f1)
+identity=$(printf '%s\n' "$src" "$base" "$toolchain" "$cross" "$KCFLAGS" "$KAFLAGS" "$rust_identity" | sha256sum | cut -d' ' -f1)
 if [[ -f $out/.build-input && $(cat "$out/.build-input") != "$identity" ]]; then
 	echo 'Toolchain/source location changed; select a new OUT_DIR.' >&2
 	exit 1
@@ -96,7 +98,7 @@ printf 'Building %s with %s (%s jobs)\n' "$head" "$toolchain" "$jobs"
 # with a different build that happens to use the same local version string.
 compiler_sha=$(sha256sum "$(command -v "${cross}gcc")" | cut -d' ' -f1)
 config_sha=$(sha256sum "$out/.config" | cut -d' ' -f1)
-abi=$(printf '%s\n' "$head" "$config_sha" "$toolchain" "$compiler_sha" | sha256sum | cut -d' ' -f1)
+abi=$(printf '%s\n' "$head" "$config_sha" "$toolchain" "$compiler_sha" "$rust_identity" | sha256sum | cut -d' ' -f1)
 localversion="-g${head:0:12}-a${abi:0:8}"
 args+=("LOCALVERSION=$localversion")
 make "${args[@]}" -j"$jobs" Image qcom/sm8750-erhai.dtb modules 2>&1 | tee "$out/build.log"
@@ -119,6 +121,7 @@ assert modules, 'configured module build produced no modules'
 result = {'status': 'OFFLINE_BUILD_ONLY', 'kernel_commit': head, 'compiler': compiler,
           'compiler_sha256': compiler_sha, 'localversion': localversion,
           'kernel_release': (out / 'include/config/kernel.release').read_text().strip(),
+          'rust_toolchain': json.loads((out / 'rust-toolchain.json').read_text()),
           'note': 'Mutable development output; package with build-mainline-boot.py before boot.',
           'files': {f: sha(out / f) for f in files},
           'modules': modules,
