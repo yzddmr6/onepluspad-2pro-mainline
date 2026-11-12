@@ -115,6 +115,7 @@ if [ -s "$root/etc/machine-id" ] && [ "$(cat "$root/etc/machine-id")" != uniniti
 fi
 
 # Runtime mounts must not become part of the filesystem or its manifests.
+test "$(stat -c '%u:%g:%a' "$root")" = 0:0:755
 umount -R "$root/proc"
 proc_mounted=0
 
