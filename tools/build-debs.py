@@ -477,11 +477,11 @@ def stage_display_power(root):
          str(PACKAGING / 'erhai-display-power/gsd-backlight-compat.c')])
 
 
-def stage_firmware(root, manifest):
+def stage_firmware(root, manifest, firmware_tree=None):
     """Copy the closure out of the tree, verifying every file on the way in."""
     base = root / 'usr/lib/firmware'
     for spec in manifest['files']:
-        source = FIRMWARE / spec['install']
+        source = (firmware_tree or FIRMWARE) / spec['install']
         if not source.is_file():
             die(f'firmware {spec["install"]} is not in '
                 f'{FIRMWARE.relative_to(REPO)}; --refresh-from-rom '
@@ -1063,6 +1063,7 @@ def pack(root, package, version, architecture, out_dir, epoch):
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument('--firmware-tree', type=Path, help='Owner-supplied firmware tree; all bytes are verified against the manifest')
     parser.add_argument('--release-version',
                         help='Project release (without v), required when building device support')
     parser.add_argument('--output', type=Path, default=WS / 'out/erhai-debs')
@@ -1150,7 +1151,7 @@ def main():
             elif package in ('erhai-debug', 'erhai-firefox', 'erhai-snap-graphics', 'erhai-apps'):
                 copy_tree(PACKAGING / package / 'tree', root)
             elif package == 'erhai-firmware':
-                stage_firmware(root, manifest)
+                stage_firmware(root, manifest, args.firmware_tree)
             elif package == 'erhai-settings':
                 stage_settings(root)
             elif package == 'erhai-audio':

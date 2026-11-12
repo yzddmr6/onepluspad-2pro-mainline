@@ -69,7 +69,7 @@ def main():
         path = path.resolve()
         info = metadata(path)
         name = info['Package']
-        if not (name.startswith('erhai-') or name in shared_gnome or name in ('piano-mesa', 'piano-snap-graphics', 'resources', 'gunyahvm',
+        if not (name.startswith('erhai-') or name in shared_gnome or name in ('qcom-npu-runtime', 'qcom-npu-demo-model', 'piano-mesa', 'piano-snap-graphics', 'resources', 'gunyahvm',
                                                      'gunyahvm-runtime', 'gunyahvm-guest-kernel', 'gunyahvm-guest-mesa')) or info['Architecture'] not in ('arm64', 'all'):
             parser.error(f'{path}: expected an arm64/all device or shared application package')
         if name in selected:
@@ -97,6 +97,10 @@ def main():
         missing = gunyahvm_pins.keys() - selected.keys()
         if missing:
             parser.error('The product image requires all GunyahVM packages: ' + ', '.join(sorted(missing)))
+    if {'erhai-apps', 'erhai-device'} & selected.keys():
+        missing = {'qcom-npu-runtime', 'qcom-npu-demo-model', 'erhai-npu-firmware'} - selected.keys()
+        if missing:
+            parser.error('The product image requires the NPU runtime and offline demo model: ' + ', '.join(sorted(missing)))
     dependencies = {}
     for path in args.dependency_deb:
         path = path.resolve()

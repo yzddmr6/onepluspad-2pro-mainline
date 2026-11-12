@@ -9,7 +9,7 @@ Description: OnePlus Pad 2 Pro (erhai) firmware closure
  The firmware this unit's mainline drivers ask for by name and the
  distribution does not ship under that name: the NT36536 touch controller's
  application firmware, the Adreno 830 SQE/GMU/AQE microcode and its zap
- shader, the WCN7860 Wi-Fi and Bluetooth images, the ADSP PIL set, and
+ shader, the WCN7860 Wi-Fi and Bluetooth images, the ADSP/CDSP PIL sets, and
  the board's AW88261 amplifier profiles prepared for audio bring-up.
  .
  This kernel is built without CONFIG_FW_LOADER_COMPRESS, so the zstd-suffixed
