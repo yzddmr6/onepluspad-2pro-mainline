@@ -131,6 +131,12 @@ def main():
             info = metadata(path)
             dependencies[name] = {'file': path.name, 'sha256': row['sha256'], **info}
             args.dependency_deb.append(path)
+    if {'erhai-apps', 'erhai-device'} & selected.keys():
+        for pin in gunyahvm['dependencies']:
+            info = dependencies.get(pin['package'])
+            if not info or (info['Version'], info['Architecture'], info['sha256']) != (
+                    pin['version'], pin['architecture'], pin['sha256']):
+                parser.error(f"Missing or mismatched GunyahVM dependency: {pin['package']}")
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=False)
     (out / 'repo').mkdir()
