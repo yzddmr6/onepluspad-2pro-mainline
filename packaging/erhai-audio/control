@@ -5,7 +5,7 @@ Maintainer: @MAINTAINER@
 Installed-Size: @INSTALLED_SIZE@
 Section: sound
 Priority: optional
-Depends: alsa-ucm-conf (>= 1.2.4), alsa-utils, python3
+Depends: wireplumber (>= 0.5.13-1ubuntu1.1), alsa-ucm-conf (>= 1.2.4), alsa-utils, python3
 Breaks: erhai-kernel (<< 0.3.0~)
 Description: OnePlus Pad 2 Pro (erhai) audio topology and configuration
  Device-specific AudioReach topology built from pinned upstream sources.
