@@ -154,7 +154,7 @@ Features under development are not included in the supported feature set.
 | Hardware video codecs | Qualcomm Iris | ✅ | Hardware decoding of H.264, H.265 and VP9 (the default player through GStreamer, Firefox through VA-API) and hardware encoding of H.264 and H.265. |
 | Front and rear cameras | SC820CS / SC1300CS | 🟡 | The default Camera app (Snapshot) supports preview and photos with both cameras. Automatic white balance uses a simple grey-world algorithm, so scenes dominated by one colour can look tinted. Lens-shading correction is absent, leaving darker corners. Focus is fixed at a distance, making close objects soft, and dim scenes are noisy. |
 | Automatic rotation | SSC / iio-sensor-proxy | ✅ | With the keyboard detached, the screen follows the orientation in all four directions, each the right way up. With the keyboard attached it stays fixed, as on a laptop. |
-| Automatic brightness | SSC ambient light / GNOME | ✅ | The ambient-light sensor is integrated with GNOME. Enabling automatic brightness adjusts the backlight to ambient light; idle dimming and blanking follow Ubuntu defaults. |
+| Automatic brightness | SSC ambient light / GNOME | ✅ | The ambient-light sensor is integrated with GNOME. Enable Automatic Brightness in Settings → Power to adjust the backlight to ambient light; idle dimming and blanking follow Ubuntu defaults. |
 | Compass and gyroscope | SSC / iio-sensor-proxy | ✅ | Heading and angular velocity are available over D-Bus and keep updating after suspend. |
 | Proximity | SSC | ❌ | The DSP does not publish the proximity sensor on this unit, and `libssc` has no SAR implementation. |
 

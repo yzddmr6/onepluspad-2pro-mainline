@@ -5,8 +5,6 @@
 
 ## v0.8.1 → v0.9.0
 
-⟦DRAFT⟧
-
 Install the complete `erhai-0.9.0` package batch together with its matching
 boot images. Keep the supplied `erhai-0.8.1` batch for complete rollback.
 The kernel, standard Mesa packages and Snap graphics provider change together;
