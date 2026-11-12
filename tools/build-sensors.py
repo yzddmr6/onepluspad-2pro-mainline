@@ -117,6 +117,7 @@ PKG_CONFIG_PATH=/@PREFIX@/lib/pkgconfig setup /build/isp /build/tree/@ISP_DIR@ \
 	-Dssc-support=enabled -Dudevrulesdir=/@PREFIX@/unused/udev \
 	-Dsystemdsystemunitdir=/@PREFIX@/unused/systemd
 meson compile -C /build/isp -j @JOBS@
+meson test -C /build/isp test-shutdown --print-errorlogs
 meson install -C /build/isp --no-rebuild --destdir "$stage"
 '''
 
