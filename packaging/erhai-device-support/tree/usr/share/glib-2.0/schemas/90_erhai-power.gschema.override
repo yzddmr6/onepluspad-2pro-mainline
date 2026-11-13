@@ -8,4 +8,4 @@ power-button-action='lock'
 lock-enabled=true
 
 [org.gnome.shell]
-enabled-extensions=['piano-osk-guard@io.github.piano']
+enabled-extensions=['piano-osk-guard@io.github.piano', 'erhai-torch@erhai.local']

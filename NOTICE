@@ -149,3 +149,7 @@ They are Qualcomm/vendor property; no redistribution permission has been obtaine
 and they will be removed upon request from the rights holder.
 
 Mesa ir3 helper ordering prerequisite: Job Noorman, upstream 87afb02bc7e54e6b47da4339a7b805e77751c9b7, MIT; imported without modification in packaging/mesa/shared/mesa/ir3-float-helper-order.patch.
+
+Erhai Torch is adapted from TheMojoMan/oneplus-erhai-ubuntu,
+main/oneplus-erhai-torch at 96effff03041, by TheMojoMan. The source package
+does not specify a separate license for the extension.

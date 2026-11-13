@@ -25,15 +25,7 @@
 // led-max-microamp = 500000 in the DT, divided over the two channels of each
 // LED = 250 mA per channel, so the full 0..255 range is a safe torch range.
 //
-// PERMISSIONS
-// A sysfs attribute write is privileged, and TAG+="uaccess" does NOT help
-// here: uaccess adds a logind ACL to a DEVICE NODE and LED class devices have
-// none. The package's 71-erhai-torch.rules rule instead chgrp's
-// /sys/class/leds/white:flash-*/ to the erhai-torch group and makes it group
-// writable at add time, and DEBIAN/postinst puts the desktop users in that
-// group. So the shell writes the LED itself — no root helper, no polkit
-// prompt, no per-drag D-Bus round trip, and the slider stays responsive while
-// it is dragged.
+// Brightness writes go through logind, which checks foreground seat ownership.
 //
 // STATE
 // The LED is the single source of truth: the slider reads the current
@@ -63,7 +55,7 @@ import {Slider} from 'resource:///org/gnome/shell/ui/slider.js';
 const LEDS_DIR = '/sys/class/leds';
 
 // Node basename prefix of the rear flash LEDs (see the HARDWARE note above).
-const LED_GLOB = 'white:flash-';
+const LED_NAMES = ['white:flash-0', 'white:flash-1'];
 
 // The DT caps each LED at 500 mA over 2 channels; 255 is the driver's full
 // scale (LED_FULL) and maps onto that led-max-microamp. Never exceed
@@ -262,27 +254,20 @@ function readFile(path) {
     }
 }
 
-// Write an attribute the same way `echo N > attr` does, but without a shell.
-// sysfs attributes must be written as a single whole value and never
-// partially, so this uses replace_contents (open + write + close) rather than
-// an append/stream write. Failure is returned instead of thrown so callers
-// can report a missing udev rule or a missing group membership as the
-// actionable problem that it is.
-function writeFile(path, value) {
-    try {
-        Gio.File.new_for_path(path).replace_contents(
-            new TextEncoder().encode(value),
-            null, false, Gio.FileCreateFlags.NONE, null);
-        return null;
-    } catch (e) {
-        return e;
-    }
+function setBrightness(led, level, done) {
+    Gio.DBus.system.call('org.freedesktop.login1',
+        '/org/freedesktop/login1/session/auto', 'org.freedesktop.login1.Session',
+        'SetBrightness', new GLib.Variant('(ssu)', ['leds', led.name, level]),
+        null, Gio.DBusCallFlags.NONE, 2000, null, (bus, result) => {
+            try {
+                bus.call_finish(result);
+                done?.(null);
+            } catch (error) {
+                done?.(error);
+            }
+        });
 }
 
-// Enumerate the rear flash LEDs as they exist right now. Discovered at call
-// time on purpose: the attribute perms arrive with the udev rule, the LEDs
-// appear only once leds-qcom-flash has probed, and a suspend/resume cycle can
-// in principle re-register them.
 function findTorchLeds() {
     const found = [];
     let enumerator;
@@ -296,7 +281,7 @@ function findTorchLeds() {
     let info;
     while ((info = enumerator.next_file(null)) !== null) {
         const name = info.get_name();
-        if (!name.startsWith(LED_GLOB))
+        if (!LED_NAMES.includes(name))
             continue;
         found.push({
             name,
@@ -537,13 +522,19 @@ class TorchSlider extends QuickSlider {
             if (have === want)
                 continue;
 
-            const error = writeFile(led.brightnessPath, `${want}\n`);
-            if (error) {
-                this._pumpId = 0;
-                this._reportWriteError(error);
-                this._syncFromHardware();
-                return GLib.SOURCE_REMOVE;
-            }
+            if (this._writing)
+                return GLib.SOURCE_CONTINUE;
+            this._writing = true;
+            setBrightness(led, want, error => {
+                this._writing = false;
+                if (this._destroyed)
+                    return;
+                if (error) {
+                    this._target = null;
+                    Main.notifyError('Torch', error.message);
+                    this._syncFromHardware();
+                }
+            });
 
             if (++this._pumpTicks > PACE_MAX_TICKS) {
                 this._pumpId = 0;
@@ -566,17 +557,6 @@ class TorchSlider extends QuickSlider {
         this._pumpTicks = 0;
         this._target = null;
         return GLib.SOURCE_REMOVE;
-    }
-
-    _reportWriteError(error) {
-        // EACCES almost always means the udev rule has not run yet (the
-        // package was just installed) or the user is not in the erhai-torch
-        // group (the postinst adds it; it applies at the next login), so say
-        // that instead of the bare errno.
-        Main.notifyError('Torch',
-            error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.PERMISSION_DENIED)
-                ? 'Not allowed to drive the torch. Log out and back in so the erhai-torch group applies.'
-                : error.message);
     }
 
     // Reflect a known-good value in the UI without writing it back to sysfs.
@@ -634,17 +614,9 @@ class TorchSlider extends QuickSlider {
         }
 
         this._target = null;
-        for (const led of findTorchLeds()) {
-            // A zero write does not touch the driver's current budget (with
-            // enable == false it releases the allocation and returns early),
-            // so this is not the racy path that level writes hit, and two of
-            // them back-to-back measured reliable. Read back once regardless:
-            // it costs a read, and the failure mode is a torch left burning
-            // with no UI left to switch it off.
-            writeFile(led.brightnessPath, '0\n');
-            if ((readFile(led.brightnessPath) ?? '0') !== '0')
-                writeFile(led.brightnessPath, '0\n');
-        }
+        this._destroyed = true;
+        for (const led of findTorchLeds())
+            setBrightness(led, 0);
 
         if (this._pollId) {
             GLib.source_remove(this._pollId);
