@@ -65,16 +65,32 @@ configure)
 		systemctl enable --quiet $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT || true
 	fi
 
+	# The keyboard cover's Esc keymap ships as a hwdb entry, which lives in
+	# the compiled database rather than the rules udevd watches.
+	if command -v systemd-hwdb >/dev/null 2>&1; then
+		systemd-hwdb update >/dev/null 2>&1 || true
+	fi
 	# udevd watches the rule directories and reloads on its own, but an
 	# explicit reload is what makes that a guarantee rather than a timing
 	# assumption -- and this package's rule has to be in effect before the
 	# radio's next add event, not eventually.
 	if command -v udevadm >/dev/null 2>&1; then
-		udevadm control --reload-rules >/dev/null 2>&1 || true
+		udevadm control --reload >/dev/null 2>&1 || true
 		# Apply the display retention workaround to an already-bound MDSS.
 		# Replaying only this platform change leaves network devices alone.
 		udevadm trigger --action=change --subsystem-match=platform \
 			--sysname-match=ae00000.display-subsystem || true
+		# An already-paired cover keeps its old keymap and classification
+		# until its input devices are re-registered; replay remove+add so
+		# the new entry applies without a re-pair.
+		for uevent in /sys/bus/hid/devices/0005:22D9:3869.*/input/input*/event*/uevent; do
+			[ -e "$uevent" ] || continue
+			echo remove >"$uevent" 2>/dev/null || true
+		done
+		for uevent in /sys/bus/hid/devices/0005:22D9:3869.*/input/input*/event*/uevent; do
+			[ -e "$uevent" ] || continue
+			echo add >"$uevent" 2>/dev/null || true
+		done
 	fi
 
 	# Suspend used to blank this tablet until a long power-key press, so an

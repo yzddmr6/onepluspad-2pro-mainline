@@ -79,8 +79,13 @@ remove)
 			deb-systemd-helper mask "$unit" >/dev/null 2>&1 || true
 		done
 	fi
+	# The Esc keymap entry lives in the compiled hwdb database; drop it
+	# with the file before the next add event.
+	if command -v systemd-hwdb >/dev/null 2>&1; then
+		systemd-hwdb update >/dev/null 2>&1 || true
+	fi
 	if command -v udevadm >/dev/null 2>&1; then
-		udevadm control --reload-rules >/dev/null 2>&1 || true
+		udevadm control --reload >/dev/null 2>&1 || true
 	fi
 	;;
 purge)

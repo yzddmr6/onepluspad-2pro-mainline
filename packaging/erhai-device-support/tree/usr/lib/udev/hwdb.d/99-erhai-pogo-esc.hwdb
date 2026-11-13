@@ -1,0 +1,13 @@
+# The keyboard cover firmware sends Escape as consumer usage 0x0224
+# (AC Back) on both its pogo-serial and Bluetooth links.  The pogo
+# kernel driver already remaps it to KEY_ESC.  Over Bluetooth the key
+# lands on a separate consumer-control interface which also lacks
+# ID_INPUT_KEYBOARD, so the desktop would ignore its keys even after
+# the keymap is fixed.  This ARM64 host has no DMI modalias, so the
+# generated name key ends at the trailing colon.
+evdev:name:OnePlus Pad 2 Pro Keyboard Consumer Control:*
+ ID_INPUT_KEYBOARD=1
+ KEYBOARD_KEY_c0224=esc
+
+evdev:input:b0005v22D9p3869*
+ KEYBOARD_KEY_c0224=esc
