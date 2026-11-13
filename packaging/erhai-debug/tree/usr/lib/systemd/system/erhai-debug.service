@@ -11,7 +11,7 @@ Type=notify
 NotifyAccess=all
 RuntimeDirectory=erhai-debug
 RuntimeDirectoryMode=0700
-ExecStart=/usr/bin/systemd-inhibit --what=sleep --mode=block --who=erhai-debug "--why=USB developer connection is enabled" /usr/libexec/erhai-ncm serve
+ExecStart=/usr/bin/systemd-inhibit --what=sleep --mode=block --who=erhai-debug "--why=USB developer connection is enabled" /usr/libexec/erhai-ncm serve ${NOTIFY_SOCKET}
 ExecStop=/usr/libexec/erhai-ncm stop
 
 [Install]
