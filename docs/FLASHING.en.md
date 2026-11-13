@@ -251,7 +251,7 @@ the newly installed contents.
 
 ## Daily use and USB diagnostics
 
-The personalised RAM setup image authorizes the host key for that boot. For an installed development system, provision the host public key in `/etc/erhai/debug/authorized_keys` (root-owned directory mode 0700, file mode 0600) locally or during an existing trusted session **before upgrading or rebooting**. Install the optional `erhai-debug` package and enable the development boot profile. The SSH login is `root@192.168.77.2`; transfer files through SSH.
+The personalised RAM setup image authorizes the host key for that boot. For an installed development system, provision the host public key in `/root/.ssh/erhai/authorized_keys` (root-owned directory mode 0700, file mode 0600) locally or during an existing trusted session **before upgrading or rebooting**. Install the optional `erhai-debug` package and enable the development boot profile. The SSH login is `root@192.168.77.2`; transfer files through SSH.
 
 Installing regular device packages over such an installation, built without
 `--debug` into a new empty output directory or taken from a release's

@@ -7,7 +7,7 @@ PartOf=erhai-debug.service
 
 [Service]
 ExecCondition=/usr/libexec/erhai-ncm interface
-ExecCondition=/usr/bin/test -s /etc/erhai/debug/authorized_keys
-ExecStartPre=/usr/bin/install -d -m0700 /etc/erhai/debug
-ExecStartPre=/bin/sh -ec 'test -s /etc/erhai/debug/host_ed25519 || /usr/bin/dropbearkey -t ed25519 -f /etc/erhai/debug/host_ed25519'
-ExecStart=/usr/sbin/dropbear -F -E -s -j -k -G root -D /etc/erhai/debug -r /etc/erhai/debug/host_ed25519 -p 192.168.77.2:22
+ExecCondition=/usr/bin/test -s /root/.ssh/erhai/authorized_keys
+ExecStartPre=/usr/bin/install -d -m0700 /root/.ssh/erhai
+ExecStartPre=/bin/sh -ec 'test -s /root/.ssh/erhai/host_ed25519 || /usr/bin/dropbearkey -t ed25519 -f /root/.ssh/erhai/host_ed25519'
+ExecStart=/usr/sbin/dropbear -F -E -s -j -k -G root -D /root/.ssh/erhai -r /root/.ssh/erhai/host_ed25519 -p 192.168.77.2:22

@@ -95,9 +95,9 @@ switch_to_newroot() {
 	# downloaded root or the persistent kernel command line.
 	if [ -n "$ROOTFS_URL" ] && [ "$DEBUG_CHANNEL" = 1 ]; then
 		case "${SETUP_KEY:-}" in ''|*[!A-Za-z0-9+/=]*) echo SETUP_KEY_REQUIRED >> "$1"; return 1 ;; esac
-		mkdir -p /newroot/etc/erhai/debug || return 1
-		chmod 0700 /newroot/etc/erhai/debug || return 1
-		(umask 077; printf 'ssh-ed25519 %s\n' "$SETUP_KEY" > /newroot/etc/erhai/debug/authorized_keys) || return 1
+		(umask 077; mkdir -p /newroot/root/.ssh/erhai) || return 1
+		chmod 0700 /newroot/root/.ssh/erhai || return 1
+		(umask 077; printf 'ssh-ed25519 %s\n' "$SETUP_KEY" > /newroot/root/.ssh/erhai/authorized_keys) || return 1
 	fi
 
 	# Never manufacture persistent service files here. An explicit debug

@@ -8,4 +8,4 @@ Priority: optional
 Depends: dropbear-bin, erhai-device-support (>= 0.1.0~), busybox-static (>= 1:1.36.1), iproute2, bash, systemd, udev, init-system-helpers
 Description: Optional USB NCM diagnostics for the OnePlus Pad 2 Pro
  Provides USB networking and a key-only SSH server on an explicitly enabled
- development boot. Provision the host public key in /etc/erhai/debug/authorized_keys.
+ development boot. Provision the host public key in /root/.ssh/erhai/authorized_keys.

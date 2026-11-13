@@ -209,7 +209,7 @@ python3 tools/install.py --serial "$device_serial" --work "$install_work" --phas
 
 ## 日常使用与 USB 调试
 
-个性化的 RAM 准备镜像只为本次启动授权主机公钥。已安装的开发系统须在升级或重启前通过本机或现有可信会话，把自己的主机公钥存入 `/etc/erhai/debug/authorized_keys`（root 所有，目录权限 0700，文件 0600）。安装可选的 `erhai-debug` 包并启用开发启动配置后，通过 SSH 登录 `root@192.168.77.2`，文件也通过 SSH 传输。
+个性化的 RAM 准备镜像只为本次启动授权主机公钥。已安装的开发系统须在升级或重启前通过本机或现有可信会话，把自己的主机公钥存入 `/root/.ssh/erhai/authorized_keys`（root 所有，目录权限 0700，文件 0600）。安装可选的 `erhai-debug` 包并启用开发启动配置后，通过 SSH 登录 `root@192.168.77.2`，文件也通过 SSH 传输。
 
 在这样的安装上换装普通设备包（不带 `--debug` 构建到新的空输出目录，或取自 Release 的
 `erhai-device-packages-版本.tar`，安装方法见[升级已有安装](#升级已有安装)）即替换调试启动镜像，
