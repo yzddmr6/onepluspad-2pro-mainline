@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Rear Focus Camera
+Name[zh_CN]=后摄对焦相机
+Exec=/usr/libexec/erhai-focus-camera
+Icon=camera-photo-symbolic
+Categories=Graphics;Photography;

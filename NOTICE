@@ -157,3 +157,7 @@ does not specify a separate license for the extension.
 OnePlus Pencil docking and BLE connection flow adapted from TheMojoMan,
 oneplus-erhai-ubuntu at 0d66f9765ca7, main/oneplus-erhai-pen. That package
 does not declare a separate license. BlueZ handles the GATT Battery Service.
+
+Rear Focus Camera uses the Tenengrad metric and coarse/fine lens sweep from
+TheMojoMan's ErhaiCam, main/oneplus-erhai-erhaicam/src/erhai-cam.cpp at
+02d3561952de (GPL-2.0-only), based on CFM880/nabu-camera's nabu-autofocus.

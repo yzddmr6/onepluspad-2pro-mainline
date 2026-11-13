@@ -1,0 +1,225 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: GPL-2.0-only
+# Focus sweep and Tenengrad metric ported from TheMojoMan's ErhaiCam
+# (oneplus-erhai-ubuntu 02d3561952de), based on CFM880/nabu-camera.
+from array import array
+from datetime import datetime
+import fcntl
+import os
+from pathlib import Path
+import time
+
+import gi
+import numpy as np
+gi.require_version('Gst', '1.0')
+gi.require_version('Gtk', '4.0')
+gi.require_version('GstVideo', '1.0')
+from gi.repository import Gio, GLib, Gst, GstVideo, Gtk
+
+REAR = '/base/soc@0/cci@ac7b000/i2c-bus@1/camera@36'
+FOCUS_ABSOLUTE = 0x009a090a
+GET_CTRL, SET_CTRL = 0xc008561b, 0xc008561c
+
+
+def lens_control(fd, request, position=0):
+    control = array('i', [FOCUS_ABSOLUTE, position])
+    fcntl.ioctl(fd, request, control, True)
+    return control[1]
+
+
+def sharpness(image, point):
+    height, width = image.shape
+    if point is None:
+        roi = image[height // 5:height - height // 5, width // 5:width - width // 5]
+    else:
+        w, h = width * 3 // 10, height * 3 // 10
+        x = min(max(round(point[0] * width) - w // 2, 0), width - w)
+        y = min(max(round(point[1] * height) - h // 2, 0), height - h)
+        roi = image[y:y + h, x:x + w]
+    f = roi.astype(np.float32) / 255
+    gx = f[:-2, 2:] - f[:-2, :-2] + 2 * (f[1:-1, 2:] - f[1:-1, :-2]) + f[2:, 2:] - f[2:, :-2]
+    gy = f[2:, :-2] - f[:-2, :-2] + 2 * (f[2:, 1:-1] - f[:-2, 1:-1]) + f[2:, 2:] - f[:-2, 2:]
+    return float(np.mean(gx * gx + gy * gy))
+
+
+class Camera(Gtk.Application):
+    def __init__(self):
+        super().__init__(application_id='io.github.erhai.FocusCamera')
+        self.window = self.pipe = self.fd = self.capture = None
+        self.positions = []
+        self.timer = 0
+
+    def do_activate(self):
+        if self.window:
+            self.window.present()
+            return
+        self.window = Gtk.ApplicationWindow(application=self, title='后摄对焦相机')
+        self.window.set_default_size(800, 600)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        self.window.set_child(box)
+        self.picture = Gtk.Picture(vexpand=True, content_fit=Gtk.ContentFit.CONTAIN)
+        box.append(self.picture)
+        touch = Gtk.GestureClick.new()
+        touch.connect('released', self.tap)
+        self.picture.add_controller(touch)
+        self.status = Gtk.Label(label='正在打开后摄')
+        box.append(self.status)
+        self.shutter = Gtk.Button(label='拍照', sensitive=False)
+        self.shutter.connect('clicked', self.take)
+        box.append(self.shutter)
+        self.window.connect('close-request', self.close)
+        self.window.present()
+        try:
+            self.pipe = Gst.parse_launch(
+                f'libcamerasrc camera-name="{REAR}" ! video/x-raw,width=1280,height=960 ! '
+                'videoconvert ! tee name=t t. ! queue leaky=downstream max-size-buffers=1 ! '
+                'gtk4paintablesink name=preview t. ! queue leaky=downstream max-size-buffers=1 ! '
+                'videoscale ! videoconvert ! video/x-raw,format=GRAY8,width=320,height=240 ! '
+                'appsink name=gray max-buffers=1 drop=true sync=false t. ! queue leaky=downstream '
+                'max-size-buffers=1 ! valve name=gate drop=true ! videoconvert ! jpegenc ! '
+                'appsink name=photo async=false sync=false max-buffers=1 drop=true')
+            self.picture.set_paintable(self.pipe.get_by_name('preview').get_property('paintable'))
+            bus = self.pipe.get_bus()
+            bus.add_signal_watch()
+            bus.connect('message::error', self.error)
+            self.pipe.set_state(Gst.State.PLAYING)
+            self.gray = self.pipe.get_by_name('gray')
+            self.gate = self.pipe.get_by_name('gate')
+            self.photo = self.pipe.get_by_name('photo')
+            self.first_frame = True
+            self.timer = GLib.timeout_add(35, self.frame)
+        except GLib.Error as error:
+            self.status.set_text(error.message)
+
+    def error(self, bus, msg):
+        self.stop()
+        self.status.set_text(msg.parse_error()[0].message)
+
+    def take(self, button):
+        self.capture = time.monotonic()
+        self.shutter.set_sensitive(False)
+        self.gate.set_property('drop', False)
+
+    def save_photo(self):
+        sample = self.photo.emit('try-pull-sample', 0)
+        if not sample and time.monotonic() - self.capture < 4:
+            return
+        self.gate.set_property('drop', True)
+        self.capture = None
+        self.shutter.set_sensitive(True)
+        if not sample:
+            self.status.set_text('未收到照片')
+            return
+        buf = sample.get_buffer()
+        try:
+            folder = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES)
+            folder = Path(folder) if folder else Path.home() / 'Pictures'
+            folder.mkdir(parents=True, exist_ok=True)
+            path = folder / datetime.now().strftime('Erhai-%Y%m%d-%H%M%S-%f.jpg')
+            with path.open('xb') as output:
+                output.write(buf.extract_dup(0, buf.get_size()))
+            self.status.set_text(f'已保存 {path.name}')
+        except OSError as error:
+            self.status.set_text(str(error))
+
+    def tap(self, gesture, count, x, y):
+        w, h = self.picture.get_width(), self.picture.get_height()
+        scale = min(w / 320, h / 240)
+        if scale <= 0:
+            return
+        u = (x - (w - 320 * scale) / 2) / (320 * scale)
+        v = (y - (h - 240 * scale) / 2) / (240 * scale)
+        if 0 <= u <= 1 and 0 <= v <= 1:
+            self.sweep((u, v))
+
+    def sweep(self, point):
+        if self.positions:
+            return
+        try:
+            if self.fd is None:
+                node = next(p.parent.name for p in Path('/sys/class/video4linux').glob('v4l-subdev*/name')
+                            if p.read_text().strip() == 'cn3927 focus')
+                self.fd = os.open('/dev/' + node, os.O_RDWR | os.O_CLOEXEC)
+            self.previous = lens_control(self.fd, GET_CTRL)
+            self.point = point
+            self.fine = False
+            self.start_positions([*range(0, 1023, 128), 1023])
+            self.status.set_text('正在对焦')
+        except (StopIteration, OSError) as error:
+            self.positions = []
+            self.status.set_text(f'对焦马达不可用 {error}')
+
+    def start_positions(self, positions):
+        self.positions = positions
+        self.scores = []
+        self.move()
+
+    def move(self):
+        lens_control(self.fd, SET_CTRL, self.positions[0])
+        self.settle = True
+
+    def frame(self):
+        if self.capture is not None:
+            self.save_photo()
+        sample = self.gray.emit('try-pull-sample', 0)
+        if not sample:
+            return True
+        if self.first_frame:
+            self.first_frame = False
+            self.shutter.set_sensitive(True)
+            self.sweep(None)
+            return True
+        if not self.positions:
+            return True
+        if self.settle:
+            self.settle = False
+            return True
+        buf = sample.get_buffer()
+        info = GstVideo.VideoInfo.new_from_caps(sample.get_caps())
+        pixels = np.ndarray((info.height, info.width), dtype=np.uint8,
+                            buffer=buf.extract_dup(0, buf.get_size()),
+                            offset=info.offset[0], strides=(info.stride[0], 1))
+        self.scores.append((sharpness(pixels, self.point), self.positions.pop(0)))
+        try:
+            if self.positions:
+                self.move()
+                return True
+            high, best = max(self.scores)
+            low = min(self.scores)[0]
+            if not self.fine and (high - low < 5e-5 or high < low * 1.15):
+                lens_control(self.fd, SET_CTRL, self.previous)
+                self.status.set_text('画面细节不足，已恢复焦点')
+            elif not self.fine:
+                self.fine = True
+                self.start_positions(sorted({min(1023, max(0, best + n)) for n in (-64, 0, 64)}))
+            else:
+                lens_control(self.fd, SET_CTRL, best)
+                self.status.set_text('已对焦，可点按画面重新对焦')
+        except OSError as error:
+            self.positions = []
+            self.status.set_text(f'对焦失败 {error}')
+        return True
+
+    def stop(self):
+        if self.timer:
+            GLib.source_remove(self.timer)
+            self.timer = 0
+        if self.pipe:
+            self.pipe.set_state(Gst.State.NULL)
+            self.pipe = None
+        if self.fd is not None:
+            os.close(self.fd)
+            self.fd = None
+        self.shutter.set_sensitive(False)
+        self.positions = []
+        self.capture = None
+
+    def close(self, window):
+        self.stop()
+        self.window = None
+        return False
+
+
+if __name__ == '__main__':
+    Gst.init(None)
+    Camera().run()
