@@ -76,6 +76,10 @@ class Pen:
         self.discovery = ''
 
     def cancel(self):
+        if getattr(self, 'pairing', '') and self.owner:
+            self.bus.call(self.owner, self.pairing, DEVICE, 'CancelPairing', None,
+                          None, Gio.DBusCallFlags.NONE, 5000, None, None)
+        self.pairing = ''
         if self.pending:
             self.pending.cancel()
             self.pending = None
@@ -93,6 +97,7 @@ class Pen:
     def action(self, path, iface, method, args=None):
         pending = Gio.Cancellable()
         self.pending = pending
+        self.pairing = path if method == 'Pair' else ''
 
         def completed(bus, result):
             try:
@@ -103,6 +108,7 @@ class Pen:
                     self.cancel()
                 return
             if self.pending == pending:
+                self.pairing = ''
                 self.pending = None
                 self.queue()
 
@@ -130,6 +136,7 @@ class Pen:
         adapter = next((p for p, obj in objects.items()
                         if obj.get(ADAPTER, {}).get('Powered')), None)
         if not adapter:
+            self.cancel()
             return False
         if not self.deadline:
             self.deadline = GLib.timeout_add_seconds(35, self.expired)
