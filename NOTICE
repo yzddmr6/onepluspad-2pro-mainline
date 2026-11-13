@@ -153,3 +153,7 @@ Mesa ir3 helper ordering prerequisite: Job Noorman, upstream 87afb02bc7e54e6b47d
 Erhai Torch is adapted from TheMojoMan/oneplus-erhai-ubuntu,
 main/oneplus-erhai-torch at 96effff03041, by TheMojoMan. The source package
 does not specify a separate license for the extension.
+
+OnePlus Pencil docking and BLE connection flow adapted from TheMojoMan,
+oneplus-erhai-ubuntu at 0d66f9765ca7, main/oneplus-erhai-pen. That package
+does not declare a separate license. BlueZ handles the GATT Battery Service.

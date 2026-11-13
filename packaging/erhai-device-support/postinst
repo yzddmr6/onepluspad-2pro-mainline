@@ -3,7 +3,7 @@
 set -e
 
 SLEEP_TARGETS='sleep.target suspend.target hibernate.target hybrid-sleep.target'
-BT_UNITS='erhai-bt-address-generate.service erhai-bt-address.service'
+BT_UNITS='erhai-bt-address-generate.service erhai-bt-address.service erhai-pen.service'
 WIFI_UNITS='erhai-wifi-address-generate.service'
 CHASSIS_UNIT=erhai-chassis.service
 IDENTITY_UNIT=erhai-physical-platform.service

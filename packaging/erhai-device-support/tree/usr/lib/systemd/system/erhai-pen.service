@@ -1,0 +1,13 @@
+[Unit]
+Description=Connect the docked OnePlus Pencil over Bluetooth
+After=bluetooth.service
+Wants=bluetooth.service
+
+[Service]
+ExecStart=/usr/libexec/erhai-pen-connect
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

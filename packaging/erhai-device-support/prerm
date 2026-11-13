@@ -6,7 +6,7 @@ remove | deconfigure)
 	if [ -d /run/systemd/system ]; then
 		systemctl stop 'erhai-power-key@*.service' || true
 		# Stopping it allows touch input again.
-		systemctl stop erhai-cover.service || true
+		systemctl stop erhai-cover.service erhai-pen.service || true
 	fi
 	;;
 esac

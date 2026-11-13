@@ -1,0 +1,159 @@
+#!/usr/bin/python3
+"""Connect the pen identified by the charging coil. BlueZ owns HID and BAS."""
+from pathlib import Path
+import re
+
+from gi.repository import Gio, GLib
+import pyudev
+
+BLUEZ = 'org.bluez'
+DEVICE = BLUEZ + '.Device1'
+ADAPTER = BLUEZ + '.Adapter1'
+PROPS = 'org.freedesktop.DBus.Properties'
+DRIVER = Path('/sys/bus/i2c/drivers/cps8601-pen-charger')
+
+
+def docked():
+    for path in DRIVER.glob('*/pen_address'):
+        try:
+            raw = path.read_text().strip()
+        except OSError:
+            continue
+        if re.fullmatch('[0-9A-F]{12}', raw) and int(raw, 16):
+            return ':'.join(raw[i:i + 2] for i in range(0, 12, 2))
+    return ''
+
+
+class Pen:
+    def __init__(self, bus):
+        self.bus = bus
+        self.address = self.discovery = ''
+        self.pending = None
+        self.deadline = 0
+        self.refresh_id = 0
+        self.exhausted = False
+        self.owner = ''
+        self.context = pyudev.Context()
+        self.monitor = pyudev.Monitor.from_netlink(self.context)
+        self.monitor.filter_by('i2c')
+        self.monitor.start()
+        GLib.unix_fd_add_full(GLib.PRIORITY_DEFAULT, self.monitor.fileno(),
+                              GLib.IOCondition.IN, self.coil_event)
+        for iface, member in [('org.freedesktop.DBus.ObjectManager', 'InterfacesAdded'),
+                              (PROPS, 'PropertiesChanged')]:
+            bus.signal_subscribe(BLUEZ, iface, member, None, None,
+                                 Gio.DBusSignalFlags.NONE, self.bluez_event)
+        Gio.bus_watch_name_on_connection(bus, BLUEZ, Gio.BusNameWatcherFlags.NONE,
+                                         self.appeared, self.vanished)
+
+    def appeared(self, bus, name, owner):
+        self.owner = owner
+        self.exhausted = False
+        self.queue()
+
+    def vanished(self, bus, name):
+        self.owner = self.discovery = ''
+        self.cancel()
+
+    def queue(self):
+        if not self.refresh_id:
+            self.refresh_id = GLib.idle_add(self.refresh)
+
+    def bluez_event(self, bus, sender, path, interface, member, params):
+        if self.address and not self.exhausted:
+            self.queue()
+
+    def coil_event(self, fd, condition):
+        while self.monitor.poll(timeout=0) is not None:
+            pass
+        self.queue()
+        return GLib.SOURCE_CONTINUE
+
+    def stop_scan(self):
+        if self.discovery and self.owner:
+            self.bus.call(self.owner, self.discovery, ADAPTER, 'StopDiscovery',
+                          None, None, Gio.DBusCallFlags.NONE, 5000, None, None)
+        self.discovery = ''
+
+    def cancel(self):
+        if self.pending:
+            self.pending.cancel()
+            self.pending = None
+        if self.deadline:
+            GLib.source_remove(self.deadline)
+            self.deadline = 0
+        self.stop_scan()
+
+    def expired(self):
+        self.deadline = 0
+        self.exhausted = True
+        self.cancel()
+        return GLib.SOURCE_REMOVE
+
+    def action(self, path, iface, method, args=None):
+        pending = Gio.Cancellable()
+        self.pending = pending
+
+        def completed(bus, result):
+            try:
+                bus.call_finish(result)
+            except GLib.Error:
+                if self.pending == pending:
+                    self.exhausted = True
+                    self.cancel()
+                return
+            if self.pending == pending:
+                self.pending = None
+                self.queue()
+
+        self.bus.call(self.owner, path, iface, method, args, None,
+                      Gio.DBusCallFlags.NONE, 25000, pending, completed)
+
+    def refresh(self):
+        self.refresh_id = 0
+        address = docked()
+        if address != self.address:
+            self.cancel()
+            self.address = address
+            self.exhausted = False
+        if not address or not self.owner or self.pending or self.exhausted:
+            return False
+        try:
+            objects, = self.bus.call_sync(
+                self.owner, '/', 'org.freedesktop.DBus.ObjectManager', 'GetManagedObjects',
+                None, None, Gio.DBusCallFlags.NONE, 5000, None).unpack()
+        except GLib.Error:
+            return False
+        if docked() != address:
+            self.queue()
+            return False
+        adapter = next((p for p, obj in objects.items()
+                        if obj.get(ADAPTER, {}).get('Powered')), None)
+        if not adapter:
+            return False
+        if not self.deadline:
+            self.deadline = GLib.timeout_add_seconds(35, self.expired)
+        for path, obj in objects.items():
+            device = obj.get(DEVICE, {})
+            if device.get('Adapter') != adapter or device.get('Address') != address:
+                continue
+            if not device.get('Paired'):
+                self.action(path, DEVICE, 'Pair')
+            elif not device.get('Trusted'):
+                args = GLib.Variant('(ssv)', (DEVICE, 'Trusted', GLib.Variant('b', True)))
+                self.action(path, PROPS, 'Set', args)
+            elif not device.get('Connected'):
+                self.action(path, DEVICE, 'Connect')
+            else:
+                self.exhausted = True
+                self.cancel()
+            return False
+        if not self.discovery:
+            self.discovery = adapter
+            self.action(adapter, ADAPTER, 'StartDiscovery')
+        return False
+
+
+if __name__ == '__main__':
+    pen = Pen(Gio.bus_get_sync(Gio.BusType.SYSTEM, None))
+    GLib.MainLoop().run()
