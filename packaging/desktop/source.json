@@ -1265,7 +1265,7 @@
       "bytes": 30022,
       "sha256": "001eeb7bbf1613fa284b306a4c7c318dfe41347fc3a7f30e4cf23b62e203ba3d",
       "file": "python3-gst-1.0_1.28.2-1_arm64.deb",
-      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/g/gst-python1.0/python3-gst-1.0_1.28.2-1_arm64.deb"
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/universe/g/gst-python1.0/python3-gst-1.0_1.28.2-1_arm64.deb"
     },
     {
       "package": "python3-numpy-dev",
