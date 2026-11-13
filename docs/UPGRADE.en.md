@@ -7,6 +7,8 @@
 
 To upgrade from v0.9.1, extract both repositories from the package TAR. Select `erhai-0.10.0` with `--previous erhai-0.9.1-rollback-0.10.0` for the whole-release upgrade, then reboot.
 
+For an existing USB development installation, provision your own SSH public key before the upgrade. Use the local terminal or finish the upgrade in a detached systemd unit. The upgrade retires the old diagnostic connections. After reboot, use the key-only USB SSH login described in [the setup guide](FLASHING.en.md).
+
 ## v0.9.0 → v0.9.1
 
 Extract the device packages TAR. Use the whole-release upgrade command below with `erhai-0.9.1` as the new repository and `erhai-0.9.0-rollback-0.9.1` for `--previous`. Shut down virtual machines before upgrading and reboot after installing the complete batch.

@@ -5,11 +5,11 @@ if [ "$1" = configure ]; then
     deb-systemd-helper unmask erhai-debug.service >/dev/null || true
     deb-systemd-helper enable erhai-debug.service >/dev/null
     if [ -d /run/systemd/system ]; then systemctl daemon-reload; fi
-    # Package upgrades remove the former HTTP service that exposed the
-    # entire filesystem. Close it immediately, including on long-lived boots.
-    if [ -d /run/systemd/system ]; then
-        systemctl stop erhai-debug-http.service 2>/dev/null || true
+    # Deactivate obsolete listeners on upgrade. Package installation must
+    # complete from a local session or an independent systemd unit.
+    if [ -d /run/systemd/system ] && [ -n "${2:-}" ]; then
+        for old in erhai-debug-http.service erhai-debug-shell.service; do
+            if systemctl is-active --quiet "$old"; then systemctl stop "$old"; fi
+        done
     fi
-    # Do not kill a running installation inside the old diagnostic session.
-    # The new, conditional units take over on the next boot.
 fi
