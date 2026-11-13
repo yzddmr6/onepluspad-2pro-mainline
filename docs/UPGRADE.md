@@ -3,6 +3,10 @@
 [English](UPGRADE.en.md) · [安装与恢复](FLASHING.md)
 
 
+## v0.9.1 → v0.10.0
+
+从 v0.9.1 升级，解压包含两个仓库的软件包 TAR，整组升级时使用 `erhai-0.10.0` 和 `--previous erhai-0.9.1-rollback-0.10.0`。完成后重启。
+
 ## v0.9.0 → v0.9.1
 
 解压本版软件包 TAR。沿用下文整版升级命令，新仓库选 `erhai-0.9.1`，`--previous` 选 `erhai-0.9.0-rollback-0.9.1`。升级前关闭虚拟机，整组安装后重启。

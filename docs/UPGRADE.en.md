@@ -3,6 +3,10 @@
 [中文](UPGRADE.md) · [Installation and recovery](FLASHING.en.md)
 
 
+## v0.9.1 → v0.10.0
+
+To upgrade from v0.9.1, extract both repositories from the package TAR. Select `erhai-0.10.0` with `--previous erhai-0.9.1-rollback-0.10.0` for the whole-release upgrade, then reboot.
+
 ## v0.9.0 → v0.9.1
 
 Extract the device packages TAR. Use the whole-release upgrade command below with `erhai-0.9.1` as the new repository and `erhai-0.9.0-rollback-0.9.1` for `--previous`. Shut down virtual machines before upgrading and reboot after installing the complete batch.

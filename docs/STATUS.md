@@ -7,6 +7,12 @@
 
 ✅ 可用 / Working · 🟡 部分支持 / Partial · ❌ 尚不支持 / Unsupported
 
+### v0.10.0
+
+Waydroid 图形包支持 Adreno 830 硬件渲染，可从 GNOME 启动 Android 应用。 弱 USB 电源下空闲 15 分钟可自动挂起。充电功率充足或开发者通道启用时保持唤醒。系统在本地记录输入和电池充电遥测。
+
+Waydroid runs Android apps from GNOME with Adreno 830 hardware rendering. The tablet can suspend after 15 idle minutes on a weak USB supply. Sufficient charging power or an active developer connection keeps it awake. Charging samples are recorded locally.
+
 ### v0.9.1
 
 PPS 电荷泵偏离工作电压窗口后会重新调整请求，修复充电意外掉档。目标和上限保持 4 A，并受适配器通告的能力限制。 修复大提交入队前的内存分配失败，修正 UDMABUF 写回内存的 GPU 映射属性。更新接电挂起策略，修复桌面注销和音频会话退出崩溃。

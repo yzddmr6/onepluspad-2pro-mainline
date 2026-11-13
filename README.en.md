@@ -55,12 +55,12 @@ primarily in Chinese.
   about 39 W (below 80 % charge, battery between 12 and 44 °C); other USB PD chargers
   get the 9 V contract (up to 18 W input). On a computer's USB port with the screen on,
   the tablet uses more than the port supplies and the battery still drains slowly. The
-  stock SUPERVOOC protocol is not available under Linux. Fastboot is not a
+  SUPERVOOC serial handshake and dual-pump control are supported. Fastboot is not a
   charging fallback.
   Closing the keyboard cover or a case suspends the tablet; the power button defaults to locking the
   screen and can be configured in Settings > Power. In suspend the SoC reaches its deepest
   power states. When idle, the screen dims and blanks with Ubuntu's defaults and the tablet
-  suspends on battery.
+  can suspend on battery or weak USB power.
   See [System suspend](docs/SUSPEND.en.md) for timings and power-button settings.
 - **Data and recovery:** unlocking the bootloader erases user data. Back up
   personal files and obtain matching stock firmware before changing the device.
@@ -129,7 +129,7 @@ Features under development are not included in the supported feature set.
 | Brightness | Dual KTZ8868 / one backlight interface | ✅ | Unified backlight control supports manual brightness adjustment and screen blanking. |
 | Magnetic keyboard | Pogo keyboard / touchpad | ✅ | Keyboard input works and stays connected while idle and after system sleep. The on-screen keyboard appears for touch input when detached and hides when attached. Holding the magnifier key turns the top row into F1 to F12. |
 | Active pen | NT36536 pen input | 🟡 | Pen input is not enabled yet: the driver is present but off by default. |
-| Pen charging | CPS8601 | ✅ | A pen attached to the back charges wirelessly. |
+| Pen charging | CPS8601 | ✅ | A docked pen charges wirelessly. Pencil 2 connects automatically and reports its battery level over Bluetooth. |
 
 ### Wireless and USB
 
@@ -152,7 +152,8 @@ Features under development are not included in the supported feature set.
 | USB-C analog audio | WCD939x headset path | ❌ | Analog adapters and headset detection are not implemented. Digital USB audio is tracked above. |
 | Video playback in desktop players | Ubuntu GStreamer packages / Iris | ✅ | Showtime, the default player, plays H.264, H.265 and VP9 with hardware decoding and continues playback after seeking. |
 | Hardware video codecs | Qualcomm Iris | ✅ | Hardware decoding of H.264, H.265 and VP9 (the default player through GStreamer, Firefox through VA-API) and hardware encoding of H.264 and H.265. |
-| Front and rear cameras | SC820CS / SC1300CS | 🟡 | The default Camera app (Snapshot) supports preview and photos with both cameras. Automatic white balance uses a simple grey-world algorithm, so scenes dominated by one colour can look tinted. Lens-shading correction is absent, leaving darker corners. Focus is fixed at a distance, making close objects soft, and dim scenes are noisy. |
+| Front and rear cameras | SC820CS / SC1300CS | 🟡 | The default Camera app (Snapshot) supports preview and photos with both cameras. Automatic white balance uses a simple grey-world algorithm, so scenes dominated by one colour can look tinted. Lens-shading correction is absent, leaving darker corners. The dedicated rear-camera app supports centre and tap focus. Dim scenes are noisy. |
+| Torch | Dual LEDs | ✅ | Switch and adjust brightness in Quick Settings. |
 | Automatic rotation | SSC / iio-sensor-proxy | ✅ | With the keyboard detached, the screen follows the orientation in all four directions, each the right way up. With the keyboard attached it stays fixed, as on a laptop. |
 | Automatic brightness | SSC ambient light / GNOME | ✅ | The ambient-light sensor is integrated with GNOME. Enable Automatic Brightness in Settings → Power to adjust the backlight to ambient light; idle dimming and blanking follow Ubuntu defaults. |
 | Compass and gyroscope | SSC / iio-sensor-proxy | ✅ | Heading and angular velocity are available over D-Bus and keep updating after suspend. |
@@ -167,11 +168,11 @@ Features under development are not included in the supported feature set.
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up and down report `KEY_VOLUMEUP` and `KEY_VOLUMEDOWN`, respectively. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management are incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
-| Charging in Linux | USB power / vendor firmware / SC8547A charge pump | ✅ | A PPS charger fast-charges through the charge pump at up to about 39 W (below 80 % charge, battery between 12 and 44 °C); other PD chargers get the 9 V contract, up to 18 W input. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. The stock SUPERVOOC protocol is not available. |
+| Charging in Linux | USB power / vendor firmware / SC8547A charge pump | ✅ | A PPS charger fast-charges through the charge pump at up to about 39 W (below 80 % charge, battery between 12 and 44 °C); other PD chargers get the 9 V contract, up to 18 W input. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. Compatible SUPERVOOC adapters support serial negotiation and dual-pump control. |
 | Suspend and resume | Linux power management | ✅ | Defaults to s2idle, with CX power collapse and DDR self-refresh. Cover, power-button and RTC wake are supported; Wi-Fi, keyboard and cameras remain usable after resume. The firmware-provided `deep` state is not used by default. See [System suspend](docs/SUSPEND.en.md). |
 | RTC | Qualcomm PMIC RTC | ✅ | Time read/write works. A forced reset loses the RTC time; it is set again once online. Certificate time checks do not block initial synchronization, and networks blocking authenticated time (NTS) use their own time server. Synchronized time is written back to the RTC and survives a normal restart. |
 | Snap applications | AppArmor / snapd / GPU content provider | 🟡 | Shared Adreno 830 graphics runtime; strict confinement remains affected by snapd feature detection. |
-| Android applications | Waydroid | 🟡 | Applications and networking with software rendering; Android Data Saver is unavailable. [Installation](docs/WAYDROID.en.md). |
+| Android applications | Waydroid | 🟡 | Applications and networking with Adreno 830 hardware rendering; Android Data Saver is unavailable. [Installation](docs/WAYDROID.en.md). |
 | Virtual machines | Gunyah / GunyahVM 1.1.0 | ✅ | Preinstalled virtual machine manager for ARM64 Linux guests. |
 | Hardware monitoring | Resources | ✅ | CPU, GPU and battery telemetry, with available temperature sensors. |
 

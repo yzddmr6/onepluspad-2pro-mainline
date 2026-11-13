@@ -22,6 +22,8 @@ sudo waydroid init
 
 ## Enable Adreno rendering
 
+Download the graphics bundle from the release attachments.
+
 After `waydroid init`, extract the matching `waydroid-sm8750-arm64-only.tar.zst` graphics bundle into an empty directory. From that directory, run the following command.
 
 ```bash
