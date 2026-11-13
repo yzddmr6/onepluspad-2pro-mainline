@@ -67,6 +67,8 @@ Root filesystems include Mozilla's Firefox package unmodified; it retains
 Mozilla's licenses and trademark terms. The Mozilla APT configuration in
 packaging/erhai-firefox is based on TheMojoMan's oneplus-erhai-ubuntu:
 https://github.com/TheMojoMan/oneplus-erhai-ubuntu
+The browser MIME defaults follow the Xiaomi Pad 8 Pro integration.
+https://github.com/yzddmr6/xiaomipad-8pro-mainline/blob/c9d5a315e9ac4f892607875b48f81a0b139a2a21/packaging/piano-ubuntu-desktop/etc/xdg/mimeapps.list
 
 Firmware and device data
 -----------------------
