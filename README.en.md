@@ -51,8 +51,8 @@ primarily in Chinese.
   and reinstallation are provided for the 512 GB model. First-time partitioning
   erases Android data. See the [installation and recovery guide](docs/FLASHING.en.md)
   for firmware and layout requirements.
-- **Power:** A PPS charger fast-charges the battery through the charge pump at up to
-  about 39 W (below 80 % charge, battery between 12 and 44 °C); other USB PD chargers
+- **Power:** A PPS charger fast-charges the battery through the charge pump according to
+  the negotiated supply and battery conditions; other USB PD chargers
   get the 9 V contract (up to 18 W input). On a computer's USB port with the screen on,
   the tablet uses more than the port supplies and the battery still drains slowly. The
   SUPERVOOC serial handshake and dual-pump control are supported. Fastboot is not a
@@ -168,7 +168,7 @@ Features under development are not included in the supported feature set.
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up and down report `KEY_VOLUMEUP` and `KEY_VOLUMEDOWN`, respectively. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management are incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
-| Charging in Linux | USB power / vendor firmware / SC8547A charge pump | ✅ | A PPS charger fast-charges through the charge pump at up to about 39 W (below 80 % charge, battery between 12 and 44 °C); other PD chargers get the 9 V contract, up to 18 W input. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. Compatible SUPERVOOC adapters support serial negotiation and dual-pump control up to the stock 90% charge limit. |
+| Charging in Linux | USB power / vendor firmware / SC8547A charge pump | ✅ | A PPS charger fast-charges through the charge pump according to the negotiated supply and battery conditions; other PD chargers get the 9 V contract, up to 18 W input. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. Compatible SUPERVOOC adapters support serial negotiation and dual-pump control. |
 | Suspend and resume | Linux power management | ✅ | Defaults to s2idle, with CX power collapse and DDR self-refresh. Cover, power-button and RTC wake are supported; Wi-Fi, keyboard and cameras remain usable after resume. The firmware-provided `deep` state is not used by default. See [System suspend](docs/SUSPEND.en.md). Connecting a charging cable wakes the tablet. |
 | RTC | Qualcomm PMIC RTC | ✅ | Time read/write works. A forced reset loses the RTC time; it is set again once online. Certificate time checks do not block initial synchronization, and networks blocking authenticated time (NTS) use their own time server. Synchronized time is written back to the RTC and survives a normal restart. |
 | Snap applications | AppArmor / snapd / GPU content provider | 🟡 | Shared Adreno 830 graphics runtime; strict confinement remains affected by snapd feature detection. |
