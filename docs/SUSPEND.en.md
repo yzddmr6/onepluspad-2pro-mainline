@@ -62,7 +62,7 @@ user profile:
 | Idle dimming | Enabled (`idle-dim=true`), timed by GNOME before blanking |
 | 5 minutes idle | Blank and lock the screen (`idle-delay=300`, locking enabled) |
 | 15 minutes idle on battery | Request suspend (`sleep-inactive-battery-type='suspend'`, timeout `900`) |
-| Idle on external power | Blank normally; no automatic suspend (Ubuntu sets `sleep-inactive-ac-timeout=0`) |
+| Idle on external power | Blank normally; no automatic suspend (`sleep-inactive-ac-type=nothing`) |
 
 These are idle deadlines, not delays added after blanking. GNOME respects application
 inhibitors and user settings; the power source is the one reported by UPower. See the
@@ -87,7 +87,7 @@ After upgrading the device package, log out and back in before checking the poli
 ## The cover
 
 The magnet of the keyboard cover or a case sits over a hall switch, which the kernel reports as
-a lid switch (`SW_LID`). Closing the cover makes logind suspend the system (`HandleLidSwitch=suspend`
+a lid switch (`SW_LID`). On external power the cover locks the screen. On battery, closing it makes logind suspend the system (`HandleLidSwitch=suspend`
 in `/etc/systemd/logind.conf.d/90-erhai-power.conf`); opening it wakes the system through the same
 switch, and the desktop lights up the lock screen. With an external display connected,
 the normal desktop/logind policy inhibits cover-triggered suspend. GNOME power settings
