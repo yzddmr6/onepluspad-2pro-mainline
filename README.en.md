@@ -51,11 +51,8 @@ primarily in Chinese.
   and reinstallation are provided for the 512 GB model. First-time partitioning
   erases Android data. See the [installation and recovery guide](docs/FLASHING.en.md)
   for firmware and layout requirements.
-- **Power:** A PPS charger fast-charges the battery through the charge pump according to
-  the negotiated supply and battery conditions; other USB PD chargers
-  get the 9 V contract (up to 18 W input). On a computer's USB port with the screen on,
-  the tablet uses more than the port supplies and the battery still drains slowly. The
-  SUPERVOOC serial handshake and dual-pump control are supported. Fastboot is not a
+- **Power:** Compatible SUPERVOOC, UFCS and PPS chargers support fast charging from 0 °C to below 51 °C, including when connected at a high state of charge. Power follows cell temperature and voltage, tapering near full charge. Compatible PD and QC chargers support 9 V charging.
+  Fastboot is not a
   charging fallback.
   Closing the keyboard cover or a case suspends the tablet; the power button defaults to locking the
   screen and can be configured in Settings > Power. In suspend the SoC reaches its deepest
@@ -65,9 +62,7 @@ primarily in Chinese.
 - **Data and recovery:** unlocking the bootloader erases user data. Back up
   personal files and obtain matching stock firmware before changing the device.
   Keep factory calibration and device addresses specific to each tablet.
-- **Debug access:** USB diagnostics are for development. When enabled, they
-  expose an unauthenticated root shell and HTTP service. Connect only to a
-  trusted computer and keep these services off public networks.
+- **Debug access:** Explicit development boots offer key-only SSH over USB. Provision your host key as described in the [installation guide](docs/FLASHING.en.md).
 
 ## 🚀 Getting Started
 
@@ -128,7 +123,7 @@ Features under development are not included in the supported feature set.
 | GPU and desktop | Adreno 830 / Freedreno / Turnip / Mesa | ✅ | GNOME, OpenGL and Vulkan hardware rendering work. Vulkan uses Turnip. If GPU recovery fails, applications can remain stuck during exit and a reboot may be needed. |
 | Brightness | Dual KTZ8868 / one backlight interface | ✅ | Unified backlight control supports manual brightness adjustment and screen blanking. |
 | Magnetic keyboard | Pogo keyboard / touchpad | ✅ | Keyboard input works and stays connected while idle and after system sleep. The on-screen keyboard appears for touch input when detached and hides when attached. Holding the magnifier key turns the top row into F1 to F12. |
-| Active pen | NT36536 pen input | 🟡 | Pen input is not enabled yet: the driver is present but off by default. |
+| Active pen | NT36536 pen input | ✅ | Pen scanning is enabled by default. |
 | Pen charging | CPS8601 | ✅ | A docked pen charges wirelessly. Pencil 2 connects automatically and reports its battery level over Bluetooth. |
 
 ### Wireless and USB
@@ -141,7 +136,7 @@ Features under development are not included in the supported feature set.
 | USB host peripherals | HID, storage, network and digital audio | ✅ | USB drives connected directly through a USB-C to USB-A adapter receive power from the tablet and can be recognized and mounted. A mouse connected through a dock works without external PD power. |
 | USB storage formats | UAS, exFAT and NTFS3 | ✅ | exFAT and NTFS3 support reading, writing and Chinese filenames. NTFS USB drives mount automatically on the desktop. |
 | External display | USB-C DisplayPort Alt Mode | ✅ | External monitor output works over USB-C DisplayPort. |
-| External display audio | DisplayPort / ALSA / PipeWire | ❌ | Disabled by default: the playback configuration prevents microphone discovery with no monitor attached. External display audio playback is unavailable. |
+| External display audio | DisplayPort / ALSA / PipeWire | ✅ | Select DisplayPort playback when a monitor is connected. |
 
 ### Audio, Video and Sensors
 
@@ -168,7 +163,7 @@ Features under development are not included in the supported feature set.
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up and down report `KEY_VOLUMEUP` and `KEY_VOLUMEDOWN`, respectively. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management are incomplete. |
 | Battery reporting | qcom_battmgr / UPower | ✅ | Capacity and runtime estimates available; charging behavior is a separate limitation. |
-| Charging in Linux | USB power / vendor firmware / SC8547A charge pump | ✅ | A PPS charger fast-charges through the charge pump according to the negotiated supply and battery conditions; other PD chargers get the 9 V contract, up to 18 W input. On a computer's USB port (about 2.5 W) with the screen on, the battery still drains by about 2–3 % per hour. Compatible SUPERVOOC adapters support serial negotiation and dual-pump control. |
+| Charging in Linux | USB power / vendor firmware / SC8547A charge pump | ✅ | Compatible SUPERVOOC, UFCS and PPS chargers support fast charging from 0 °C to below 51 °C, including when connected at a high state of charge. Power follows cell temperature and voltage, tapering near full charge. Compatible PD and QC chargers support 9 V charging. |
 | Suspend and resume | Linux power management | ✅ | Defaults to s2idle, with CX power collapse and DDR self-refresh. Cover, power-button and RTC wake are supported; Wi-Fi, keyboard and cameras remain usable after resume. The firmware-provided `deep` state is not used by default. See [System suspend](docs/SUSPEND.en.md). Connecting a charging cable wakes the tablet. |
 | RTC | Qualcomm PMIC RTC | ✅ | Time read/write works. A forced reset loses the RTC time; it is set again once online. Certificate time checks do not block initial synchronization, and networks blocking authenticated time (NTS) use their own time server. Synchronized time is written back to the RTC and survives a normal restart. |
 | Snap applications | AppArmor / snapd / GPU content provider | 🟡 | Shared Adreno 830 graphics runtime; strict confinement remains affected by snapd feature detection. |

@@ -13,6 +13,10 @@ Waydroid 图形包支持 Adreno 830 硬件渲染，可从 GNOME 启动 Android �
 
 Waydroid runs Android apps from GNOME with Adreno 830 hardware rendering. The tablet can suspend after 15 idle minutes on a weak USB supply. Sufficient charging power or an active developer connection keeps it awake. Charging samples are recorded locally.
 
+电池温度在 0 °C 至 51 °C 以下时，兼容的 SUPERVOOC、UFCS 和 PPS 充电器可快充，高电量插入也可使用。系统随电池温度和电压调节功率，接近充满时逐步降流。兼容的 PD 或 QC 充电器可用 9 V 充电。 一加手写笔扫描默认开启，支持 DisplayPort 音频输出。
+
+Compatible SUPERVOOC, UFCS and PPS chargers support fast charging from 0 °C to below 51 °C, including when connected at a high state of charge. Power follows cell temperature and voltage, tapering near full charge. Compatible PD and QC chargers support 9 V charging. Pen scanning is enabled by default and DisplayPort audio output is supported.
+
 ### v0.9.1
 
 PPS 电荷泵偏离工作电压窗口后会重新调整请求，修复充电意外掉档。目标和上限保持 4 A，并受适配器通告的能力限制。 修复大提交入队前的内存分配失败，修正 UDMABUF 写回内存的 GPU 映射属性。更新接电挂起策略，修复桌面注销和音频会话退出崩溃。

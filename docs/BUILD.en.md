@@ -128,8 +128,7 @@ power-management initialization from completing and is not the normal build
 choice. Boot and package builders require explicit opt-in for that layout
 and record the selected layout in their manifests.
 
-The NCM profile provides a USB link (device `192.168.77.2`, telnet 2323,
-HTTP evidence on 8080) with a bounded recovery timer. Its recovery destination
+The NCM profile provides a USB link (device `192.168.77.2`) with a bounded recovery timer. Its recovery destination
 depends on the installed boot images; the host controller must also verify the
 return to Android. See [testing and recovery](FLASHING.en.md). Optional kernel cmdline flags: `erhai.watchdog=NN` (session length),
 `erhai.rootfs=<url>` with `erhai.rootfs.sha256=<digest>` (fetch and verify a
@@ -187,9 +186,9 @@ python3 tools/build-debs.py --release-version "$RELEASE_VERSION" --output out/de
 | `erhai-kernel` | selects a versioned kernel payload; configuration activates its triplet through the switcher without rebooting |
 | `erhai-kernel-image-<release>` | matching signed boot images and configured modules; installation only populates files and runs `depmod`, allowing RAM validation before selection |
 | `erhai-firmware` | the firmware closure the mainline drivers ask for and the distribution does not ship under those names |
-| `erhai-audio` | the board AudioReach topology and UCM for the internal microphones; DisplayPort audio is disabled in the default profile, and internal speakers are enabled by default with a persistent opt-out (see [daily-use policies](DAILY.en.md)) |
+| `erhai-audio` | the board AudioReach topology and UCM for the internal microphones; DisplayPort playback follows connector availability, and internal speakers are enabled by default with a persistent opt-out (see [daily-use policies](DAILY.en.md)) |
 | `erhai-display-power` | the backlight power service, its socket and the GNOME 50 display-power adapter; it requires the kernel's single led-backlight device |
-| `erhai-debug` (optional) | USB diagnostic DHCP, HTTP and root-shell units, using Ubuntu's `busybox-static`; all units require `erhai.debug=1`. While installed, the kernel panics on a hung task, soft lockup or oops and reboots 10 s later |
+| `erhai-debug` (optional) | USB DHCP and key-only SSH for the development boot profile. Provision a host public key as described in the installation guide. |
 | `erhai-device` | a metapackage depending on the required device packages |
 
 The kernel build includes all configured modules and records their hashes.

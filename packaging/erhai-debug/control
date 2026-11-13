@@ -5,13 +5,7 @@ Maintainer: @MAINTAINER@
 Installed-Size: @INSTALLED_SIZE@
 Section: admin
 Priority: optional
-Depends: erhai-device-support (>= 0.1.0~), busybox-static (>= 1:1.36.1), iproute2, bash, systemd, udev, init-system-helpers
+Depends: dropbear-bin, erhai-device-support (>= 0.1.0~), busybox-static (>= 1:1.36.1), iproute2, bash, systemd, udev, init-system-helpers
 Description: Optional USB NCM diagnostics for the OnePlus Pad 2 Pro
- Provides separately supervised DHCP, HTTP and root-shell services on the
- development USB link. Every service requires erhai.debug=1 on the kernel
- command line. Ordinary installed boots leave the channel closed.
- The HTTP server exposes the root filesystem and the shell is unauthenticated;
- this package is intended for explicitly enabled local development sessions.
- While installed, it also sets the kernel to panic on a hung task, a soft
- lockup or an oops and to reboot 10 seconds later, so that a hang cannot
- keep an unattended development device stuck.
+ Provides USB networking and a key-only SSH server on an explicitly enabled
+ development boot. Provision the host public key in /etc/erhai/debug/authorized_keys.

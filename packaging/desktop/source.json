@@ -1284,12 +1284,40 @@
       "sha256": "8f36162243a7ecf198724a67c2b4f04a2eccd3f3c8b3f492fdad470999c0ceed",
       "file": "python3-numpy_2.3.5+ds-3ubuntu1_arm64.deb",
       "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/n/numpy/python3-numpy_2.3.5+ds-3ubuntu1_arm64.deb"
+    },
+    {
+      "package": "dropbear-bin",
+      "version": "2025.89-1",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/universe/d/dropbear/dropbear-bin_2025.89-1_arm64.deb",
+      "file": "dropbear-bin_2025.89-1_arm64.deb",
+      "bytes": 171052,
+      "sha256": "0c1b43846ca05e78fb605a20a47fb01fb154755aed0bfbf1e945ae40bf0ddf3a"
+    },
+    {
+      "package": "libtomcrypt1",
+      "version": "1.18.2+dfsg-7build2",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/universe/libt/libtomcrypt/libtomcrypt1_1.18.2+dfsg-7build2_arm64.deb",
+      "file": "libtomcrypt1_1.18.2+dfsg-7build2_arm64.deb",
+      "bytes": 417092,
+      "sha256": "91c4dcb75d3083789a73d6113c44e20b6567d6528a760817cf6bafd20fabff6d"
+    },
+    {
+      "package": "libtommath1",
+      "version": "1.3.0-1build1",
+      "architecture": "arm64",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/universe/libt/libtommath/libtommath1_1.3.0-1build1_arm64.deb",
+      "file": "libtommath1_1.3.0-1build1_arm64.deb",
+      "bytes": 59668,
+      "sha256": "98c56eb4fe03012097e5dbcd11b8ee0501baebdceb6ab2d1159b991819ceba3c"
     }
   ],
   "runtime_snapshot": "20260924T000000Z",
   "runtime_seeds": [
     "gstreamer1.0-plugins-bad",
     "gstreamer1.0-libav",
-    "firefox=158.0.1~build1"
+    "firefox=158.0.1~build1",
+    "dropbear-bin=2025.89-1"
   ]
 }

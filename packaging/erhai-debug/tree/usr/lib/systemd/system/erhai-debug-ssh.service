@@ -1,0 +1,13 @@
+[Unit]
+Description=Key-authenticated SSH over Erhai USB
+ConditionKernelCommandLine=erhai.debug=1
+Requires=erhai-debug.service
+After=erhai-debug.service
+PartOf=erhai-debug.service
+
+[Service]
+ExecCondition=/usr/libexec/erhai-ncm interface
+ExecCondition=/usr/bin/test -s /etc/erhai/debug/authorized_keys
+ExecStartPre=/usr/bin/install -d -m0700 /etc/erhai/debug
+ExecStartPre=/bin/sh -ec 'test -s /etc/erhai/debug/host_ed25519 || /usr/bin/dropbearkey -t ed25519 -f /etc/erhai/debug/host_ed25519'
+ExecStart=/usr/sbin/dropbear -F -E -s -j -k -G root -D /etc/erhai/debug -r /etc/erhai/debug/host_ed25519 -p 192.168.77.2:22

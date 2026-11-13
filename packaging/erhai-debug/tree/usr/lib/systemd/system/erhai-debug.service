@@ -3,8 +3,8 @@ Description=Explicitly enabled USB NCM diagnostics
 ConditionKernelCommandLine=erhai.debug=1
 ConditionPathExistsGlob=/sys/class/udc/*
 After=local-fs.target
-Wants=erhai-debug-http.service erhai-debug-shell.service erhai-debug-dhcp.service
-Before=erhai-debug-http.service erhai-debug-shell.service erhai-debug-dhcp.service
+Wants=erhai-debug-ssh.service erhai-debug-dhcp.service
+Before=erhai-debug-ssh.service erhai-debug-dhcp.service
 
 [Service]
 Type=notify

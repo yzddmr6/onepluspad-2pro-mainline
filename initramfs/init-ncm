@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 # Mainline first-boot evidence profile: the kernel has DEVTMPFS and all USB
 # gadget support built in; no module loading. RAM evidence is exported over
-# NCM/HTTP; the session ends via telnet or the watchdog.
+# NCM; the watchdog bounds the setup session.
 #
 # Cmdline knobs:
 #   erhai.watchdog=<s>          bound the initramfs phase (default 600)
@@ -23,7 +23,7 @@ export PATH=/bin
 mount -t proc proc /proc
 mount -t sysfs sysfs /sys
 # Prebuilt nodes give the kernel its early console; devtmpfs on top provides
-# the rest (ptmx for telnetd, etc.). Mount it unconditionally.
+# the remaining device nodes. Mount it unconditionally.
 mount -t devtmpfs devtmpfs /dev
 mkdir -p /dev/pts /run
 mount -t devpts devpts /dev/pts
@@ -46,6 +46,7 @@ for arg in $(cat /proc/cmdline); do
 	erhai.weston=1) WESTON=1 ;;
 	erhai.root=*) ROOT_SPEC=${arg#erhai.root=} ;;
 	erhai.debug=1) DEBUG_CHANNEL=1 ;;
+	erhai.setup_key=*) SETUP_KEY=${arg#erhai.setup_key=} ;;
 	esac
 done
 # erhai.watchdog bounds the initramfs phase only (a boot that wedges before the
@@ -90,6 +91,15 @@ find_partlabel() {
 # collide with the package-owned services in the new root. The host keeps
 # its lease while the package takes over DHCP on the existing USB interface.
 switch_to_newroot() {
+	# A setup key travels in the host-personalised RAM image, never in the
+	# downloaded root or the persistent kernel command line.
+	if [ -n "$ROOTFS_URL" ] && [ "$DEBUG_CHANNEL" = 1 ]; then
+		case "${SETUP_KEY:-}" in ''|*[!A-Za-z0-9+/=]*) echo SETUP_KEY_REQUIRED >> "$1"; return 1 ;; esac
+		mkdir -p /newroot/etc/erhai/debug || return 1
+		chmod 0700 /newroot/etc/erhai/debug || return 1
+		(umask 077; printf 'ssh-ed25519 %s\n' "$SETUP_KEY" > /newroot/etc/erhai/debug/authorized_keys) || return 1
+	fi
+
 	# Never manufacture persistent service files here. An explicit debug
 	# desktop needs the package that owns its services and dependencies.
 	if [ "$DEBUG_CHANNEL" = 1 ] &&
@@ -146,8 +156,8 @@ EOF
 		echo "TEST_SESSION_ARMED=$SESSION_SECONDS" >> "$1"
 	fi
 	kill "$WATCHDOG_PID" 2>/dev/null
-	kill "$TELNET_LOOP_PID" "$HEARTBEAT_PID" 2>/dev/null
-	for p in $(pidof telnetd httpd udhcpd dd 2>/dev/null); do kill "$p" 2>/dev/null; done
+	kill "$HEARTBEAT_PID" 2>/dev/null
+	for p in $(pidof udhcpd dd 2>/dev/null); do kill "$p" 2>/dev/null; done
 	echo "SWITCHROOT systemd $(cat /proc/uptime)" >> "$1"
 	sync
 	# Move the new root over / and enter it, instead of busybox switch_root,
@@ -243,10 +253,6 @@ if [ "$EARLY_DEBUG" = 0 ] || [ "$NCM_READY" = 1 ] || [ -n "$ROOT_SPEC" ]; then
 	if [ "$NCM_READY" = 1 ]; then
 		dmesg > /run/evidence/dmesg.txt
 		cat /proc/mounts > /run/evidence/mounts.txt
-		httpd -p 192.168.77.2:8080 -h /run/evidence
-		# Respawn only inside the bounded diagnostic initramfs session.
-		( while :; do telnetd -b 192.168.77.2:2323 -l /bin/sh; sleep 2; done ) &
-		TELNET_LOOP_PID=$!
 		echo ERHAI_MAINLINE_READY
 	elif [ "$EARLY_DEBUG" = 0 ]; then
 		echo ERHAI_DEBUG_DISABLED > /dev/kmsg
@@ -448,6 +454,6 @@ else
 	echo USB_SETUP_FAILURE
 	dmesg > /run/evidence/dmesg.txt
 fi
-# Evidence is served until the host ends the session (telnet reboot) or the
+# Keep evidence in memory until the
 # watchdog above returns the tablet to Android on its own.
 while :; do sleep 60; done

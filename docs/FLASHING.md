@@ -20,7 +20,7 @@ RAM 临时启动不替换启动分区，但使用已安装根系统的临时内�
 匹配的启动镜像、根系统与校验和，并确认会话超时后的恢复方式。不要混用不同构建的产物。
 
 开发会话须绑定目标设备、有明确超时，并具备用户态恢复；panic/用户态定时器不能
-保证从所有硬锁死中恢复。免认证 USB 调试通道只用于可信直连。
+保证从所有硬锁死中恢复。USB 开发通道使用主机公钥认证。
 
 ## 已有安装返回 Android
 
@@ -108,19 +108,21 @@ for part in boot init_boot vendor_boot; do
   adb -s "$device_serial" exec-out su -c "cat /dev/block/by-name/${part}_a" > "$device_backup/$part.img"
 done
 adb -s "$device_serial" reboot bootloader
-fastboot -s "$device_serial" boot out/ram-desktop/boot-mainline.img
+ssh-keygen -t ed25519 -f "$device_backup/setup-ssh" -N ''
+python3 tools/authorize-setup-ssh.py out/ram-desktop/boot-mainline.img "$device_backup/setup-ssh.pub" "$device_backup/setup-boot.img"
+fastboot -s "$device_serial" boot "$device_backup/setup-boot.img"
 ```
 
 电脑识别出 USB 网络后，用 `ip -br link` 查到新增接口名。将下方 `USB_INTERFACE` 换成
 该接口名；文件服务器终端继续保持运行。若电脑已通过 USB DHCP 获得 `192.168.77.10`，
-可跳过地址设置。调试网络只连接自己的电脑；主机需要 `curl` 和 Telnet 客户端。
+可跳过地址设置。调试网络只连接自己的电脑；主机需要 OpenSSH 客户端。
 
 ```sh
 sudo ip link set USB_INTERFACE up
 sudo ip address replace 192.168.77.10/24 dev USB_INTERFACE
 ```
 
-等待 RAM 桌面出现，再从电脑连接 `telnet 192.168.77.2 2323`。以下命令在平板的
+等待 RAM 桌面出现，再从电脑连接 `ssh -o HostKeyAlias=erhai-setup -o UserKnownHostsFile="$device_backup/setup-known-hosts" -i "$device_backup/setup-ssh" root@192.168.77.2`。以下命令在平板的
 root shell 中执行，只查看方案并保存分区表（下载成功后才执行）：
 
 ```sh
@@ -132,8 +134,8 @@ python3 /run/prepare-dualboot.py
 
 ```sh
 set -e
-curl --fail http://192.168.77.2:8081/run/erhai-gpt-backup.bin -o "$device_backup/gpt.bin"
-curl --fail http://192.168.77.2:8081/run/erhai-gpt-backup.json -o "$device_backup/gpt.json"
+ssh -o HostKeyAlias=erhai-setup -o UserKnownHostsFile="$device_backup/setup-known-hosts" -i "$device_backup/setup-ssh" root@192.168.77.2 cat /run/erhai-gpt-backup.bin > "$device_backup/gpt.bin"
+ssh -o HostKeyAlias=erhai-setup -o UserKnownHostsFile="$device_backup/setup-known-hosts" -i "$device_backup/setup-ssh" root@192.168.77.2 cat /run/erhai-gpt-backup.json > "$device_backup/gpt.json"
 ```
 
 确认备份已在电脑上、接受 Android 数据全部丢失后，在同一个平板 root shell 中应用：
@@ -207,14 +209,11 @@ python3 tools/install.py --serial "$device_serial" --work "$install_work" --phas
 
 ## 日常使用与 USB 调试
 
-首次准备时使用的免认证 USB root shell 和文件服务只存在于 setup 启动镜像的 RAM 会话中；
-根文件系统以及由它安装的系统都不含调试通道。需要在可信电脑上继续开发时，可按
-[构建指南](BUILD.md#设备包与图形组件)用 `--debug` 构建设备包，以此装配根文件系统后再安装：
-其内核包在启动镜像中加入 `erhai.debug=1`，并依赖 `erhai-debug`。
+个性化的 RAM 准备镜像只为本次启动授权主机公钥。已安装的开发系统须在升级或重启前通过本机或现有可信会话，把自己的主机公钥存入 `/etc/erhai/debug/authorized_keys`（root 所有，目录权限 0700，文件 0600）。安装可选的 `erhai-debug` 包并启用开发启动配置后，通过 SSH 登录 `root@192.168.77.2`，文件也通过 SSH 传输。
 
 在这样的安装上换装普通设备包（不带 `--debug` 构建到新的空输出目录，或取自 Release 的
 `erhai-device-packages-版本.tar`，安装方法见[升级已有安装](#升级已有安装)）即替换调试启动镜像，
-重启后不再启用 USB shell、HTTP 和调试 DHCP。只停止桌面上的调试服务不能关闭调试镜像在启动早期提供的通道。
+重启后不再启用 USB SSH 和调试 DHCP。只停止桌面上的调试服务不能关闭调试镜像在启动早期提供的通道。
 
 ## 升级已有安装
 

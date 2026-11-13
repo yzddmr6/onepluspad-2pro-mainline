@@ -2,6 +2,6 @@
 # SPDX-License-Identifier: GPL-2.0-only
 set -e
 if [ "$1" = remove ] && [ -d /run/systemd/system ]; then
-    systemctl stop erhai-debug.service erhai-debug-http.service \
-        erhai-debug-shell.service erhai-debug-dhcp.service || true
+    systemctl stop erhai-debug.service erhai-debug-ssh.service \
+        erhai-debug-dhcp.service || true
 fi

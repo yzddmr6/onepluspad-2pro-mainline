@@ -26,7 +26,7 @@ timeout established in advance. Do not combine artifacts from unrelated builds.
 
 Development sessions need explicit device selection, bounded timeouts and
 userspace recovery. Panic/userspace timers cannot recover every hardware lockup.
-Unauthenticated USB diagnostics are for trusted direct connections only.
+USB development access requires the host SSH key.
 
 ## Return to Android on an existing installation
 
@@ -131,13 +131,15 @@ for part in boot init_boot vendor_boot; do
   adb -s "$device_serial" exec-out su -c "cat /dev/block/by-name/${part}_a" > "$device_backup/$part.img"
 done
 adb -s "$device_serial" reboot bootloader
-fastboot -s "$device_serial" boot out/ram-desktop/boot-mainline.img
+ssh-keygen -t ed25519 -f "$device_backup/setup-ssh" -N ''
+python3 tools/authorize-setup-ssh.py out/ram-desktop/boot-mainline.img "$device_backup/setup-ssh.pub" "$device_backup/setup-boot.img"
+fastboot -s "$device_serial" boot "$device_backup/setup-boot.img"
 ```
 
 Use `ip -br link` to find the new USB network interface and substitute its name
 for `USB_INTERFACE` below. Skip address configuration if USB DHCP has already
 assigned `192.168.77.10` to the host. Keep this diagnostic network connected only
-to your own computer. The host needs `curl` and a Telnet client.
+to your own computer. The host needs an OpenSSH client.
 
 ```sh
 sudo ip link set USB_INTERFACE up
@@ -145,7 +147,7 @@ sudo ip address replace 192.168.77.10/24 dev USB_INTERFACE
 ```
 
 Wait for the RAM desktop, then connect from the host with
-`telnet 192.168.77.2 2323`. In the tablet's root shell, save the partition-table
+`ssh -o HostKeyAlias=erhai-setup -o UserKnownHostsFile="$device_backup/setup-known-hosts" -i "$device_backup/setup-ssh" root@192.168.77.2`. In the tablet's root shell, save the partition-table
 backup and display the plan:
 
 ```sh
@@ -157,8 +159,8 @@ In the host terminal, retrieve both backup files:
 
 ```sh
 set -e
-curl --fail http://192.168.77.2:8081/run/erhai-gpt-backup.bin -o "$device_backup/gpt.bin"
-curl --fail http://192.168.77.2:8081/run/erhai-gpt-backup.json -o "$device_backup/gpt.json"
+ssh -o HostKeyAlias=erhai-setup -o UserKnownHostsFile="$device_backup/setup-known-hosts" -i "$device_backup/setup-ssh" root@192.168.77.2 cat /run/erhai-gpt-backup.bin > "$device_backup/gpt.bin"
+ssh -o HostKeyAlias=erhai-setup -o UserKnownHostsFile="$device_backup/setup-known-hosts" -i "$device_backup/setup-ssh" root@192.168.77.2 cat /run/erhai-gpt-backup.json > "$device_backup/gpt.json"
 ```
 
 Once the backups are on the host and you accept losing all Android data, apply
@@ -249,19 +251,13 @@ the newly installed contents.
 
 ## Daily use and USB diagnostics
 
-The unauthenticated USB root shell and file service of first-time preparation
-exist only in the RAM session of the setup boot image. The root filesystem and
-an installation made from it have no diagnostic channel. To keep the channel
-for development with a trusted host, assemble the root filesystem from device
-packages built with `--debug` (see the [build guide](BUILD.en.md#device-packages))
-and install that root instead: their kernel package adds `erhai.debug=1` to the
-boot images and requires `erhai-debug`.
+The personalised RAM setup image authorizes the host key for that boot. For an installed development system, provision the host public key in `/etc/erhai/debug/authorized_keys` (root-owned directory mode 0700, file mode 0600) locally or during an existing trusted session **before upgrading or rebooting**. Install the optional `erhai-debug` package and enable the development boot profile. The SSH login is `root@192.168.77.2`; transfer files through SSH.
 
 Installing regular device packages over such an installation, built without
 `--debug` into a new empty output directory or taken from a release's
 `erhai-device-packages-VERSION.tar` as described in
 [Upgrading an existing installation](#upgrading-an-existing-installation),
-replaces the diagnostic boot images. After reboot, the USB shell, HTTP service
+replaces the diagnostic boot images. After reboot, the USB SSH service
 and diagnostic DHCP stay disabled. Stopping only the desktop services does not
 disable the early-boot channels in a diagnostic image.
 
