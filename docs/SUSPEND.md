@@ -56,7 +56,7 @@ logind 保持 `HandlePowerKey=ignore`，避免在桌面未接管时重复处理�
 | 静置变暗 | 开启（`idle-dim=true`），由 GNOME 在熄屏前安排 |
 | 空闲 5 分钟 | 熄屏并锁屏（`idle-delay=300`，锁屏开启） |
 | 电池供电，空闲 15 分钟 | 请求挂起（`sleep-inactive-battery-type='suspend'`，超时 `900`） |
-| 外部电源供电时空闲 | 正常熄屏，不自动挂起（Ubuntu 设置 `sleep-inactive-ac-timeout=0`） |
+| 外部电源供电时空闲 | 正常熄屏，不自动挂起（`sleep-inactive-ac-type=nothing`） |
 
 这些时限从空闲开始计算，不是在熄屏后再追加。GNOME 会遵循应用的阻止请求和用户设置；
 供电类型以 UPower 上报为准。默认值来源见
@@ -79,7 +79,7 @@ done
 
 ## 合盖
 
-键盘套或保护套的磁铁正对一颗霍尔开关，内核把它报成合盖开关（`SW_LID`）。合上时 logind
+键盘套或保护套的磁铁正对一颗霍尔开关，内核把它报成合盖开关（`SW_LID`）。接电合盖会锁屏。电池供电时合盖，logind
 让系统挂起（`/etc/systemd/logind.conf.d/90-erhai-power.conf` 里的 `HandleLidSwitch=suspend`），
 打开时由同一开关唤醒，桌面随即点亮锁屏。接着外屏时，桌面/logind 的正常策略会阻止合盖触发挂起。
 电源键动作由 GNOME 电源设置决定；外屏连接不改变上述空闲配置。

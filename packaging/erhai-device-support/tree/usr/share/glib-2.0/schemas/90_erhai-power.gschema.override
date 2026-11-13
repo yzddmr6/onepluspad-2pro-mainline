@@ -1,5 +1,5 @@
 # The shared GNOME Settings Daemon owns the power key.
-# Leave idle blanking, dimming and automatic suspend at distribution defaults.
+# Idle blanking and dimming use distribution defaults.
 [org.gnome.settings-daemon.plugins.power]
 # Lock by default; the Settings power panel can change the action.
 power-button-action='lock'
