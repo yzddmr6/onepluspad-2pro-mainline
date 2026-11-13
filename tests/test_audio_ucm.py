@@ -20,6 +20,7 @@ from unittest.mock import patch
 REPO = Path(__file__).resolve().parents[1]
 UCM = REPO / 'packaging/erhai-audio/tree/usr/share/alsa/ucm2'
 MIC_ROUTE = 'MultiMedia3 Mixer TX_CODEC_DMA_TX_3'
+DP_ROUTE = 'DISPLAY_PORT_RX_0 Audio Mixer MultiMedia2'
 SPEAKER_ROUTE = 'Secondary TDM0 Audio Mixer MultiMedia1'
 
 
@@ -60,8 +61,10 @@ class AcpProbeOrder(unittest.TestCase):
                 for conf in board.glob('*.conf'):
                     text = conf.read_text().replace('${CardId}', '0')
                     text = text.replace('/var/lib/erhai/audio/speaker-disabled', str(flag))
+                    # Model the presence of the card's DP jack without a sound card.
+                    text = text.replace("Type ControlExists\n\t\tControl \"iface=CARD,name='DP0 Jack'\"", f'Type Path\nPath "{temp}"\nMode exist')
                     text = re.sub(r'cset "name=\'([^\']+)\' ([^"]+)"', instrument, text)
-                    text = text.replace('"hw:0,0"', '"null"').replace('"hw:0,2"', '"null"')
+                    text = text.replace('"hw:0,0"', '"null"').replace('"hw:0,2"', '"null"').replace('"hw:0,1"', '"null"')
                     conf.write_text(text)
                 alsa = root / 'alsa.conf'
                 alsa.write_text('pcm.null { type null }\n')
@@ -79,21 +82,21 @@ class AcpProbeOrder(unittest.TestCase):
                         self.assertGreater(count, 0)
                         names = [devices[i].decode() for i in range(0, count, 2)]
                         lib.snd_use_case_free_list(devices, count)
-                        self.assertEqual(set(names), {'Mic'} if disabled else {'Mic', 'Speaker'})
+                        self.assertEqual(set(names), {'Mic', 'HDMI'} if disabled else {'Mic', 'Speaker', 'HDMI'})
                         self.assertEqual(lib.snd_use_case_set(manager, b'_verb', b'HiFi'), 0)
-                        self.assertEqual(writes(), [(MIC_ROUTE, '1'), (SPEAKER_ROUTE, '0,0' if disabled else '1,1')])
+                        self.assertCountEqual(writes(), [(MIC_ROUTE, '1'), (SPEAKER_ROUTE, '0,0' if disabled else '1,1'), (DP_ROUTE, '1,1')])
                         # Like ACP, open playback then capture with only the verb set.
-                        for stream in ([1] if disabled else [0, 1]):
+                        for stream in ([0, 1] if disabled else [0, 0, 1]):
                             pcm = C.c_void_p()
                             self.assertEqual(lib.snd_pcm_open(C.byref(pcm), b'null', stream, 0), 0)
                             lib.snd_pcm_close(pcm)
                         print(f'opt_out={disabled}: only _verb; devices={names}; before PCM opens={writes()}', flush=True)
                         if not disabled:
                             self.assertEqual(lib.snd_use_case_set(manager, b'_enadev', b'Speaker'), 0)
-                            self.assertEqual(len(writes()), 9)  # two routes, six amps, DSP gain
-                            self.assertTrue(all('Volume' in name or 'Playback Volu' in name for name, _ in writes()[2:]))
+                            self.assertEqual(len(writes()), 10)  # three routes, six amps, DSP gain
+                            self.assertTrue(all('Volume' in name or 'Playback Volu' in name for name, _ in writes()[3:]))
                         self.assertEqual(lib.snd_use_case_set(manager, b'_verb', b'Inactive'), 0)
-                        self.assertEqual(writes()[-2:], [(SPEAKER_ROUTE, '0,0'), (MIC_ROUTE, '0')])
+                        self.assertCountEqual(writes()[-3:], [(SPEAKER_ROUTE, '0,0'), (MIC_ROUTE, '0'), (DP_ROUTE, '0,0')])
                     finally:
                         lib.snd_use_case_mgr_close(manager)
 
