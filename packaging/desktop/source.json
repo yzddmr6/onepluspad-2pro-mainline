@@ -1230,6 +1230,60 @@
       "file": "python3-hivex_1.3.24-2.1build2_arm64.deb",
       "bytes": 11178,
       "sha256": "9bbd7e96e1ac0dde4d045c491c1f387b3d9d985a32a36d0a4da2e91ff05d8ee6"
+    },
+    {
+      "package": "libblas3",
+      "architecture": "arm64",
+      "version": "3.12.1-7ubuntu1",
+      "bytes": 180716,
+      "sha256": "e80a0b11711b2e8ac6241196a52c63c3a616d9a2cf26a3f4662706d6d1f6078a",
+      "file": "libblas3_3.12.1-7ubuntu1_arm64.deb",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/l/lapack/libblas3_3.12.1-7ubuntu1_arm64.deb"
+    },
+    {
+      "package": "libgfortran5",
+      "architecture": "arm64",
+      "version": "16-20260322-1ubuntu1",
+      "bytes": 448808,
+      "sha256": "c1e5c5fb8e0987bf65da2e9994578b4ed73a326824b77f039915616b7d773562",
+      "file": "libgfortran5_16-20260322-1ubuntu1_arm64.deb",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/g/gcc-16/libgfortran5_16-20260322-1ubuntu1_arm64.deb"
+    },
+    {
+      "package": "liblapack3",
+      "architecture": "arm64",
+      "version": "3.12.1-7ubuntu1",
+      "bytes": 2299176,
+      "sha256": "9d2fc660514ca2b2e17c307790e09e26d0c44547050b20fc799520c9b6732a81",
+      "file": "liblapack3_3.12.1-7ubuntu1_arm64.deb",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/l/lapack/liblapack3_3.12.1-7ubuntu1_arm64.deb"
+    },
+    {
+      "package": "python3-gst-1.0",
+      "architecture": "arm64",
+      "version": "1.28.2-1",
+      "bytes": 30022,
+      "sha256": "001eeb7bbf1613fa284b306a4c7c318dfe41347fc3a7f30e4cf23b62e203ba3d",
+      "file": "python3-gst-1.0_1.28.2-1_arm64.deb",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/g/gst-python1.0/python3-gst-1.0_1.28.2-1_arm64.deb"
+    },
+    {
+      "package": "python3-numpy-dev",
+      "architecture": "arm64",
+      "version": "1:2.3.5+ds-3ubuntu1",
+      "bytes": 141558,
+      "sha256": "fc1e374fcbe2e292f0c6a8635421477ff889afeb6addf129437fa2e2993b978b",
+      "file": "python3-numpy-dev_2.3.5+ds-3ubuntu1_arm64.deb",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/n/numpy/python3-numpy-dev_2.3.5+ds-3ubuntu1_arm64.deb"
+    },
+    {
+      "package": "python3-numpy",
+      "architecture": "arm64",
+      "version": "1:2.3.5+ds-3ubuntu1",
+      "bytes": 3899038,
+      "sha256": "8f36162243a7ecf198724a67c2b4f04a2eccd3f3c8b3f492fdad470999c0ceed",
+      "file": "python3-numpy_2.3.5+ds-3ubuntu1_arm64.deb",
+      "url": "https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/n/numpy/python3-numpy_2.3.5+ds-3ubuntu1_arm64.deb"
     }
   ],
   "runtime_snapshot": "20260924T000000Z",
