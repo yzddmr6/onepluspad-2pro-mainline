@@ -56,13 +56,13 @@ configure)
 	# what puts it on the interface, because that is the only hook ordered
 	# ahead of NetworkManager.
 	if command -v deb-systemd-helper >/dev/null 2>&1; then
-		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT; do
+		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT tablet-charge-sample.timer; do
 			deb-systemd-helper unmask "$unit" >/dev/null 2>&1 || true
 			deb-systemd-helper enable "$unit" >/dev/null 2>&1 || true
 		done
 	elif command -v systemctl >/dev/null 2>&1; then
 		# shellcheck disable=SC2086
-		systemctl enable --quiet $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT || true
+		systemctl enable --quiet $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT tablet-charge-sample.timer || true
 	fi
 
 	# udevd watches the rule directories and reloads on its own, but an
@@ -113,7 +113,7 @@ configure)
 	# the next boot runs them again.
 	if [ -d /run/systemd/system ] && command -v systemctl >/dev/null 2>&1; then
 		# shellcheck disable=SC2086
-		systemctl start $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT || true
+		systemctl start $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT tablet-charge-sample.timer || true
 		# The cover follower holds no state worth keeping across a version.
 		systemctl restart $COVER_UNIT || true
 

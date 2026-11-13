@@ -459,6 +459,7 @@ def copy_tree(source, root):
 
 def stage_device_support(root):
     copy_tree(PACKAGING / 'erhai-device-support/tree', root)
+    copy_tree(PACKAGING / 'shared-charge', root)
     for program in SWITCHER_PROGRAMS:
         install_file(REPO / 'switch' / program, root / 'usr/sbin' / program, 0o755)
     # The store itself: the package owns the directory, never its contents.
