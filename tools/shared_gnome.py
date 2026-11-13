@@ -18,9 +18,11 @@ def load():
     if (binaries['source_repository'], binaries['source_commit']) != (provenance['repository'], provenance['commit']):
         raise ValueError('Shared GNOME binary provenance differs from the source import')
     canonical = {}
-    for line in (ROOT / 'shared/ubuntu/power-button-lock.SHA256SUMS').read_text().splitlines():
-        digest, name = line.split()
-        canonical[name] = digest
+    manifests = ('power-button-lock.SHA256SUMS', 'mutter/SHA256SUMS')
+    for manifest in manifests:
+        for line in (ROOT / 'shared/ubuntu' / manifest).read_text().splitlines():
+            digest, name = line.split()
+            canonical[name] = digest
     packages = binaries['packages']
     if {pin['file']: pin['sha256'] for pin in packages.values()} != canonical:
         raise ValueError('Shared GNOME binary hashes differ from the canonical manifest')
@@ -29,7 +31,7 @@ def load():
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('--packages', type=Path, help='Verify all four runtime debs in this directory')
+    ap.add_argument('--packages', type=Path, help='Verify all shared runtime debs in this directory')
     args = ap.parse_args()
     packages = load()
     if args.packages:

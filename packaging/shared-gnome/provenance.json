@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/yzddmr6/xiaomipad-8pro-mainline",
-  "commit": "2a4d38e464b236291965bd9e2b22eff885b99455",
+  "commit": "74e59d5fe0ecccf42e2279e9424c4d35b8aa4a69",
   "authority": "Sources, patches and build recipes are maintained only in the source repository. Import these files unchanged; device branding is supplied by erhai-settings.",
   "files_sha256": {
     "ubuntu/gnome-control-center/COPYING": "640d90f6ee401241ff62834d0d1b33f83049e99b8bfdfa04ed1b0a1635dde3e7",
@@ -18,6 +18,12 @@
     "ubuntu/gnome-settings-daemon/power-button-lock.patch": "bf44c2aa151eab024ee884a5a2c7ae7775697165d0a78252ec37938a548f44a2",
     "ubuntu/gnome-settings-daemon/source.json": "fa8e8883e36da44dfe40b482a57324b1ed8705d8d9c532b0c60f5de36effc5ff",
     "ubuntu/gnome-settings-daemon/test-inhibition-order.patch": "01ecad1e55dd495ee6d8f5434608c84ce8da8528ab4458522b93c6d0b6b40d1d",
-    "ubuntu/power-button-lock.SHA256SUMS": "98caf491b9638ab3d9403ff5eab48ee6320424b465c2e73ca1e192c848282e24"
+    "ubuntu/power-button-lock.SHA256SUMS": "98caf491b9638ab3d9403ff5eab48ee6320424b465c2e73ca1e192c848282e24",
+    "ubuntu/mutter/changelog-entry": "7d6b42c9fba8976749ea3f82dfb7992d23ffc2e625e96bdb137eea0e4944d5e6",
+    "ubuntu/mutter/build-source.sh": "b85d2f01783a1abba64f02799f2af68ae88be63ed532dccb05d73025dd09db94",
+    "ubuntu/mutter/source.json": "7450cf1998da5f4d3a4ae117f4ca6e427585235f8c811191b21001347efa5341",
+    "ubuntu/mutter/native-release-power-save-onscreens-in-dispose.patch": "21a9b016a38b634c974fd46974c35c01ed82f37581719f75915484efd4550a3d",
+    "ubuntu/mutter/SHA256SUMS": "5336688cb9aa9903954138a7f9855cddddc2e62590c88228f52ebf6efc9d9194",
+    "ubuntu/mutter/COPYING": "2ec957306fef70d33c518e9d7a42bec23219c21cfa02212e275b8194ea7f2650"
   }
 }

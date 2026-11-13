@@ -3,7 +3,7 @@
 源码、补丁与构建配方的权威位置是小米平板 8 Pro 集成仓的 `ubuntu/`。
 `shared/` 按 `provenance.json` 的提交原样导入，每个文件均有 SHA-256；不要修改这些副本，
 也不在一加维护第二套补丁。保留原作者、许可证和 Ubuntu 源认证链。
-`binaries.json` 固定四个运行时 deb，并与导入的权威 `power-button-lock.SHA256SUMS` 交叉核对。
+`binaries.json` 固定八个运行时 deb，并与导入的权威 `power-button-lock.SHA256SUMS`、`mutter/SHA256SUMS` 交叉核对。
 
 装配前运行：
 
@@ -11,7 +11,8 @@
 python3 tools/shared_gnome.py --packages /path/to/runtime-debs
 ```
 
-把四个 deb 分别通过 `tools/build-desktop-rootfs.py --device-deb` 传入。
+WirePlumber 与 libwireplumber-0.5-0 使用 Ubuntu 更新包，通过 --dependency-deb 将两者加入离线仓库。
+把八个 deb 分别通过 `tools/build-desktop-rootfs.py --device-deb` 传入。
 打包器检查版本和哈希；选择 `erhai-settings` 或 `erhai-device` 时必须提供整组。
 
 `erhai-settings` 提供 `/usr/share/gnome-control-center/port-author.ini`、精确 APT pin，
