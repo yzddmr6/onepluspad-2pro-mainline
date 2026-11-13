@@ -7,11 +7,11 @@ Wants=erhai-debug-http.service erhai-debug-shell.service erhai-debug-dhcp.servic
 Before=erhai-debug-http.service erhai-debug-shell.service erhai-debug-dhcp.service
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+Type=notify
+NotifyAccess=all
 RuntimeDirectory=erhai-debug
 RuntimeDirectoryMode=0700
-ExecStart=/usr/libexec/erhai-ncm start
+ExecStart=/usr/bin/systemd-inhibit --what=sleep --mode=block --who=erhai-debug "--why=USB developer connection is enabled" /usr/libexec/erhai-ncm serve
 ExecStop=/usr/libexec/erhai-ncm stop
 
 [Install]

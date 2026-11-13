@@ -43,6 +43,11 @@ interface() {
 }
 
 case "${1:-}" in
+serve)
+    "$0" start
+    systemd-notify --ready
+    exec /usr/bin/sleep infinity
+    ;;
 prepare) prepare ;;
 interface) interface ;;
 start)
