@@ -48,7 +48,10 @@ if [[ $head != "$pinned_head" && ${ALLOW_UNPINNED_KERNEL:-0} != 1 ]]; then
 	echo 'For an explicit development experiment only, set ALLOW_UNPINNED_KERNEL=1.' >&2
 	exit 1
 fi
-base=$(git -C "$src" describe --tags --abbrev=0 --match 'v[0-9]*' HEAD)
+base=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["kernel"]["baseline_tag"])' "$repo/kernel/source.json")
+git -C "$src" merge-base --is-ancestor "refs/tags/$base" "$head" || {
+	echo 'Kernel source does not descend from the pinned upstream tag.' >&2; exit 1;
+}
 [[ -z $(git -C "$src" status --porcelain --untracked-files=no) ]] || {
 	echo 'Commit or snapshot tracked kernel changes before building.' >&2
 	exit 1
