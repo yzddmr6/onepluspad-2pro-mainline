@@ -75,7 +75,7 @@ esac
 case "$1" in
 remove)
 	if command -v deb-systemd-helper >/dev/null 2>&1; then
-		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT tablet-charge-sample.timer; do
+		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT tablet-charge-sample.timer tablet-charge-events.service; do
 			deb-systemd-helper mask "$unit" >/dev/null 2>&1 || true
 		done
 	fi
@@ -87,13 +87,13 @@ purge)
 	if command -v deb-systemd-helper >/dev/null 2>&1; then
 		deb-systemd-helper purge erhai-power-key@.service >/dev/null 2>&1 || true
 		deb-systemd-helper unmask erhai-power-key@.service >/dev/null 2>&1 || true
-		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT tablet-charge-sample.timer; do
+		for unit in $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT tablet-charge-sample.timer tablet-charge-events.service; do
 			deb-systemd-helper purge "$unit" >/dev/null 2>&1 || true
 			deb-systemd-helper unmask "$unit" >/dev/null 2>&1 || true
 		done
 	elif command -v systemctl >/dev/null 2>&1; then
 		# shellcheck disable=SC2086
-		systemctl disable --quiet $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT tablet-charge-sample.timer || true
+		systemctl disable --quiet $BT_UNITS $WIFI_UNITS $CHASSIS_UNIT $IDENTITY_UNIT $COVER_UNIT tablet-charge-sample.timer tablet-charge-events.service || true
 	fi
 	;;
 esac
