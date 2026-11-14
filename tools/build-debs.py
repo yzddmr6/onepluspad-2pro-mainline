@@ -98,6 +98,7 @@ import time
 import urllib.request
 from pathlib import Path
 
+from lib.app_center_input import stage_app_center
 from lib.abl_layout import (LayoutError, add_arguments as add_layout_arguments,
                             check_choice, sink_layout, vendor_boot_dtb)
 
@@ -1155,6 +1156,8 @@ def main():
                 stage_display_power(root)
             elif package in ('erhai-debug', 'erhai-firefox', 'erhai-snap-graphics', 'erhai-apps'):
                 copy_tree(PACKAGING / package / 'tree', root)
+                if package == 'erhai-apps':
+                    stage_app_center(root / 'usr/share/tablet-app-center')
             elif package == 'erhai-firmware':
                 stage_firmware(root, manifest, args.firmware_tree)
             elif package == 'erhai-settings':

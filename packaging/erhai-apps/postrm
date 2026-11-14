@@ -1,0 +1,6 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -e
+if [ "$1" = purge ]; then
+    deb-systemd-helper purge tablet-app-center-install.service >/dev/null
+fi

@@ -1,0 +1,6 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -e
+if [ "$1" = remove ]; then
+    deb-systemd-helper disable tablet-app-center-install.service >/dev/null
+fi
