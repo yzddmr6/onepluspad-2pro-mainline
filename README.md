@@ -5,7 +5,6 @@
 
 官方发布只在本仓库 [Releases](https://github.com/yzddmr6/onepluspad-2pro-mainline/releases)，免费提供。
 
-连接有线电源时，GNOME 顶栏显示电池侧净充电功率和当前充电通路。
 
 ## 🧭 路线选择
 
@@ -152,7 +151,7 @@
 | 音量键 | GPIO / PMIC PON input | ✅ | 音量上键与下键分别上报 `KEY_VOLUMEUP` 和 `KEY_VOLUMEDOWN`。 |
 | 调频与测温 | SCMI / IIO / thermal | 🟡 | 调频和温度读取可用；持续负载下的温控与机身温度管理不完整。 |
 | 电池信息 | qcom_battmgr / UPower | ✅ | 可读电量、容量与估计剩余时间；充电能力另列。 |
-| Linux 充电 | USB 供电 / 厂商固件 / SC8547A 电荷泵 | ✅ | 电池温度在 0 °C 至 51 °C 以下时，兼容的 SUPERVOOC、UFCS 和 PPS 充电器可快充，高电量插入也可使用。系统随电池温度和电压调节功率，接近充满时逐步降流。兼容的 PD 或 QC 充电器可用 9 V 充电。 |
+| Linux 充电 | USB 供电 / 厂商固件 / SC8547A 电荷泵 | ✅ | 电池温度在 0 °C 至 51 °C 以下时，兼容的 SUPERVOOC、UFCS 和 PPS 充电器可快充，高电量插入也可使用。系统随电池温度和电压调节功率，接近充满时逐步降流。兼容的 PD 或 QC 充电器可用 9 V 充电。 连接有线电源时，GNOME 顶栏显示电池侧净充电功率和当前充电通路。 |
 | 挂起与恢复 | Linux 电源管理 | ✅ | 默认使用 s2idle，支持 CX 断电、DDR 自刷新，以及开盖、电源键和 RTC 定时唤醒；恢复后可继续使用 Wi-Fi、键盘与摄像头。固件提供的 `deep` 状态默认不使用。详见[系统休眠](docs/SUSPEND.md)。 支持插入充电线唤醒。 |
 | RTC | Qualcomm PMIC RTC | ✅ | 支持时间读写。强制复位后 RTC 时间会丢失，联网后自动重新校准：证书时间检查不会阻止校时，网络拦截加密校时（NTS）时改用网络自带的时间源。校准后写回 RTC，普通重启后时间保持正确。 |
 | Snap 应用 | AppArmor / snapd / 图形运行库 | 🟡 | 共用 Adreno 830 图形运行库；strict 隔离仍受 snapd 能力检测问题影响。 |
