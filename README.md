@@ -5,6 +5,8 @@
 
 官方发布只在本仓库 [Releases](https://github.com/yzddmr6/onepluspad-2pro-mainline/releases)，免费提供。
 
+连接有线电源时，GNOME 顶栏显示电池侧净充电功率和当前充电通路。
+
 ## 🧭 路线选择
 
 让一台安卓平板跑起 Linux 桌面，大致有两条路。

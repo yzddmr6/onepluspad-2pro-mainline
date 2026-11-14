@@ -9,6 +9,8 @@
 
 ### v0.10.0
 
+连接有线电源时，GNOME 顶栏显示电池侧净充电功率和当前充电通路。 While wired power is connected, the GNOME top bar shows net battery charging power and the active charging protocol.
+
 内屏默认 120 Hz，可在显示设置中选择 90 Hz。Wi-Fi 发射功率由固件和当前监管域决定。
 
 The internal display defaults to 120 Hz and offers 90 Hz in Settings. Wi-Fi transmit power follows the firmware and the active regulatory domain.
