@@ -15,9 +15,9 @@
 
 The internal display defaults to 120 Hz and offers 90 Hz in Settings. Wi-Fi transmit power follows the firmware and the active regulatory domain.
 
-Waydroid 图形包支持 Adreno 830 硬件渲染，可从 GNOME 启动 Android 应用。 弱 USB 电源下空闲 15 分钟可自动挂起。充电功率充足或开发者通道启用时保持唤醒。系统在本地记录输入和电池充电遥测。
+Waydroid 图形包支持 Adreno 830 硬件渲染，可从 GNOME 启动 Android 应用。 接着有线充电器时，锁屏或合盖后屏幕关闭，系统保持唤醒，快充可持续至充满。充满后仍保持唤醒，拔线后恢复正常休眠。 接电脑 SDP/CDP 口时可正常空闲挂起；开发者模式会保持连接。系统在本地记录输入和电池充电遥测。
 
-Waydroid runs Android apps from GNOME with Adreno 830 hardware rendering. The tablet can suspend after 15 idle minutes on a weak USB supply. Sufficient charging power or an active developer connection keeps it awake. Charging samples are recorded locally.
+Waydroid runs Android apps from GNOME with Adreno 830 hardware rendering. With a wired charger connected, locking the tablet or closing the cover turns off the screen. The system stays awake so fast charging can continue until full. It stays awake while the charger remains connected and resumes normal sleep behavior after unplugging. The tablet can suspend when idle on an SDP or CDP computer port; USB developer mode keeps the connection awake. Charging samples are recorded locally.
 
 电池温度在 0 °C 至 51 °C 以下时，兼容的 SUPERVOOC、UFCS 和 PPS 充电器可快充，高电量插入也可使用。系统随电池温度和电压调节功率，接近充满时逐步降流。兼容的 PD 或 QC 充电器可用 9 V 充电。 一加手写笔扫描默认开启，支持 DisplayPort 音频输出。
 

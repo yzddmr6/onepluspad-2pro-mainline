@@ -4,7 +4,7 @@
     "upstream": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
     "baseline_tag": "v7.4-rc2",
     "branch": "sm8750/v7.4-dev",
-    "commit": "723bb9f112ec2b40cb6a6dbca5df0e0092ba819c",
+    "commit": "37c02984f26d2c05c40787980e26ebc46c62b64e",
     "board_dts": "arch/arm64/boot/dts/qcom/sm8750-erhai.dts",
     "toolchain": "aarch64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1)",
     "repository": "https://github.com/yzddmr6/linux-sm8750-erhai",
