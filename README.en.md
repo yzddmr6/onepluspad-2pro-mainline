@@ -118,7 +118,7 @@ Features under development are not included in the supported feature set.
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
 | Boot and storage | SM8750P / UFS | ✅ | Ubuntu boot and storage access work. Dual-boot switching is limited to the partition layout described above. |
-| Internal display | Dual DSI / DSC | ✅ | 3392 × 2400 at 120 Hz only. |
+| Internal display | Dual DSI / DSC | ✅ | 3392 × 2400 at 120 Hz by default, with an optional 90 Hz mode. |
 | Touch | Novatek NT36536 | ✅ | Finger input, desktop interaction and login work. Pen support is listed separately. |
 | GPU and desktop | Adreno 830 / Freedreno / Turnip / Mesa | ✅ | GNOME, OpenGL and Vulkan hardware rendering work. Vulkan uses Turnip. If GPU recovery fails, applications can remain stuck during exit and a reboot may be needed. |
 | Brightness | Dual KTZ8868 / one backlight interface | ✅ | Unified backlight control supports manual brightness adjustment and screen blanking. |
@@ -130,7 +130,7 @@ Features under development are not included in the supported feature set.
 
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
-| Wi-Fi | WCN7860 / ath12k | ✅ | Networking, automatic connection at boot and data transfers work. Packages keep the radio in world domain `00`. 5 GHz uses passive scanning and cannot host a hotspot. Changing the country code while associated can crash the WLAN firmware; do not do so. |
+| Wi-Fi | WCN7860 / ath12k | ✅ | Networking, automatic connection at boot and data transfers work. Transmit power follows the firmware and active regulatory domain. Packages keep the radio in world domain `00`. 5 GHz uses passive scanning and cannot host a hotspot. Changing the country code while associated can crash the WLAN firmware; do not do so. |
 | Bluetooth | WCN7860 / BlueZ | ✅ | The Bluetooth controller, scanning and device connections work. |
 | USB device mode | USB-C / NCM | 🟡 | USB networking works. Some unplug/replug cycles require a reboot to restore the connection. |
 | USB host peripherals | HID, storage, network and digital audio | ✅ | USB drives connected directly through a USB-C to USB-A adapter receive power from the tablet and can be recognized and mounted. A mouse connected through a dock works without external PD power. |

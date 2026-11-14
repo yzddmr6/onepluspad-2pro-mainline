@@ -9,6 +9,10 @@
 
 ### v0.10.0
 
+内屏默认 120 Hz，可在显示设置中选择 90 Hz。Wi-Fi 发射功率由固件和当前监管域决定。
+
+The internal display defaults to 120 Hz and offers 90 Hz in Settings. Wi-Fi transmit power follows the firmware and the active regulatory domain.
+
 Waydroid 图形包支持 Adreno 830 硬件渲染，可从 GNOME 启动 Android 应用。 弱 USB 电源下空闲 15 分钟可自动挂起。充电功率充足或开发者通道启用时保持唤醒。系统在本地记录输入和电池充电遥测。
 
 Waydroid runs Android apps from GNOME with Adreno 830 hardware rendering. The tablet can suspend after 15 idle minutes on a weak USB supply. Sufficient charging power or an active developer connection keeps it awake. Charging samples are recorded locally.
