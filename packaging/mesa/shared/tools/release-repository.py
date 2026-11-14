@@ -138,10 +138,22 @@ def previous_for_installed(previous, old, new, before, store):
     Project release packages must match the supplied previous batch. Ubuntu
     Mesa/libdrm may have received normal archive updates since that release.
     Capture their exact cohort via authenticated APT before changing anything.
+    Packages newly added to the new batch at the already-installed version are
+    left alone: the previous batch never managed them.
     """
     rows = {x['package']: x for x in old['packages']}
+    new_rows = {x['package']: x for x in new['packages']}
     managed = {x['package'] for x in old['packages'] + new['packages']}
-    missing = {n: before[n] for n in managed & before.keys()
+    # A package first managed by the new batch is not part of the previous
+    # release's cohort. If the target already has exactly the version the new
+    # batch ships, neither the upgrade nor a rollback changes it, so there is
+    # nothing to capture and nothing to reject. Asking the previous batch for
+    # its .deb turns every newly added ordinary Ubuntu dependency into a hard
+    # upgrade failure (observed on erhai v0.8.1 -> v0.9.0, where four libxcb
+    # packages were already installed by Qt/fcitx5 at the new versions).
+    added_unchanged = {n for n, row in new_rows.items()
+                       if n not in rows and before.get(n) == row['version']}
+    missing = {n: before[n] for n in (managed & before.keys()) - added_unchanged
                if n not in rows or rows[n]['version'] != before[n]}
     if not missing:
         return previous, old
