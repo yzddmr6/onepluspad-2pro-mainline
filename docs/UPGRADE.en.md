@@ -7,9 +7,10 @@
 
 To upgrade from v0.10.0, extract both repositories from the package TAR. Select `erhai-0.10.1` with `--previous erhai-0.10.0-rollback-0.10.1` for the whole-release upgrade. Shut down virtual machines before upgrading and reboot afterwards.
 
-From v0.10.1, a successful whole-release upgrade or a completed rollback removes what is no longer needed: earlier batches, boot image copies, old kernel packages and their modules, and project packages dropped from the releases. It keeps the two batches of this upgrade, their boot sets, and the kernels that are running or needed for rollback. Boot-set copies saved by hand as `/var/lib/erhai/rollback-*` following earlier instructions are removed when their kernel is no longer kept. Personal files, Waydroid, virtual machines and changed configuration files are not affected; `/var/lib/erhai/releases/cleanup.json` records what was removed and why. To clean up again later, run:
+From v0.10.1, a successful whole-release upgrade or a completed rollback removes what is no longer needed: earlier batches, boot image copies, old kernel packages and their modules, and project packages dropped from the releases. It keeps the two batches of this upgrade, their boot sets, and the kernels that are running or needed for rollback. Boot-set copies saved by hand as `/var/lib/erhai/rollback-*` following earlier instructions are removed when their kernel is no longer kept. Personal files, Waydroid, virtual machines and changed configuration files are not affected; `/var/lib/erhai/releases/cleanup.json` records what was removed and why. To clean up again later, preview the plan with `--dry-run`, which lists what would be removed and why without changing anything, then run it:
 
 ```sh
+sudo /usr/bin/python3 /var/lib/erhai/releases/erhai-0.10.1/install.py cleanup --product erhai --dry-run
 sudo /usr/bin/python3 /var/lib/erhai/releases/erhai-0.10.1/install.py cleanup --product erhai
 ```
 

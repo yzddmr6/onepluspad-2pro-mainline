@@ -7,9 +7,10 @@
 
 从 v0.10.0 升级，解压包含两个仓库的软件包 TAR，整组升级时使用 `erhai-0.10.1` 和 `--previous erhai-0.10.0-rollback-0.10.1`。升级前关闭虚拟机，完成后重启。
 
-从 v0.10.1 起，整组升级成功或整版回退完成后，工具自动清掉不再需要的东西：旧批次、启动镜像副本、旧内核包及其模块，以及版本里已经去掉的项目包；只留本次升级的新旧两批、它们的启动镜像组，以及正在运行或回退要用的内核。以前按旧说明手工保存的 `/var/lib/erhai/rollback-*` 启动组副本，对应内核不再保留的也一并删掉。个人文件、Waydroid、虚拟机和改过的配置文件不受影响，删了什么、为什么删记在 `/var/lib/erhai/releases/cleanup.json`。以后需要时可以手动再清一次：
+从 v0.10.1 起，整组升级成功或整版回退完成后，工具自动清掉不再需要的东西：旧批次、启动镜像副本、旧内核包及其模块，以及版本里已经去掉的项目包；只留本次升级的新旧两批、它们的启动镜像组，以及正在运行或回退要用的内核。以前按旧说明手工保存的 `/var/lib/erhai/rollback-*` 启动组副本，对应内核不再保留的也一并删掉。个人文件、Waydroid、虚拟机和改过的配置文件不受影响，删了什么、为什么删记在 `/var/lib/erhai/releases/cleanup.json`。以后需要再清理时，可以先加 `--dry-run` 预览要删的内容和原因（不做任何改动），再正式执行：
 
 ```sh
+sudo /usr/bin/python3 /var/lib/erhai/releases/erhai-0.10.1/install.py cleanup --product erhai --dry-run
 sudo /usr/bin/python3 /var/lib/erhai/releases/erhai-0.10.1/install.py cleanup --product erhai
 ```
 
