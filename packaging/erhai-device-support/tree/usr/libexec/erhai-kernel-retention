@@ -36,6 +36,9 @@ def main():
         releases.add(os.uname().release)
     if any(not re.fullmatch(r'[a-z0-9.+-]{1,64}', release) for release in releases):
         raise SystemExit('invalid kernel release in retention inputs')
+    # Only installed payloads can be protected; a selected set whose kernel has
+    # been purged, or a RAM-booted kernel, must not leave a stale entry.
+    releases = {release for release in releases if (root / 'usr/lib/erhai/boot' / release).is_dir()}
     # APT's built-in kernel name parser does not recognize the erhai prefix.
     # Use its standard exact-package protection, limited to selected kernels.
     patterns = ['^erhai-kernel-image-' + release.replace('.', '[.]').replace('+', '[+]') + '$'

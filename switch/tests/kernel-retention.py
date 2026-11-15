@@ -60,7 +60,11 @@ def main():
         # Legacy, unversioned installs have only the canonical source path.
         (store / 'ubuntu.prev/kernel.json').unlink()
         (store / 'ubuntu.prev/meta.json').write_text(json.dumps({'source': '/usr/lib/erhai/boot/7.2.0-erhai-dev+'}))
+        (root / 'usr/lib/erhai/boot/7.2.0-erhai-dev+').mkdir()
         check(root, releases[1], [releases[1], '7.2.0-erhai-dev+'], [releases[0], releases[2]])
+        # A selected set whose kernel payload was purged leaves no entry.
+        (root / 'usr/lib/erhai/boot/7.2.0-erhai-dev+').rmdir()
+        check(root, releases[1], [releases[1]], ['7.2.0-erhai-dev+', releases[0], releases[2]])
     print('KERNEL_RETENTION_INSTALLER_AND_APT_PASS')
 
 
