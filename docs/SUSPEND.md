@@ -56,13 +56,13 @@ logind 保持 `HandlePowerKey=ignore`，避免在桌面未接管时重复处理�
 | 静置变暗 | 开启（`idle-dim=true`），由 GNOME 在熄屏前安排 |
 | 空闲 5 分钟 | 熄屏并锁屏（`idle-delay=300`，锁屏开启） |
 | 电池供电，空闲 15 分钟 | 请求挂起（`sleep-inactive-battery-type='suspend'`，超时 `900`） |
-| 外部电源供电时空闲 | 正常熄屏，不自动挂起（`sleep-inactive-ac-type=nothing`） |
+| 外部电源供电时空闲 | 空闲 15 分钟请求挂起（`sleep-inactive-ac-type='suspend'`，超时 `900`）。接着有线充电器时系统保持唤醒，快充可持续至充满，充满后仍保持唤醒，拔线后恢复正常休眠；接电脑 SDP/CDP 口时可正常空闲挂起；开发者模式会保持连接 |
 
 这些时限从空闲开始计算，不是在熄屏后再追加。GNOME 会遵循应用的阻止请求和用户设置；
 供电类型以 UPower 上报为准。默认值来源见
 [GNOME 电源默认值](https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/blob/50.0/data/org.gnome.settings-daemon.plugins.power.gschema.xml.in)
 及 [Ubuntu 覆盖](https://git.launchpad.net/ubuntu/+source/ubuntu-settings/tree/debian/ubuntu-settings.gsettings-override?h=ubuntu/resolute)。
-设备包不再覆盖这些空闲默认值，也不会清除个人设置。
+设备包把外部电源供电时的空闲动作设为 15 分钟挂起（`95_tablet-charge.gschema.override`），不会清除个人设置。
 
 可在**设置 → 电源**中调整时限。如果已有账户曾显式保存“永不熄屏”或“永不挂起”，
 希望恢复默认值，可在该用户桌面的终端中只重置以下键（不要使用 `sudo`）：

@@ -62,13 +62,13 @@ user profile:
 | Idle dimming | Enabled (`idle-dim=true`), timed by GNOME before blanking |
 | 5 minutes idle | Blank and lock the screen (`idle-delay=300`, locking enabled) |
 | 15 minutes idle on battery | Request suspend (`sleep-inactive-battery-type='suspend'`, timeout `900`) |
-| Idle on external power | Blank normally; no automatic suspend (`sleep-inactive-ac-type=nothing`) |
+| Idle on external power | Request suspend after 15 minutes (`sleep-inactive-ac-type='suspend'`, timeout `900`). With a wired charger connected the system stays awake so fast charging can continue until full; it stays awake while the charger remains connected and resumes normal sleep behavior after unplugging. The tablet can suspend when idle on an SDP or CDP computer port; USB developer mode keeps the connection awake |
 
 These are idle deadlines, not delays added after blanking. GNOME respects application
 inhibitors and user settings; the power source is the one reported by UPower. See the
 [GNOME power defaults](https://gitlab.gnome.org/GNOME/gnome-settings-daemon/-/blob/50.0/data/org.gnome.settings-daemon.plugins.power.gschema.xml.in)
 and [Ubuntu overrides](https://git.launchpad.net/ubuntu/+source/ubuntu-settings/tree/debian/ubuntu-settings.gsettings-override?h=ubuntu/resolute).
-The device package does not replace those idle defaults or erase personal settings.
+The device package sets the idle action on external power to suspend after 15 minutes (`95_tablet-charge.gschema.override`) and does not erase personal settings.
 
 Use **Settings → Power** to choose different times. If an existing account explicitly
 saved the previous never-blank or never-suspend settings, reset just these keys from a
