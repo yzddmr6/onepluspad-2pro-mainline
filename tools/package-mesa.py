@@ -26,6 +26,13 @@ def main():
     parser.add_argument('--release-packages', type=Path, action='append', default=[])
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    # The import record ships in erhai-mesa as its source statement.
+    shared = REPO / 'packaging/mesa/shared'
+    record = json.loads((REPO / 'packaging/mesa/provenance.json').read_text())
+    stale = sorted(name for name, digest in record['files_sha256'].items()
+                   if not (shared / name).is_file() or sha(shared / name) != digest)
+    if stale:
+        parser.error('packaging/mesa/provenance.json does not match the imported files: ' + ', '.join(stale))
     package = args.shared_package.resolve()
     fields = subprocess.check_output(['dpkg-deb', '-f', str(package), 'Package', 'Version', 'Architecture'],
                                      text=True)
