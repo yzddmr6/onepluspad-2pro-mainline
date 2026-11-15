@@ -37,9 +37,7 @@ These steps require the established project layout and complete switcher storage
 - In Android, use the installed KernelSU switching module; see the
   [switcher reference](../switch/README.md) for its installation and path conventions.
 - An installed Linux system net-charges from a USB PD charger; on a computer's USB
-  port the battery still drains. Fastboot does not charge: when the battery
-  runs low there, return to Android to charge and confirm that capacity has
-  recovered before continuing.
+  port the battery still drains. Fastboot does not charge.
 
 Both switching directions have been tested on the existing layout. Switching
 writes three boot partitions; it does not apply to a fresh tablet, missing
@@ -208,7 +206,7 @@ switcher to activate the Ubuntu boot triplet. Stock devices without Linux
 partitions are outside this procedure.
 
 The host needs amd64 Linux, rootful Docker, Android platform-tools, ARM64 binfmt, a native C compiler and `dpkg-deb`. Start with Android
-running, battery at least 50%, USB debugging, working KernelSU root and this
+running, USB debugging, working KernelSU root and this
 project's switch module installed. Firmware must match the [tested combination](../packaging/installation.json); another OTA on the same model is not automatically accepted. Use the build guide's `rootfs.squashfs` and
 its adjacent `manifest.json`. Allow space for the private installation images.
 The installer builds the pinned AOSP `ext2simg` tool, which uses the ext4 allocation

@@ -29,8 +29,7 @@ RAM 临时启动不替换启动分区，但使用已安装根系统的临时内�
 - Ubuntu 桌面打开 **Switch to Android（切换到 Android）**，按提示输入管理员密码，等待自动重启。
 - Android 侧使用已安装的 KernelSU 切换模块；其安装和路径约定见
   [切换器说明](../switch/README.md)。
-- 已装 Linux 中接 USB PD 充电器可以净充电（电脑 USB 口供电不足，仍会净放电）；Fastboot 下不能充电，
-  电量不足时返回 Android 充电，确认电量恢复后再继续。
+- 已装 Linux 中接 USB PD 充电器可以净充电（电脑 USB 口供电不足，仍会净放电）；Fastboot 下不充电。
 
 两个方向的切换在既有测试布局上已有验证。切换会改写三个启动分区，不能用于尚未
 安装、缺失回退镜像或布局不一致的设备。
@@ -172,7 +171,7 @@ adb -s "$device_serial" push out/erhai-switch-*.zip /sdcard/Download/
 它保留 Android 数据和 GPT；清空两个 Linux 分区，并通过既有切换器安装
 Ubuntu 启动三件套。尚未划分 Linux 分区的原厂设备不适用这一流程。
 
-主机需要 amd64 Linux、rootful Docker、Android platform-tools、ARM64 binfmt、原生 C 编译器及 `dpkg-deb`。平板从 Android 开始，电量至少 50%，USB 调试与 KernelSU
+主机需要 amd64 Linux、rootful Docker、Android platform-tools、ARM64 binfmt、原生 C 编译器及 `dpkg-deb`。平板从 Android 开始，USB 调试与 KernelSU
 root 可用，且已安装本项目的切换模块。固件须在[已验证组合](../packaging/installation.json)中；
 同型号的其它 OTA 不会自动获准刷入。准备构建指南生成的 `rootfs.squashfs` 及同目录
 `manifest.json`，备份目录应有足够空间存放系统安装镜像。安装器自动从固定输入构建

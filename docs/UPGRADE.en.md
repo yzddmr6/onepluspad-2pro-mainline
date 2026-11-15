@@ -2,10 +2,61 @@
 
 [中文](UPGRADE.md) · [Installation and recovery](FLASHING.en.md)
 
+This page lists the notes for each release. The whole-release upgrade runs entirely on the tablet, no computer needed; the steps are in [Whole-release upgrade (tablet only)](#whole-release-upgrade-tablet-only).
+
+## Whole-release upgrade (tablet only)
+
+Every step runs on the tablet. `<version>` is the release you upgrade to (the version in the
+release title, without the `v`), and `<previous>` is the version the tablet runs now.
+
+1. **Download.** Open the [latest release](https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/latest)
+   in Firefox and download `erhai-device-packages-v<version>.tar` and `SHA256SUMS`. They are saved
+   to the Downloads folder.
+
+2. **Verify and extract.** Open Terminal:
+
+   ```sh
+   cd "$(xdg-user-dir DOWNLOAD)"
+   sha256sum -c --ignore-missing SHA256SUMS        # the package TAR line says OK
+   tar -xf erhai-device-packages-v<version>.tar     # yields both batches under repositories/
+   ```
+
+3. **Preview the cleanup (optional).** From v0.10.1, a completed whole-release upgrade removes the
+   batches, kernels and boot image copies earlier releases left. To see what would be removed and
+   why, run the command below; it only lists and changes nothing. A fresh installation that has
+   never had a whole-release upgrade reports that there is nothing to clean up; skip this step then:
+
+   ```sh
+   sudo /usr/bin/python3 repositories/erhai-<version>/install.py cleanup --product erhai --dry-run
+   ```
+
+4. **Upgrade.** Shut down running virtual machines, then run:
+
+   ```sh
+   sudo systemd-run --unit=erhai-release-upgrade --setenv=DEBIAN_FRONTEND=noninteractive \
+     /usr/bin/python3 "$PWD/repositories/erhai-<version>/install.py" upgrade \
+     "$PWD/repositories/erhai-<version>" --previous "$PWD/repositories/erhai-<previous>-rollback-<version>"
+   journalctl -f -u erhai-release-upgrade   # press Ctrl+C after "Deactivated successfully"
+   sudo dpkg --audit                        # expect no output
+   ```
+
+   The upgrade runs in its own system unit, so closing the terminal does not interrupt it. If it
+   fails, run `sudo dpkg --configure -a` and then the same upgrade command again.
+
+5. **Reboot.** Run `sudo reboot`; after logging in again, `uname -r` shows the new kernel. The
+   upgrade tool keeps the two batches needed for rollback in `/var/lib/erhai/releases/`. Once the
+   new release works, you can delete the TAR and the extracted `repositories/` from the Downloads folder.
+
+### Transfer from a computer (optional)
+
+You can also download and verify the same two files on a computer and copy them to the tablet
+(for example with `scp` to `root@192.168.77.2` on an installation with USB debugging enabled), then
+continue from step 2 in a terminal on the tablet. Fastboot recovery for a system that does not
+boot is in [Installation and recovery](FLASHING.en.md).
 
 ## v0.10.0 → v0.10.1
 
-To upgrade from v0.10.0, extract both repositories from the package TAR. Select `erhai-0.10.1` with `--previous erhai-0.10.0-rollback-0.10.1` for the whole-release upgrade. Shut down virtual machines before upgrading and reboot afterwards.
+To upgrade from v0.10.0, download the package TAR on the tablet and extract both repositories from it as in [Whole-release upgrade (tablet only)](#whole-release-upgrade-tablet-only). Select `erhai-0.10.1` with `--previous erhai-0.10.0-rollback-0.10.1` for the whole-release upgrade. Shut down virtual machines before upgrading and reboot afterwards.
 
 From v0.10.1, a successful whole-release upgrade or a completed rollback removes what is no longer needed: earlier batches, boot image copies, old kernel packages and their modules, and project packages dropped from the releases. It keeps the two batches of this upgrade, their boot sets, and the kernels that are running or needed for rollback. Boot-set copies saved by hand as `/var/lib/erhai/rollback-*` following earlier instructions are removed when their kernel is no longer kept. Personal files, Waydroid, virtual machines and changed configuration files are not affected; `/var/lib/erhai/releases/cleanup.json` records what was removed and why. To clean up again later, preview the plan with `--dry-run`, which lists what would be removed and why without changing anything, then run it:
 
