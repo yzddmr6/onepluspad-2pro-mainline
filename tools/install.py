@@ -108,7 +108,7 @@ class Installer:
         return self.run(['adb', '-s', self.args.serial, 'exec-out', 'su', '-c',
                          identity + script], timeout, output)
 
-    def inspect(self, minimum_battery=50, require_linux=True):
+    def inspect(self, require_linux=True):
         names = 'userdata boot_a init_boot_a vendor_boot_a'
         if require_linux:
             names += ' linux_rootfs linux_data'
@@ -123,14 +123,10 @@ for name in @PARTITIONS@; do
     echo PART=$name,$dev,$(blockdev --getsize64 "$dev"),$(cat /sys/class/block/$node/start)
 done
 test -d /mnt/vendor/persist/sensors/registry/registry
-dumpsys battery
 '''.replace('@PARTITIONS@', names))
         slot = re.search(r'^SLOT=(.*)$', text, re.M)
         if not slot or slot[1] != '_a':
             raise RuntimeError('Only the verified active-slot-A layout is supported')
-        battery = re.search(r'^\s*level:\s*(\d+)', text, re.M)
-        if not battery or int(battery[1]) < minimum_battery:
-            raise RuntimeError(f'Charge in Android to at least {minimum_battery}% before installation')
         parts = {}
         for name, device, size, start in re.findall(r'^PART=([^,]+),([^,]+),(\d+),(\d+)$', text, re.M):
             parts[name] = {'device': device, 'bytes': int(size), 'start_512': int(start)}
@@ -140,13 +136,12 @@ dumpsys battery
             if parts[name]['bytes'] < minimum:
                 raise RuntimeError(f'{name} is too small')
         return {'serial': self.args.serial, 'slot': slot[1], 'partitions': parts,
-                'firmware': re.search(r'^FIRMWARE=(.*)$', text, re.M)[1],
-                'battery': int(battery[1])}
+                'firmware': re.search(r'^FIRMWARE=(.*)$', text, re.M)[1]}
 
     def check_device(self):
         plan = self.inspect(require_linux=False)
         check_firmware(plan)
-        print('OPD2413, tested Android firmware, active slot A and battery: OK')
+        print('OPD2413, tested Android firmware and active slot A: OK')
 
     def backup(self):
         if (self.work / 'backup.json').exists():
@@ -357,7 +352,7 @@ dumpsys battery
             self.fastboot('flash', name + plan['slot'], self.work / 'android' / (name + '.img'), timeout=180)
         self.fastboot('reboot')
         self.wait_adb()
-        restored = self.inspect(minimum_battery=0)
+        restored = self.inspect()
         for name in PARTS:
             got = self.android('sha256sum ' + shlex.quote(restored['partitions'][name + '_a']['device'])).split()[0]
             if got != plan['android_sha256'][name]:

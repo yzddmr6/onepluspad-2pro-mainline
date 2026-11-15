@@ -118,5 +118,28 @@ class InstallBoundaries(unittest.TestCase):
         self.installer.run.assert_not_called()
 
 
+class InspectionIgnoresCharge(unittest.TestCase):
+    """Installing writes only the Linux partitions and slot A; the charge level never gates it."""
+
+    def test_inspection_neither_reads_nor_requires_charge(self):
+        with tempfile.TemporaryDirectory() as directory:
+            installer = install.Installer(SimpleNamespace(work=Path(directory), serial='TEST_DEVICE', erase_linux=True))
+            try:
+                gib = 1 << 30
+                listing = ['SLOT=_a', 'FIRMWARE=test-firmware'] + [
+                    f'PART={name},/dev/block/sda{n},{size},{8 * n}' for n, (name, size) in enumerate(
+                        (('userdata', gib), ('boot_a', 1 << 26), ('init_boot_a', 1 << 23), ('vendor_boot_a', 1 << 26),
+                         ('linux_rootfs', 16 * gib), ('linux_data', 8 * gib)), 1)]
+                installer.android = Mock(return_value='\n'.join(listing) + '\n')
+                plan = installer.inspect()
+                script = installer.android.call_args[0][0]
+            finally:
+                installer.log.close()
+        self.assertNotIn('battery', script)
+        self.assertEqual((plan['slot'], plan['firmware']), ('_a', 'test-firmware'))
+        self.assertNotIn('battery', plan)
+        self.assertEqual(plan['partitions']['linux_rootfs']['bytes'], 16 * gib)
+
+
 if __name__ == '__main__':
     unittest.main()

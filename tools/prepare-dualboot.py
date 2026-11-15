@@ -69,9 +69,6 @@ def inspect():
         raise RuntimeError('Expected 4096-byte disk sectors')
     if not 450 * GIB <= int(run('blockdev', '--getsize64', DISK)) <= 512 * GIB:
         raise RuntimeError('Only the 512 GB model layout is supported')
-    battery = list(Path('/sys/class/power_supply').glob('*/capacity'))
-    if not battery or int(battery[0].read_text()) < 50:
-        raise RuntimeError('Charge to at least 50% in Android before partitioning')
     table = run('sgdisk', '--print', DISK)
     entries = re.findall(r'^\s*(\d+)\s+(\d+)\s+(\d+)\s+.*?\s+([0-9A-F]{4})\s+(\S+)\s*$', table, re.M)
     names = {int(n): name for n, _, _, _, name in entries}

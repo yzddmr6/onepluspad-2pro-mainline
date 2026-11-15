@@ -92,22 +92,28 @@ class Gates(unittest.TestCase):
         self.assertFalse((self.dev / '.rebooted').exists())
         return result
 
-    def test_battery_gate(self):
-        for value in ('0', '39', '', 'bad', '-1', '101', '40.0'):
-            for target in ('android', 'ubuntu'):
-                with self.subTest(value=value, target=target):
-                    self.fill('ubuntu')
-                    (self.battery / 'capacity').write_text(value)
-                    result = self.assert_refused_unchanged('to-' + target)
-                    self.assertIn('40%', result.stderr)
-                    self.assertIn('40%', (self.root / 'notifications').read_text())
-        (self.battery / 'capacity').unlink()
-        self.assert_refused_unchanged('to-android')
+    def test_switches_at_any_or_unreadable_charge(self):
+        # Writing a triplet takes seconds and touches only slot A; slot B and Fastboot stay intact.
+        def assert_holds(kind):
+            self.assertEqual(self.partitions(), {n: (self.store / kind / (n + '.img')).read_bytes() for n in PARTS})
+        for value in ('0', '1', '39', '', 'bad'):
+            with self.subTest(value=value):
+                self.fill('ubuntu')
+                (self.battery / 'capacity').write_text(value)
+                for target in ('android', 'ubuntu'):
+                    result = self.run_switch('to-' + target)
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    assert_holds(target)
+                    self.assertTrue((self.dev / '.rebooted').exists())
+                    (self.dev / '.rebooted').unlink()
         shutil.rmtree(self.dev / 'power_supply')
-        self.assert_refused_unchanged('to-android')
+        self.fill('ubuntu')
+        result = self.run_switch('to-android')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        assert_holds('android')
+        self.assertNotIn('battery', (result.stdout + result.stderr).lower())
 
-    def test_boundary_and_repeat_reboot(self):
-        (self.battery / 'capacity').write_text('40\n')
+    def test_repeat_reboot(self):
         for target in ('android', 'ubuntu'):
             with self.subTest(target=target):
                 result = self.run_switch('to-' + target, '--no-reboot')
@@ -259,12 +265,14 @@ do_reboot
                                         text=True, capture_output=True, timeout=5)
                 self.assertEqual(result.stdout.strip(), expected, result.stderr)
 
-    def test_busybox_shared_gate(self):
+    def test_busybox_switches_at_low_charge(self):
         self.assertIsNotNone(shutil.which('busybox'))
-        for level, expected in (('39', 1), ('40', 0)):
-            (self.battery / 'capacity').write_text(level)
-            result = self.run_switch('to-android', '--no-reboot', shell='busybox')
-            self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+        for level in ('0', '39', 'bad'):
+            with self.subTest(level=level):
+                self.fill('ubuntu')
+                (self.battery / 'capacity').write_text(level)
+                result = self.run_switch('to-android', '--no-reboot', shell='busybox')
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == '__main__':

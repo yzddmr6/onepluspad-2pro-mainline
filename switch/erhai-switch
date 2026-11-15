@@ -524,7 +524,6 @@ cmd_stash() {
 }
 
 cmd_to_ubuntu() {
-	require_switch_battery
 	[ ! -f "$STORE/.switch-incomplete" ] || die 'a switch was interrupted; restore Android first'
 	validate_target "$STORE/ubuntu" ubuntu
 	tu_who=$(occupant)
@@ -548,7 +547,6 @@ cmd_to_ubuntu() {
 }
 
 cmd_to_android() {
-	require_switch_battery
 	validate_target "$STORE/android" android
 	ta_who=$(occupant)
 	if [ "$ta_who" = android ]; then
