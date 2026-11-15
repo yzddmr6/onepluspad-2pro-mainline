@@ -5,6 +5,8 @@ kernel based on upstream Linux. [中文](README.md)
 
 Official builds are published only in this repository's [Releases](https://github.com/yzddmr6/onepluspad-2pro-mainline/releases), free of charge.
 
+**Turn your tablet into a touchscreen Linux computer:** run Linux applications on the native GNOME desktop, manage ARM64 virtual machines with the preinstalled GunyahVM, and use Waydroid for Android applications with Adreno GPU acceleration.
+
 ## 🧭 Our Approach
 
 There are roughly two ways to bring a Linux desktop to an Android tablet.
@@ -54,7 +56,7 @@ primarily in Chinese.
 - **Power:** Compatible SUPERVOOC, UFCS and PPS chargers support fast charging from 0 °C to below 51 °C, including when connected at a high state of charge. Power follows cell temperature and voltage, tapering near full charge. Compatible PD and QC chargers support 9 V charging.
   Fastboot is not a
   charging fallback.
-  Closing the keyboard cover or a case suspends the tablet; the power button defaults to locking the
+  On battery power, closing the keyboard cover or a case suspends the tablet; the power button defaults to locking the
   screen and can be configured in Settings > Power. In suspend the SoC reaches its deepest
   power states. When idle, the screen dims and blanks with Ubuntu's defaults and the tablet
   can suspend on battery or weak USB power.
@@ -158,7 +160,7 @@ Features under development are not included in the supported feature set.
 
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
-| Cover | Hall switch / logind | ✅ | Closing the keyboard cover or a case suspends the tablet within about a second; opening it wakes the tablet and lights up the screen. Touch input is ignored while the cover is closed. Closing and opening the cover does not wake a suspend entered with the cover open (for example through idle suspend); press the power button instead. |
+| Cover | Hall switch / logind | ✅ | On battery power, closing the keyboard cover or a case suspends the tablet within about a second; opening it wakes the tablet and lights up the screen. Touch input is ignored while the cover is closed. Closing and opening the cover does not wake a suspend entered with the cover open (for example through idle suspend); press the power button instead. |
 | Power button | Linux input / GNOME | ✅ | GNOME handles the key; its default action is to lock the screen and can be changed in Settings > Power. The old `power-key-action` files no longer apply. |
 | Volume keys | GPIO / PMIC PON input | ✅ | Volume up and down report `KEY_VOLUMEUP` and `KEY_VOLUMEDOWN`, respectively. |
 | CPU frequency and temperature | SCMI / IIO / thermal | 🟡 | Frequency scaling and temperature readings work. Sustained-load thermal control and enclosure-temperature management are incomplete. |
