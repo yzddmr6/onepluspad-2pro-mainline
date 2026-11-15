@@ -17,7 +17,8 @@ class CleanupTest(unittest.TestCase):
                               'ii linux-modules-7.0.0-14-generic\nii linux-main-modules-zfs-7.0.0-14-generic\n'
                               'rc linux-image-6.17.0-1-generic\nii kdump-tools\n'
                               'ii linux-firmware\nii erhai-kernel-image-current\nii erhai-kernel-image-rollback\n'
-                              'ii linux-headers-7.0.0-14\nii linux-image-6.12-custom\n')
+                              'ii linux-headers-7.0.0-14\nii linux-image-6.12-custom\nii linux-tools-7.0.0-14\n'
+                              'ii linux-tools-common\nii linux-perf\nii linux-libc-dev\nii linux-base\n')
             (root / 'dpkg-query').write_text('#!/bin/sh\nif [ ! -f "$CASE_ROOT/removed" ]; then cat "$CASE_ROOT/before"; fi\n')
             (root / 'dpkg').write_text('#!/bin/sh\nexit 0\n')
             (root / 'apt-mark').write_text('#!/bin/sh\nexit 0\n')
@@ -33,16 +34,18 @@ class CleanupTest(unittest.TestCase):
             self.assertEqual(set(args[3:]), {
                 'linux-generic-hwe-26.04', 'linux-image-7.0.0-14-generic',
                 'linux-modules-7.0.0-14-generic', 'linux-main-modules-zfs-7.0.0-14-generic',
-                'linux-image-6.17.0-1-generic', 'kdump-tools'})
+                'linux-image-6.17.0-1-generic', 'kdump-tools',
+                # The flavour-independent pieces of a distribution kernel are kernels too.
+                'linux-headers-7.0.0-14', 'linux-image-6.12-custom', 'linux-tools-7.0.0-14'})
             return result
 
-    def test_removes_only_unused_generic_packages(self):
+    def test_removes_every_distribution_kernel_and_nothing_else(self):
         self.assertEqual(self.run_cleanup().returncode, 0)
 
     def test_remaining_packages_are_a_failure(self):
         result = self.run_cleanup(leftover=True)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('Generic kernel packages remain', result.stderr)
+        self.assertIn('Distribution kernel packages remain', result.stderr)
 
 if __name__ == '__main__':
     unittest.main()
