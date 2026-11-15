@@ -7,6 +7,12 @@
 
 ✅ 可用 / Working · 🟡 部分支持 / Partial · ❌ 尚不支持 / Unsupported
 
+### v0.10.1
+
+原装充电器的 SUPERVOOC 电荷泵一直工作到快满时按原厂的低电流判据结束，不再在 89% 左右提前转入慢充；从 73% 充到显示 100% 由约 86 分钟缩短到约 43 分钟。整组升级或回退完成后，自动清掉旧的发布批次、旧内核、旧启动镜像备份和不再使用的旧包，只保留当前版本和用于回退的上一版。GunyahVM 升到 1.3.0，可以在平板上直接从 Apple 的服务器创建 macOS 虚拟机。
+
+With the original charger, the SUPERVOOC charge pump now runs until the stock low-current full criterion near the top instead of handing over to slow charging around 89 %; from 73 % to 100 % shown takes about 43 minutes instead of about 86. After a full upgrade or a rollback, old release batches, old kernels, old boot image backups and packages that are no longer used are removed automatically; only the current version and the previous one kept for rollback remain. GunyahVM 1.3.0 creates macOS VMs on the tablet directly from Apple's servers.
+
 ### v0.10.0
 
 连接有线电源时，GNOME 顶栏显示电池侧净充电功率和当前充电通路。 While wired power is connected, the GNOME top bar shows net battery charging power and the active charging protocol.
