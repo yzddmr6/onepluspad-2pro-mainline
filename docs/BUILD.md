@@ -196,10 +196,9 @@ Mozilla 不再提供已钉住的版本时，改钉当前版本。
 ### v0.8.0 应用输入
 
 把共用 `piano-snap-graphics` 提供者、[固定的 Resources 包](../packaging/resources/source.json)，
-以及 [GunyahVM 1.0.1](https://github.com/yzddmr6/GunyahVM) 的 `gunyahvm`、
-`gunyahvm-runtime`、`gunyahvm-guest-kernel`、`gunyahvm-guest-mesa` 四包放进
-`out/shared-apps`。四包的发布 URL、版本与 SHA-256 固定在
-[packaging/gunyahvm/source.json](../packaging/gunyahvm/source.json)，产品镜像装配会检查四包齐全且内容匹配。Snap 提供者使用与 `packaging/mesa/shared/mesa/source.json` 一致的
+以及 [GunyahVM](https://github.com/yzddmr6/GunyahVM) 的 `gunyahvm` 包放进
+`out/shared-apps`。它的发布 URL、版本与 SHA-256 固定在
+[packaging/gunyahvm/source.json](../packaging/gunyahvm/source.json)，产品镜像装配会检查固定的包齐全且内容匹配。Snap 提供者使用与 `packaging/mesa/shared/mesa/source.json` 一致的
 Mesa 来源。GunyahVM 所需的 Ubuntu 依赖已钉在 `packaging/desktop/source.json`，由装配器获取。
 其他额外的 Ubuntu 依赖 deb 才放进 `out/app-dependencies`，每个包只留一个版本；
 从固定 Ubuntu snapshot 获取，并保留索引中的 URL 与 SHA-256。
@@ -252,6 +251,6 @@ CDSP 固件和原厂 DSP 运行文件已随仓库提供，正常构建不需要�
 
 内核基线变化只重建匹配的内核、模块与启动镜像组；小米还重建同 ABI 的相机
 loopback 模块。根镜像、整版 APT 仓库与附件始终用最终组件重新装配和校验。
-GunyahVM 1.2.0 的输入锁包含四个应用包、两个 Casilda 包和九个系统依赖。
+GunyahVM 1.3.0 的输入锁包含一个应用包、两个 Casilda 包和十个系统依赖。
 组装时将整组放入发布包池。换版时更新该组的源锁，再重跑整组升级、
 回退及应用门槛，无需重编 Mesa。宿主 Mesa 与 Snap 的构建输出目录分别保留。

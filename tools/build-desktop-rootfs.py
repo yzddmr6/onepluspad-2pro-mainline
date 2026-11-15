@@ -69,8 +69,8 @@ def main():
         path = path.resolve()
         info = metadata(path)
         name = info['Package']
-        if not (name.startswith('erhai-') or name in shared_gnome or name in ('qcom-npu-runtime', 'qcom-npu-demo-model', 'piano-mesa', 'piano-snap-graphics', 'resources', 'gunyahvm',
-                                                     'gunyahvm-runtime', 'gunyahvm-guest-kernel', 'gunyahvm-guest-mesa')) or info['Architecture'] not in ('arm64', 'all'):
+        if not (name.startswith('erhai-') or name in shared_gnome or name in gunyahvm_pins or name in (
+                'qcom-npu-runtime', 'qcom-npu-demo-model', 'piano-mesa', 'piano-snap-graphics', 'resources')) or info['Architecture'] not in ('arm64', 'all'):
             parser.error(f'{path}: expected an arm64/all device or shared application package')
         if name in selected:
             parser.error(f'duplicate package input: {name}')

@@ -366,10 +366,9 @@ Use `--layer-cache` to reuse read-only mounts of the original Ubuntu layers with
 
 Put the shared `piano-snap-graphics` provider, the Resources package pinned in
 [packaging/resources/source.json](../packaging/resources/source.json), and the
-`gunyahvm`, `gunyahvm-runtime`, `gunyahvm-guest-kernel`, `gunyahvm-guest-mesa`
-packages from [GunyahVM 1.0.1](https://github.com/yzddmr6/GunyahVM) into
-`out/shared-apps`. Release URLs, versions and SHA-256 values are pinned in
-[packaging/gunyahvm/source.json](../packaging/gunyahvm/source.json); product image assembly requires all four matching packages. The Snap provider must use the same pinned Mesa source as
+`gunyahvm` package from [GunyahVM](https://github.com/yzddmr6/GunyahVM) into
+`out/shared-apps`. Its release URL, version and SHA-256 are pinned in
+[packaging/gunyahvm/source.json](../packaging/gunyahvm/source.json); product image assembly requires the matching pinned package. The Snap provider must use the same pinned Mesa source as
 `packaging/mesa/shared/mesa/source.json`. Ubuntu dependencies for GunyahVM are
 already pinned in `packaging/desktop/source.json` and fetched by the assembler.
 Put any other additional Ubuntu dependency
@@ -437,6 +436,6 @@ existing version.
 A kernel baseline change rebuilds matching kernel, modules and boot images;
 Piano also rebuilds its camera loopback module for that ABI. Always assemble
 and verify root images, complete APT batches and attachments from the final
-components. The GunyahVM 1.2.0 lock covers four application packages, two Casilda packages
-and nine system dependencies. Include all of them in the release repository. Updating the lock requires whole-release upgrade/rollback and application checks, but
+components. The GunyahVM 1.3.0 lock covers one application package, two Casilda packages
+and ten system dependencies. Include all of them in the release repository. Updating the lock requires whole-release upgrade/rollback and application checks, but
 no Mesa compilation. Keep host Mesa and Snap build outputs separate.
