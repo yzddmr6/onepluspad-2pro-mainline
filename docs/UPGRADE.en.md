@@ -3,6 +3,18 @@
 [中文](UPGRADE.md) · [Installation and recovery](FLASHING.en.md)
 
 
+## v0.10.0 → v0.10.1
+
+To upgrade from v0.10.0, extract both repositories from the package TAR. Select `erhai-0.10.1` with `--previous erhai-0.10.0-rollback-0.10.1` for the whole-release upgrade. Shut down virtual machines before upgrading and reboot afterwards.
+
+From v0.10.1, a successful whole-release upgrade or a completed rollback removes what is no longer needed: earlier batches, boot image copies, old kernel packages and their modules, and project packages dropped from the releases. It keeps the two batches of this upgrade, their boot sets, and the kernels that are running or needed for rollback. Boot-set copies saved by hand as `/var/lib/erhai/rollback-*` following earlier instructions are removed when their kernel is no longer kept. Personal files, Waydroid, virtual machines and changed configuration files are not affected; `/var/lib/erhai/releases/cleanup.json` records what was removed and why. To clean up again later, run:
+
+```sh
+sudo /usr/bin/python3 /var/lib/erhai/releases/erhai-0.10.1/install.py cleanup --product erhai
+```
+
+GunyahVM moves to 1.3.0 as a single `gunyahvm` package; APT removes the former `gunyahvm-runtime`, `gunyahvm-guest-kernel` and `gunyahvm-guest-mesa` packages during the upgrade.
+
 ## v0.9.1 → v0.10.0
 
 To upgrade from v0.9.1, extract both repositories from the package TAR. Select `erhai-0.10.0` with `--previous erhai-0.9.1-rollback-0.10.0` for the whole-release upgrade, then reboot.
@@ -95,15 +107,7 @@ using the matching previous boot set.
 v0.8.0 keeps Linux 7.2.15 and adds Gunyah virtual machines, Waydroid kernel support, Snap graphics, Resources hardware monitoring, together with interrupt and UART suspend fixes.
 GunyahVM and Resources are preinstalled. Install Waydroid separately using the [guide](WAYDROID.en.md); it uses software rendering and Android Data Saver is unavailable. Snap graphics use the shared `piano-snap-graphics` package; strict confinement remains affected by snapd feature detection.
 
-Before upgrading, while still running v0.7.2, save an independent boot-set copy. If the destination already exists, inspect it instead of overwriting it:
-
-```sh
-sudo test ! -e /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 &&
-sudo cp -a --reflink=never /var/lib/erhai/switch/ubuntu /var/lib/erhai/rollback-v0.7.2-before-v0.8.0
-sudo sh -c 'cd /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 && sha256sum -c SHA256SUMS'
-```
-
-After checking `SHA256SUMS`, run on the tablet:
+Run on the tablet:
 
 ```sh
 tar xf erhai-device-packages-v0.8.0.tar
@@ -118,13 +122,13 @@ GunyahVM and its runtime and guest payload packages are installed by this upgrad
 
 ### Kernel rollback and upgrading again
 
-Keep this copy and the v0.7.2 kernel/module packages until the new version is confirmed usable. To roll back while Ubuntu is still accessible, run:
+The upgrade keeps the v0.7.2 boot set automatically as `/var/lib/erhai/switch/ubuntu.prev`. Keep the v0.7.2 kernel/module packages until the new version is confirmed usable. To roll back while Ubuntu is still accessible, run:
 
 ```sh
-sudo erhai-switch-install-ubuntu-images /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 && sudo reboot
+sudo erhai-switch-install-ubuntu-images /var/lib/erhai/switch/ubuntu.prev && sudo reboot
 ```
 
-The installer verifies all three images, promotes the specified copy to the current Ubuntu boot set, and writes the current active slot. A copy matching `ubuntu.prev` is also promoted. After rebooting, `uname -r` should report `7.2.15-erhai-dev-g870167fad062-a359a9829`. This restores the kernel and boot set only; it does not downgrade applications or restore user data.
+The installer verifies all three images, promotes this set to the current Ubuntu boot set, and writes the current active slot. After rebooting, `uname -r` should report `7.2.15-erhai-dev-g870167fad062-a359a9829`. This restores the kernel and boot set only; it does not downgrade applications or restore user data.
 
 To select v0.8.0 again after rollback, reinstall the package set so the kernel postinst activates the v0.8.0 kernel again. A plain `apt install` may skip maintenance scripts because those versions are already installed:
 

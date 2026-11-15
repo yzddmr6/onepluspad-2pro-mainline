@@ -3,6 +3,18 @@
 [English](UPGRADE.en.md) · [安装与恢复](FLASHING.md)
 
 
+## v0.10.0 → v0.10.1
+
+从 v0.10.0 升级，解压包含两个仓库的软件包 TAR，整组升级时使用 `erhai-0.10.1` 和 `--previous erhai-0.10.0-rollback-0.10.1`。升级前关闭虚拟机，完成后重启。
+
+从 v0.10.1 起，整组升级成功或整版回退完成后，工具自动清掉不再需要的东西：旧批次、启动镜像副本、旧内核包及其模块，以及版本里已经去掉的项目包；只留本次升级的新旧两批、它们的启动镜像组，以及正在运行或回退要用的内核。以前按旧说明手工保存的 `/var/lib/erhai/rollback-*` 启动组副本，对应内核不再保留的也一并删掉。个人文件、Waydroid、虚拟机和改过的配置文件不受影响，删了什么、为什么删记在 `/var/lib/erhai/releases/cleanup.json`。以后需要时可以手动再清一次：
+
+```sh
+sudo /usr/bin/python3 /var/lib/erhai/releases/erhai-0.10.1/install.py cleanup --product erhai
+```
+
+GunyahVM 更新到 1.3.0，合并为单个 `gunyahvm` 包；升级时 APT 自动移除旧的 `gunyahvm-runtime`、`gunyahvm-guest-kernel` 和 `gunyahvm-guest-mesa`。
+
 ## v0.9.1 → v0.10.0
 
 从 v0.9.1 升级，解压包含两个仓库的软件包 TAR，整组升级时使用 `erhai-0.10.0` 和 `--previous erhai-0.9.1-rollback-0.10.0`。完成后重启。
@@ -87,15 +99,7 @@ Fastboot 仅恢复启动分区，不能恢复用户态包；只能进入恢复�
 v0.8.0 保留 Linux 7.2.15，增加 Gunyah 虚拟机、Waydroid 内核支持、Snap 图形、Resources 硬件监控，并修正中断与串口挂起行为。
 GunyahVM 与 Resources 随系统预装；Waydroid 按[安装指南](WAYDROID.md)单独安装，使用软件渲染，Android“省流量”不可用。Snap 图形使用共用 `piano-snap-graphics` 包；strict 隔离仍受 snapd 能力检测问题影响。
 
-升级前，在仍运行 v0.7.2 时保存独立启动组副本；若目标目录已经存在，先核实它，勿覆盖：
-
-```sh
-sudo test ! -e /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 &&
-sudo cp -a --reflink=never /var/lib/erhai/switch/ubuntu /var/lib/erhai/rollback-v0.7.2-before-v0.8.0
-sudo sh -c 'cd /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 && sha256sum -c SHA256SUMS'
-```
-
-核对 `SHA256SUMS` 后在平板上执行：
+在平板上执行：
 
 ```sh
 tar xf erhai-device-packages-v0.8.0.tar
@@ -110,13 +114,13 @@ sudo erhai-remove-generic-kernels
 
 ### 回退内核与再次升级
 
-保留上述副本及 v0.7.2 内核/模块包，直到新版本确认可用。需要回退且仍能进入 Ubuntu 时，执行：
+升级会把 v0.7.2 的启动组自动保留为 `/var/lib/erhai/switch/ubuntu.prev`。保留 v0.7.2 内核/模块包，直到新版本确认可用。需要回退且仍能进入 Ubuntu 时，执行：
 
 ```sh
-sudo erhai-switch-install-ubuntu-images /var/lib/erhai/rollback-v0.7.2-before-v0.8.0 && sudo reboot
+sudo erhai-switch-install-ubuntu-images /var/lib/erhai/switch/ubuntu.prev && sudo reboot
 ```
 
-安装器校验三个镜像，将指定副本提升为当前 Ubuntu 启动组，并写入当前活动槽；即使它与 `ubuntu.prev` 相同，也会完成提升。重启后 `uname -r` 应回到 `7.2.15-erhai-dev-g870167fad062-a359a9829`。这只回退内核与启动组，不会降级应用包或还原用户数据。
+安装器校验三个镜像，将这组提升为当前 Ubuntu 启动组，并写入当前活动槽。重启后 `uname -r` 应回到 `7.2.15-erhai-dev-g870167fad062-a359a9829`。这只回退内核与启动组，不会降级应用包或还原用户数据。
 
 回退后再次选择 v0.8.0，需要重新配置已安装的包，使内核 postinst 再次激活 v0.8.0 内核；普通 `apt install` 可能因版本已安装而不执行维护脚本：
 
