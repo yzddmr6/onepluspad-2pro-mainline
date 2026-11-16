@@ -36,6 +36,12 @@ Description: OnePlus Pad 2 Pro (erhai) device support
  which the interface is managed with the firmware's address. A drop-in keeps
  NetworkManager from putting the firmware's address back.
  .
+ The keyboard cover's Esc key reports AC Back over its Bluetooth link, which
+ the generic HID mapping turns into KEY_BACK and the desktop ignores. A hwdb
+ keymap entry remaps that consumer usage to Escape and marks the cover's
+ consumer-control interface a keyboard; the kernel driver already does the
+ same on the pogo-serial link.
+ .
  It also disables flash-kernel (/etc/flash-kernel/machine = "none", the tool's
  own documented switch). The distribution's initramfs hooks call it whenever a
  kernel or firmware trigger fires, it has no database entry for this tablet,
