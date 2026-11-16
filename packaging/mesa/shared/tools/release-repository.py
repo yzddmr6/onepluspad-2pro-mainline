@@ -148,9 +148,11 @@ def verify(repo):
     return m
 
 
-def installed():
+def installed(*, include_unconfigured=False):
     text = subprocess.check_output(['dpkg-query', '-W', '-f=${db:Status-Abbrev}\t${Package}\t${Version}\n'], text=True)
-    return {p: v for state, p, v in (l.split('\t') for l in text.splitlines()) if state.startswith('ii')}
+    return {p: v for state, p, v in (l.split('\t') for l in text.splitlines())
+            if state.startswith('ii') or (include_unconfigured and state[:1] == 'i'
+                                          and state[1:2] in ('U', 'F', 'H', 'W', 't'))}
 
 
 def guard(product):
@@ -293,13 +295,15 @@ def apt_preferences(product):
         yield ['-o', 'Dir::Etc::preferencesparts=' + tmp]
 
 
-def solve_and_install(targets, product):
+def solve_and_install(targets, product, *, repair_unpacked=True):
     with apt_preferences(product) as options:
+        # Upgrade repairs unpacked dependencies before the targeted transaction.
+        # Rollback must replace a broken new postinst, never require it to work.
         # APT will not solve a targeted transaction on an already-broken
         # dependency graph, even if all requested versions are available.
         # Complete the unpacked package's dependencies before switching the
         # remaining batch. A repair must not discard installed applications.
-        if subprocess.check_output(['dpkg', '--audit'], text=True).strip():
+        if repair_unpacked and subprocess.check_output(['dpkg', '--audit'], text=True).strip():
             repair = ['apt-get', *options, '--fix-broken', '--no-remove',
                       '--no-install-recommends', 'install']
             run([*repair[:1], '-s', *repair[1:]])
@@ -727,7 +731,8 @@ def main():
             already_rolled_back = state['phase'] == 'rolled-back'
             repo = store / state['previous']; old = verify(repo)
             newer = verify(store / state['to'])
-            current = installed(); rows = {x['package']:x for x in old['packages']}
+            # New-only unpacked/half-configured packages also need removal.
+            current = installed(include_unconfigured=True); rows = {x['package']:x for x in old['packages']}
             selected = set(state['before']) | {x['package'] for x in old['packages'] if x['install']}
             # Keep optional packages installed after upgrading when the preceding
             # complete source cohort contains their earlier versions.
@@ -738,7 +743,7 @@ def main():
                         if x['package'] in current and x['package'] not in rows
                         and not kernel_release(x['package'])]
             activate(repo, product)
-            solve_and_install(targets, product)
+            solve_and_install(targets, product, repair_unpacked=False)
             state['phase'] = 'userspace-restored'; atomic_json(state_path, state)
             if not already_rolled_back:
                 switch_boot(product, state['boot'])

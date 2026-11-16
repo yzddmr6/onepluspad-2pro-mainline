@@ -3,7 +3,9 @@
 import importlib.util
 from pathlib import Path
 import tempfile
+import contextlib
 import unittest
+from unittest.mock import patch
 
 TOOLS = Path(__file__).resolve().parents[1] / 'packaging/mesa/shared/tools'
 spec = importlib.util.spec_from_file_location(
@@ -47,7 +49,7 @@ class PreviousBatchCohort(unittest.TestCase):
 
     def resolve(self, new_rows, before):
         return release_repository.previous_for_installed(
-            self.previous, self.old, batch('erhai-0.9.0', new_rows),
+            self.previous, self.old, self.previous, batch('erhai-0.9.0', new_rows),
             before, self.store)
 
     def test_new_dependencies_at_new_version_do_not_block_upgrade(self):
@@ -63,21 +65,52 @@ class PreviousBatchCohort(unittest.TestCase):
         self.assertIs(got_old, self.old)
         self.assertFalse((self.store / 'erhai-0.8.1-before-erhai-0.9.0').exists())
 
-    def test_new_dependency_at_other_version_is_still_rejected(self):
+    def test_other_installed_dependency_version_requires_authenticated_capture(self):
+        self.previous.mkdir()
         before = {'erhai-device': DEVICE['version'], 'libxcb-ewmh2': '0.4.1-1'}
-        with self.assertRaisesRegex(ValueError, 'previous batch is missing'):
-            self.resolve([DEVICE, ADDED[1]], before)
+        with patch.object(release_repository.subprocess, 'check_output', return_value='libxcb-ewmh2\tarm64\n'), patch.object(release_repository.subprocess, 'run') as archive:
+            archive.return_value.returncode = 100
+            archive.return_value.stdout = ''
+            with self.assertRaisesRegex(ValueError, 'exact installed distribution package unavailable'):
+                self.resolve([DEVICE, ADDED[1]], before)
+            archive.assert_called_once()
 
     def test_drifted_release_package_is_still_rejected(self):
         before = {'erhai-device': '0.8.0+other'}
-        with self.assertRaisesRegex(ValueError, 'previous batch is missing'):
-            self.resolve([DEVICE], before)
+        with patch.object(release_repository.subprocess, 'check_output', return_value='erhai-device\tarm64\n'):
+            with self.assertRaisesRegex(ValueError, 'previous batch is missing'):
+                self.resolve([DEVICE], before)
 
     def test_unchanged_cohort_is_returned_untouched(self):
         before = {'erhai-device': DEVICE['version']}
         got_previous, got_old = self.resolve([DEVICE], before)
         self.assertIs(got_previous, self.previous)
         self.assertIs(got_old, self.old)
+
+
+class RepairPolicy(unittest.TestCase):
+    def test_rollback_inventory_includes_broken_new_only_packages(self):
+        status = 'ii \tgood\t1\niF \tbad\t2\niU \tnew\t3\nrc \tremoved\t4\niH \thalf\t5\n'
+        with patch.object(release_repository.subprocess, 'check_output', return_value=status):
+            self.assertEqual(release_repository.installed(), {'good': '1'})
+            self.assertEqual(release_repository.installed(include_unconfigured=True),
+                             {'good': '1', 'bad': '2', 'new': '3', 'half': '5'})
+
+    def test_upgrade_repairs_unpacked_dependencies(self):
+        with patch.object(release_repository, 'apt_preferences', return_value=contextlib.nullcontext([])), patch.object(release_repository, 'run') as run, patch.object(release_repository.subprocess, 'check_output', side_effect=['unpacked dependency', '']):
+            release_repository.solve_and_install(['fixture=2'], 'piano')
+            commands = [call.args[0] for call in run.call_args_list]
+            self.assertEqual(sum('--fix-broken' in c for c in commands), 2)
+            self.assertEqual(commands[-1], ['dpkg', '--configure', '-a'])
+
+    def test_rollback_replaces_bad_postinst_before_configuring(self):
+        with patch.object(release_repository, 'apt_preferences', return_value=contextlib.nullcontext([])), patch.object(release_repository, 'run') as run, patch.object(release_repository.subprocess, 'check_output', return_value='') as audit:
+            release_repository.solve_and_install(['fixture=1'], 'piano', repair_unpacked=False)
+            commands = [call.args[0] for call in run.call_args_list]
+            self.assertFalse(any('--fix-broken' in c for c in commands))
+            self.assertIn('--allow-downgrades', commands[0])
+            self.assertEqual(commands[-1], ['dpkg', '--configure', '-a'])
+            audit.assert_called_once_with(['dpkg', '--audit'], text=True)
 
 
 if __name__ == '__main__':
