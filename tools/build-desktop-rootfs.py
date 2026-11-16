@@ -70,6 +70,7 @@ def main():
         info = metadata(path)
         name = info['Package']
         if not (name.startswith('erhai-') or name in shared_gnome or name in gunyahvm_pins or name in (
+                'mainline-update', 'libcamera0.7', 'libcamera-ipa', 'gstreamer1.0-libcamera',
                 'qcom-npu-runtime', 'qcom-npu-demo-model', 'piano-mesa', 'piano-snap-graphics', 'resources')) or info['Architecture'] not in ('arm64', 'all'):
             parser.error(f'{path}: expected an arm64/all device or shared application package')
         if name in selected:
