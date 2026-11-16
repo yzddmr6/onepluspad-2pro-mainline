@@ -1,0 +1,28 @@
+# The keyboard cover's touchpad is a clickpad: one mechanical button
+# under the touch surface. Over the pogo-serial link the kernel driver
+# sets INPUT_PROP_BUTTONPAD, but the Bluetooth link's HID descriptor
+# exposes a plain touchpad with BTN_LEFT and BTN_RIGHT, so libinput
+# treats it as a two-button pad. On a non-clickpad libinput never pins
+# the pressing finger at button press; a second finger landing while
+# the button is held then enters the two-finger gesture state machine,
+# which swallows its motion and kills click-and-drag (the gesture stays
+# undecided and no POINTER_MOTION is emitted at all).
+#
+# Marking the device a buttonpad makes libinput pin the pressing finger
+# and feed the second finger's motion into pointer deltas while the
+# button is held, the same as every other clickpad. BTN_RIGHT goes away
+# because a clickpad has no separate right button and libinput would
+# flag the device as a kernel bug otherwise; right clicks are still
+# generated from click position or finger count. Same class of fix as
+# the Lenovo T480s, https://gitlab.freedesktop.org/libinput/libinput/issues/177
+#
+# Matched on the Bluetooth bus only: the pogo-serial twin already
+# reports INPUT_PROP_BUTTONPAD from the kernel driver.
+[OnePlus Pad 2 Pro Keyboard Touchpad]
+MatchName=OnePlus Pad 2 Pro Keyboard Touchpad
+MatchBus=bluetooth
+MatchVendor=0x22D9
+MatchProduct=0x3869
+MatchUdevType=touchpad
+AttrEventCode=-BTN_RIGHT
+AttrInputProp=+INPUT_PROP_BUTTONPAD
