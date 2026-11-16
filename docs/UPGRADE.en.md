@@ -54,6 +54,10 @@ You can also download and verify the same two files on a computer and copy them 
 continue from step 2 in a terminal on the tablet. Fastboot recovery for a system that does not
 boot is in [Installation and recovery](FLASHING.en.md).
 
+## v0.10.1 → v0.10.2
+
+To upgrade from v0.10.1, download the package TAR on the tablet and extract both repositories from it as in [Whole-release upgrade (tablet only)](#whole-release-upgrade-tablet-only). Select `erhai-0.10.2` with `--previous erhai-0.10.1-rollback-0.10.2` for the whole-release upgrade. Shut down virtual machines before upgrading and reboot afterwards. This release changes only the kernel.
+
 ## v0.10.0 → v0.10.1
 
 To upgrade from v0.10.0, download the package TAR on the tablet and extract both repositories from it as in [Whole-release upgrade (tablet only)](#whole-release-upgrade-tablet-only). Select `erhai-0.10.1` with `--previous erhai-0.10.0-rollback-0.10.1` for the whole-release upgrade. Shut down virtual machines before upgrading and reboot afterwards.

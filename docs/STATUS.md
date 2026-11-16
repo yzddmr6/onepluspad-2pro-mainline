@@ -7,6 +7,12 @@
 
 ✅ 可用 / Working · 🟡 部分支持 / Partial · ❌ 尚不支持 / Unsupported
 
+### v0.10.2
+
+第三方 PPS 和 UFCS 充电器充电时，整段快充都按开始时的电量选用电流表，和原厂一致；不再在电量过 56%、76%、86% 时逐级降流。常见的 3 A PPS 充电器在 86% 以后从约 2.0 A 恢复到约 2.9 A。
+
+With third-party PPS and UFCS chargers, the whole fast-charge session now uses the current table chosen at its start, as the stock firmware does, instead of stepping down as the charge passes 56 %, 76 % and 86 %. A common 3 A PPS charger keeps about 2.9 A instead of about 2.0 A above 86 %.
+
 ### v0.10.1
 
 原装充电器的 SUPERVOOC 电荷泵一直工作到快满时按原厂的低电流判据结束，不再在 89% 左右提前转入慢充；从 73% 充到显示 100% 由约 86 分钟缩短到约 43 分钟。整组升级或回退完成后，自动清掉旧的发布批次、旧内核、旧启动镜像备份和不再使用的旧包，只保留当前版本和用于回退的上一版。GunyahVM 升到 1.3.0，可以在平板上直接从 Apple 的服务器创建 macOS 虚拟机。
