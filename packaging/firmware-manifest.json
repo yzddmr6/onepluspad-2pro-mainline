@@ -793,6 +793,13 @@
       "member": "::/image/cdsp_dtb.mdt",
       "size": 4044,
       "sha256": "6e8f95f9bf041b855b57ac816de03996c5abb6de7e7b80216f8349db9d6d06ea"
+    },
+    {
+      "install": "wireless_pen/24926/cps8601_firmware.bin",
+      "from": "stock-odm",
+      "member": "firmware/wireless_pen/24926/cps8601_firmware.bin",
+      "size": 15360,
+      "sha256": "33a4ab21db5e92af7f144fecf3d86f64137079d22e4890902d6da24dd6aa1ee4"
     }
   ]
 }

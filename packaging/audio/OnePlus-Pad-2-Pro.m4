@@ -12,13 +12,13 @@ include(`audioreach/module_tdm.m4')
 include(`audioreach/module_mfc_cfg.m4')
 
 # The hardware speaker interface carries eight discrete TDM slots; the front
-# end is stereo, as on the stock firmware, and the device MFC spreads it over
-# the slots (see device40.mfc1_cfg below).  The front end is S16_LE, a format
+# end is four channel and the device MFC routes it over the slots (see
+# device40.mfc1_cfg below). The front end is S16_LE, a format
 # the q6apm-dai platform driver offers (S16_LE and S24_LE only), and at most
 # four channels, all its PCM media format commands carry; outside either the
 # stream fails with EINVAL before the DSP is reached.
 STREAM_SG_PCM_ADD(audioreach/subgraph-stream-vol-playback.m4, FRONTEND_DAI_MULTIMEDIA1,
-	`S16_LE', 48000, 48000, 2, 2,
+	`S16_LE', 48000, 48000, 4, 4,
 	0x00004001, 0x00004001, 0x00006001, `110000')
 
 # DisplayPort uses its own PCM; the microphone and speaker PCM numbers stay
@@ -58,30 +58,30 @@ AR_MODULE_MFC_CFG(1, 1, 1, 0x00006101, 1, 1, 1, 2, 0x00006102)
 AR_MODULE_TDM_RX(1, 1, 1, 0x00006102, LPAIF_INTF_TYPE_LPAIF, I2S_INTF_TYPE_SECONDARY,
 	DATA_FORMAT_FIXED_POINT, 0xff, 8, 32, 2, 1, 1, 0, 0, 0, `Secondary TDM0')
 
-# Stereo to the eight slots, left on the even slots and right on the odd
-# ones: the stock speaker graph's MFC calibration (ACDB module 0x4026,
-# PARAM_ID_CHMIXER_COEFF 0x0800101f, one 8x2 table in Q14).  The MFC applies
-# a table only when its channel maps equal the stream's, otherwise it falls
-# back to its built-in ITU-R BS.775 upmix, which leaves slots 2-7 silent.
-# Input: FL FR (the stereo front end).  Output: the kernel's default
-# eight-channel map, which the MFC output media format carries:
-# FL FR LFE FC LS RS LB RB = 1 2 6 3 4 5 8 9.
-# Words are little endian; two u16 fields share a word, low half first.
+# Four independent PCM channels let the session route screen-relative left
+# and right to the matching physical speaker pairs. The MFC keeps the two
+# high-frequency units fed from the average of their corresponding pair.
+# Input map: FL FR RL RR = 1 2 4 5. Output map: the kernel's eight-channel
+# map FL FR LFE FC LS RS LB RB = 1 2 6 3 4 5 8 9. Rows address TDM slots:
+# slot0 FL, slot1 RR, slot2 RL, slot3 FR, slot5 right tweeter, slot6 left
+# tweeter; slots4/7 are unconnected. Coefficients are Q14.
 SectionData."device40.mfc1_cfg" {
-	words "0x00000060, 0x01001006, 0x00000000, 0x00000000,
-		0x00006101, 0x0800101f, 0x0000003c, 0x00000000,
-		0x00000001, 0x00020008,
+	words "0x00000080, 0x01001006, 0x00000000, 0x00000000,
+		0x00006101, 0x0800101f, 0x00000060, 0x00000000,
+		0x00000001, 0x00040008,
 		0x00020001, 0x00030006, 0x00050004, 0x00090008,
-		0x00020001,
-		0x00004000, 0x40000000, 0x00004000, 0x40000000,
-		0x00004000, 0x40000000, 0x00004000, 0x40000000,
-		0x00000000"
+		0x00020001, 0x00050004,
+		0x00004000, 0x00000000,
+		0x00000000, 0x40000000,
+		0x00000000, 0x00004000,
+		0x40000000, 0x00000000,
+		0x00000000, 0x00000000,
+		0x20000000, 0x20000000,
+		0x00002000, 0x00002000,
+		0x00000000, 0x00000000"
 }
-# Header: blob size 96 including it, SND_SOC_AR_TPLG_MODULE_CFG_TYPE, two
-# reserved words.  Parameter: instance 0x6101, id, size 60, error code.
-# Payload: one table; 8 outputs, 2 inputs; output map; input map; one Q14
-# row per output slot, (left, right): 0x4000 = unity; a pad word keeps the
-# APM payload a multiple of eight bytes.
+# Header: 132 bytes including it. Parameter payload is 96 bytes: one table;
+# 8 outputs, 4 inputs; output/input maps followed by eight four-value rows.
 
 SectionGraph."Secondary TDM0 Hardware Graph" {
 	index "1"

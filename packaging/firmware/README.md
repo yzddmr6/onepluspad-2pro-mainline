@@ -1,6 +1,6 @@
 # Device firmware
 
-The 77 binaries under this directory provide the firmware for this tablet's
+The 99 binaries under this directory provide the firmware for this tablet's
 enabled drivers and its audio and video candidates, laid out exactly as they install under
 `/usr/lib/firmware`. `tools/build-debs.py` packs them into `erhai-firmware`
 after checking each one against the sha256 and size recorded in
@@ -21,8 +21,10 @@ source versions; the project release is **v0.3.0**.
 | Files | From | What |
 |---|---|---|
 | 59 | the OnePlus Pad 2 Pro official ColorOS OTA `OPD2413_11.C.34_1340_202607031844`: 58 out of `modem.img`, one out of `dtbo.img` | the ADSP PIL set under `qcom/sm8750/erhai/`, and the NT36536 touch application firmware, which the vendor keeps as an overlay property rather than as a file |
+| 20 | the same OTA, `modem.img:/image/` | CDSP firmware and its device tree under `qcom/sm8750/erhai/` |
 | 1 | the same OTA, `modem.img:/image/soccp.mbn` | the SoCCP image at `qcom/sm8750/erhai/soccp.mbn`; the kernel starts it early so that it parks in D3 and drops the bus vote it inherits from the bootloader |
 | 1 | the same OTA, `odm.img:/firmware/aw882xx_acf.bin` | the unmodified AW88261 amplifier profile at `awinic/erhai/aw88261_acf.bin`; this is ROM content, not per-unit calibration |
+| 1 | the same OTA, `odm.img:/firmware/wireless_pen/24926/cps8601_firmware.bin` | the CPS8601 pen charger application image at `wireless_pen/24926/`; as in the stock driver, it is read once per boot and written to the chip only when the chip reports a different version |
 | 1 | the same OTA, `vendor.img:/firmware/vpu35_4v.mbn` | the vendor-signed Iris (VPU 3.5) video core image at `qcom/sm8750/erhai/vpu35_4v.mbn`; linux-firmware carries no SM8750 Iris image, and this unit's TZ authenticates only the vendor-signed one |
 | 1 | the same OTA, `vendor.img:/firmware/gen80000_zap.mbn` | the Adreno 830 zap shader signed for this product, at `qcom/sm8750/erhai/gen80000_zap.mbn`; see below |
 | 2 | the same OTA, `odm.img:/etc/wifi/peach/bdwlan.elf` and `regdb.bin` | this product's WCN7860 board data and regulatory database, a candidate at `ath12k/WCN7860/hw2.0/erhai/`; `board-2.bin` there is the two files packed by `ath12k-bdencoder` from qca-swiss-army-knife commit `6df4dae3`, `regdb.bin` is the plain file |

@@ -40,7 +40,7 @@
     "tools/package-mesa-snap.py": "e63b43cf8bf7f057ad5d23634545c1f36a87ca877a54eab54534ccffd7c3cfd3",
     "tools/package-mesa.py": "478df6aac956a54fdc3732a1cef421af3bb9de272d5d22cf327689445f6425ca",
     "tools/prepare-mesa-initramfs.py": "33b59fb81fc30a1e2d072274c1b856d491b69a88fc800a0cbd227f1aa4e50241",
-    "tools/release-repository.py": "f4c19a01623b2d7cb6f0d20c969913d19ecca1664d8b185ab85e97b45d5ad1fa",
+    "tools/release-repository.py": "041d3bd7a9a0414f92aef7c769fbca35e7460aa8e925efb677a9dff609739c92",
     "tools/test-snap-graphics-glsl.py": "b1d5e79d5a1e0f72fc30b0bf90d1ad5384fef9c7c43a717aa01830b21927c3f5",
     "tools/validate-mesa-snap.py": "7d49b542852f578b9215eae8224010d5c32e8e037e7918649c8207e3cf559b81",
     "mesa/freedreno-a830v1.patch": "543a1fd4534c77e42ef1d2955d2853495ffa24ed22c4e36faaad8029a9296e49",
@@ -50,7 +50,7 @@
     "mesa/ir3-float-helper-order.patch": "f5b5faa8b571e88d7faf634259cd131c79c2b360eba291ec0872b4a311f83e56"
   },
   "file_commits": {
-    "tools/release-repository.py": "6931a92c052ecb96c352f57f3103c801869a1982"
+    "tools/release-repository.py": "4298d18fd7bcf9f641af861ee94a9530ded98004"
   },
   "documentation_commit": "bf0c0e2edd9bea9491527b082e927401e733c95c",
   "documentation_files": [

@@ -5,7 +5,7 @@ Maintainer: @MAINTAINER@
 Installed-Size: @INSTALLED_SIZE@
 Section: admin
 Priority: optional
-Depends: gnome-settings-daemon (= 50.0-1ubuntu1+piano2), gnome-settings-daemon-common (= 50.0-1ubuntu1+piano2), systemd, python3, python3-gi, python3-pyudev, python3-numpy, python3-gst-1.0, gir1.2-gtk-4.0, gstreamer1.0-libcamera, gstreamer1.0-gtk4, gstreamer1.0-plugins-good, gir1.2-glib-2.0, bluez, libglib2.0-bin, tuned-ppd (>= 2.25.1), systemd-zram-generator, erhai-kernel-zram, erhai-display-power (>= 0.1.0~)
+Depends: gnome-settings-daemon (= 50.0-1ubuntu1+piano3), gnome-settings-daemon-common (= 50.0-1ubuntu1+piano3), systemd, pkexec, polkitd, python3, python3-gi, python3-pyudev, python3-numpy, python3-gst-1.0, gir1.2-gtk-4.0, gstreamer1.0-libcamera, gstreamer1.0-gtk4, gstreamer1.0-plugins-good, gir1.2-glib-2.0, bluez, libglib2.0-bin, tuned-ppd (>= 2.25.1), systemd-zram-generator, erhai-kernel-zram, erhai-display-power (>= 0.1.0~)
 Pre-Depends: dpkg (>= 1.17.14)
 Description: OnePlus Pad 2 Pro (erhai) device support
  Everything the mainline port needs in the running system that is neither a
@@ -35,6 +35,12 @@ Description: OnePlus Pad 2 Pro (erhai) device support
  ignores a netdev until udev has finished with it, so there is no window in
  which the interface is managed with the firmware's address. A drop-in keeps
  NetworkManager from putting the firmware's address back.
+ .
+ The keyboard cover's Esc key reports AC Back over its Bluetooth link, which
+ the generic HID mapping turns into KEY_BACK and the desktop ignores. A hwdb
+ keymap entry remaps that consumer usage to Escape and marks the cover's
+ consumer-control interface a keyboard; the kernel driver already does the
+ same on the pogo-serial link.
  .
  It also disables flash-kernel (/etc/flash-kernel/machine = "none", the tool's
  own documented switch). The distribution's initramfs hooks call it whenever a
