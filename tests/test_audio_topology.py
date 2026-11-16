@@ -102,8 +102,8 @@ class TopologyGuard(unittest.TestCase):
         # with "Invalid channels (8)" before any command reached the DSP.
         start = self.conf.index('SectionPCMCapabilities."MultiMedia1 Playback"')
         head, tail = self.conf[:start], self.conf[start:]
-        wide = head + tail.replace('channels_min "2"', 'channels_min "8"', 1).replace(
-            'channels_max "2"', 'channels_max "8"', 1)
+        wide = head + tail.replace('channels_min "4"', 'channels_min "8"', 1).replace(
+            'channels_max "4"', 'channels_max "8"', 1)
         self.assertIn('channel range outside q6apm-dai 2..4', self.rejects(wide))
 
     def test_every_declared_back_end_is_used(self):
@@ -127,8 +127,8 @@ class SpeakerMixing(unittest.TestCase):
     def test_stereo_front_end_and_eight_slot_back_end(self):
         start = self.conf.index('SectionPCMCapabilities."MultiMedia1 Playback"')
         caps = self.conf[start:self.conf.index('}', start)]
-        self.assertIn('channels_min "2"', caps)
-        self.assertIn('channels_max "2"', caps)
+        self.assertIn('channels_min "4"', caps)
+        self.assertIn('channels_max "4"', caps)
         tdm = self.conf[self.conf.index('SectionVendorTuples."device40.tdm_rx1_tuples"'):]
         self.assertIn('AR_TKN_U16_MODULE_NSLOTS_PER_FRAME "8"', tdm)
         self.assertIn('AR_TKN_U32_MODULE_SLOT_MASK "0xff"', tdm)
@@ -139,12 +139,12 @@ class SpeakerMixing(unittest.TestCase):
         tables = configs['device40.mfc1'][build.AR_PARAM_ID_CHMIXER_COEFF]
         self.assertEqual(len(tables), 1)
         out_map, in_map, rows = tables[0]
-        self.assertEqual(tuple(in_map), build.KERNEL_CHANNEL_MAPS[2])
+        self.assertEqual(tuple(in_map), build.KERNEL_CHANNEL_MAPS[4])
         self.assertEqual(tuple(out_map), build.KERNEL_CHANNEL_MAPS[8])
-        self.assertEqual(mix(rows, (1, 0)), [1, 0] * 4)
-        self.assertEqual(mix(rows, (0, 1)), [0, 1] * 4)
-        # Same as the stock ACDB table (speaker manifest, stereo_mixing).
-        self.assertEqual(rows, [(0x4000, 0), (0, 0x4000)] * 4)
+        self.assertEqual(mix(rows, (1, 0, 0, 0)), [1, 0, 0, 0, 0, 0, .5, 0])
+        self.assertEqual(mix(rows, (0, 1, 0, 0)), [0, 0, 0, 1, 0, .5, 0, 0])
+        self.assertEqual(mix(rows, (0, 0, 1, 0)), [0, 0, 1, 0, 0, 0, .5, 0])
+        self.assertEqual(mix(rows, (0, 0, 0, 1)), [0, 1, 0, 0, 0, .5, 0, 0])
 
     def test_blob_sits_behind_the_module_tokens(self):
         # audioreach_get_{sg,cont,module}_array() stop at the first array
@@ -191,12 +191,11 @@ class SpeakerMixing(unittest.TestCase):
         self.assertIn('addresses instance 0x6102', self.rejects(other))
 
     def test_blob_size_must_match(self):
-        short = self.conf.replace('words "0x00000060, 0x01001006', 'words "0x00000064, 0x01001006')
+        short = self.conf.replace('words "0x00000080, 0x01001006', 'words "0x00000084, 0x01001006')
         self.assertIn('vendor array', self.rejects(short))
 
     def test_coefficient_above_unity(self):
-        loud = self.conf.replace('0x00004000, 0x40000000, 0x00004000, 0x40000000,\n\t\t0x00004000',
-                                 '0x00004001, 0x40000000, 0x00004000, 0x40000000,\n\t\t0x00004000', 1)
+        loud = self.conf.replace('0x00004000, 0x00000000,', '0x00004001, 0x00000000,', 1)
         self.assertNotEqual(loud, self.conf)
         self.assertIn('above Q14 unity', self.rejects(loud))
 

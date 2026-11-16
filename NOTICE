@@ -163,3 +163,9 @@ does not declare a separate license. BlueZ handles the GATT Battery Service.
 Rear Focus Camera uses the Tenengrad metric and coarse/fine lens sweep from
 TheMojoMan's ErhaiCam, main/oneplus-erhai-erhaicam/src/erhai-cam.cpp at
 02d3561952de (GPL-2.0-only), based on CFM880/nabu-camera's nabu-autofocus.
+
+Community integration: PR #18 and #19 by yzddmr6 (dc4a10b, 4fcf17c), with Devin attribution retained; PR #21 by JackJunbao (e2b7808), with Tencent Hunyuan attribution retained. Sources: https://github.com/yzddmr6/onepluspad-2pro-mainline/pulls
+
+Screen-relative speaker routing follows zczyh0922's design and Erhai slot map: https://github.com/yzddmr6/onepluspad-2pro-mainline/issues/24 . The Piano slot map remains the board's own UCM mapping.
+
+Ambient brightness curve support: GreenTeodoro839, Xiaomi Pad 8 Pro PR #23 (824269d), https://github.com/yzddmr6/xiaomipad-8pro-mainline/pull/23 ; original patch authors and trailers retained in the shared GNOME recipe.

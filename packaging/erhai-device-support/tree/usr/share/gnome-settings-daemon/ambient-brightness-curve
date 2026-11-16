@@ -1,0 +1,10 @@
+# Stock product/overlay/FrameworksResCommon_Sys.apk
+# config_autoBrightnessLevels, config_autoBrightnessLcdBacklightValues / 255 * 100
+0 3.92156863
+10 7.84313725
+30 15.68627451
+60 27.45098039
+100 43.13725490
+150 62.74509804
+210 78.43137255
+255 100.00000000

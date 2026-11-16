@@ -1,6 +1,6 @@
 # Device firmware
 
-The 77 binaries under this directory provide the firmware for this tablet's
+The 99 binaries under this directory provide the firmware for this tablet's
 enabled drivers and its audio and video candidates, laid out exactly as they install under
 `/usr/lib/firmware`. `tools/build-debs.py` packs them into `erhai-firmware`
 after checking each one against the sha256 and size recorded in

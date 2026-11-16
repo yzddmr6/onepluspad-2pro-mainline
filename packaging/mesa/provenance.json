@@ -50,7 +50,7 @@
     "mesa/ir3-float-helper-order.patch": "f5b5faa8b571e88d7faf634259cd131c79c2b360eba291ec0872b4a311f83e56"
   },
   "file_commits": {
-    "tools/release-repository.py": "6931a92c052ecb96c352f57f3103c801869a1982"
+    "tools/release-repository.py": "7a761cfad73b59340579e05023e9c48102fab4f7"
   },
   "documentation_commit": "bf0c0e2edd9bea9491527b082e927401e733c95c",
   "documentation_files": [

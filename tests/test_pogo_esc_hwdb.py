@@ -51,9 +51,9 @@ class PogoEscHwdbTest(unittest.TestCase):
 
     def test_postinst_replays_existing_bluetooth_devices(self):
         self.assertIn('/sys/bus/hid/devices/0005:22D9:3869.', self.postinst)
-        self.assertIn('event*/uevent', self.postinst)
-        self.assertIn('remove', self.postinst)
-        self.assertIn('add', self.postinst)
+        self.assertIn('input*/event*', self.postinst)
+        self.assertNotIn('echo remove', self.postinst)
+        self.assertIn('udevadm trigger --action=change', self.postinst)
 
     def test_postrm_drops_compiled_rule(self):
         self.assertIn('systemd-hwdb update', self.postrm)

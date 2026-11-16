@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+if [ "$1" = remove ]; then
+ deb-systemd-helper --user disable erhai-speaker-rotation.service >/dev/null
+fi

@@ -80,16 +80,10 @@ configure)
 		# Replaying only this platform change leaves network devices alone.
 		udevadm trigger --action=change --subsystem-match=platform \
 			--sysname-match=ae00000.display-subsystem || true
-		# An already-paired cover keeps its old keymap and classification
-		# until its input devices are re-registered; replay remove+add so
-		# the new entry applies without a re-pair.
-		for uevent in /sys/bus/hid/devices/0005:22D9:3869.*/input/input*/event*/uevent; do
-			[ -e "$uevent" ] || continue
-			echo remove >"$uevent" 2>/dev/null || true
-		done
-		for uevent in /sys/bus/hid/devices/0005:22D9:3869.*/input/input*/event*/uevent; do
-			[ -e "$uevent" ] || continue
-			echo add >"$uevent" 2>/dev/null || true
+		# Reapply the keymap only to the matching Bluetooth cover.
+		for event in /sys/bus/hid/devices/0005:22D9:3869.*/input/input*/event*; do
+			[ -e "$event/uevent" ] || continue
+			udevadm trigger --action=change "$event" || true
 		done
 	fi
 

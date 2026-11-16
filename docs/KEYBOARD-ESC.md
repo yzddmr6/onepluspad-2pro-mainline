@@ -34,12 +34,10 @@ a bare `*`, not `:input:…`; and `udevadm trigger
 Shipped in `erhai-device-support` (2026-11-14): the same rule lives at
 `packaging/erhai-device-support/tree/usr/lib/udev/hwdb.d/99-erhai-pogo-esc.hwdb`;
 `postinst` rebuilds the hwdb (`systemd-hwdb update`), reloads udev and
-replays remove+add on the event nodes of every `0005:22D9:3869.*` HID
-device, so an already paired keyboard picks up the mapping and the
-`ID_INPUT_KEYBOARD` classification without re-pairing; `postrm` refreshes
-the database on removal. Verified on this unit by installing the file from
-the package payload, dropping the `/etc` drop-in, replaying the postinst
-block and re-checking `ID_INPUT_KEYBOARD=1` plus `systemd-hwdb query`.
+sends a change event only to the event nodes of `0005:22D9:3869.*` HID devices.
+It preserves existing input registrations; a running desktop may pick up the
+keyboard classification on its next connection. `postrm` refreshes the database
+on removal.
 Guarded by `tests/test_pogo_esc_hwdb.py` (packaged rule and script logic)
 and `tests/test_pogo_keyboard_esc.py` (kernel driver table).
 

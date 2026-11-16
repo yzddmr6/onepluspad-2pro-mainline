@@ -22,6 +22,8 @@ fi
 
 case "$1" in
 remove | purge)
+	rm -- /var/lib/tablet-charge/behaviour 2>/dev/null || true
+	rmdir /var/lib/tablet-charge 2>/dev/null || true
 	# Do not leave TuneD pointing at a profile whose package was removed.
 	# Its own state API also works during offline rootfs maintenance.
 	if command -v tuned-adm >/dev/null 2>&1; then
@@ -89,6 +91,8 @@ remove)
 	fi
 	;;
 purge)
+	rm -- /var/lib/tablet-charge/behaviour 2>/dev/null || true
+	rmdir /var/lib/tablet-charge 2>/dev/null || true
 	if command -v deb-systemd-helper >/dev/null 2>&1; then
 		deb-systemd-helper purge erhai-power-key@.service >/dev/null 2>&1 || true
 		deb-systemd-helper unmask erhai-power-key@.service >/dev/null 2>&1 || true
