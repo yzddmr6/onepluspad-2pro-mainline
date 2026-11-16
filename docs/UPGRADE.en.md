@@ -4,6 +4,12 @@
 
 This page lists the notes for each release. The whole-release upgrade runs entirely on the tablet, no computer needed; the steps are in [Whole-release upgrade (tablet only)](#whole-release-upgrade-tablet-only).
 
+## v0.10.2 → v0.11.0
+
+Open the release notification and select Update. After the download, review the cleanup preview and select Install. Restart when prompted. To restore the previous release, open System Update, select Roll back to previous release, then restart. If the existing notification only offers release notes, use the manual procedure below for this first upgrade.
+
+For a manual whole-release upgrade use `erhai-0.11.0` and `--previous erhai-0.10.2-rollback-0.11.0`. Shut down virtual machines first and restart after installation.
+
 ## Whole-release upgrade (tablet only)
 
 Every step runs on the tablet. `<version>` is the release you upgrade to (the version in the

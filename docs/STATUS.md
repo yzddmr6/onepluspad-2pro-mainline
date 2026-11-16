@@ -7,6 +7,12 @@
 
 ✅ 可用 / Working · 🟡 部分支持 / Partial · ❌ 尚不支持 / Unsupported
 
+### v0.11.0
+
+可从通知整组升级系统，从充电菜单暂停充电，并根据屏幕方向切换立体声声道。按本机环境光曲线调节亮度，登录界面保留重启前的亮度，USB 光驱可读取 ISO 9660、Joliet 与 UDF。键盘盖支持 Esc，蓝牙触控板支持按住拖动，笔充电固件随系统提供，前摄支持同进程重开。
+
+Update the whole system from the release notification, pause charging from the charging menu, and keep stereo aligned with the screen. Automatic brightness follows the tablet’s ambient-light curve. The login screen preserves brightness across reboots. USB optical drives read ISO 9660, Joliet and UDF. The keyboard cover supports Esc and Bluetooth click-and-drag. The system includes pen charging firmware and supports reopening the front camera in one process.
+
 ### v0.10.2
 
 第三方 PPS 和 UFCS 充电器充电时，整段快充都按开始时的电量选用电流表，和原厂一致；不再在电量过 56%、76%、86% 时逐级降流。常见的 3 A PPS 充电器在 86% 以后从约 2.0 A 恢复到约 2.9 A。
