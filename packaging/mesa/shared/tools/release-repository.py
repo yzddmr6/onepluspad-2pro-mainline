@@ -195,7 +195,9 @@ def previous_for_installed(previous, old, repo, new, before, store):
     """
     rows = {x['package']: x for x in old['packages']}
     newer = {x['package']: x for x in new['packages']}
-    missing = {n: before[n] for n in (rows.keys() | newer.keys()) & before.keys()
+    added_unchanged = {n for n, row in newer.items()
+                       if n not in rows and before.get(n) == row['version']}
+    missing = {n: before[n] for n in ((rows.keys() | newer.keys()) & before.keys()) - added_unchanged
                if n not in rows or rows[n]['version'] != before[n]}
     if not missing:
         return previous, old
