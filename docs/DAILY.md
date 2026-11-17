@@ -62,8 +62,8 @@ Ubuntu 的 `systemd-zram-generator` 创建 `/dev/zram0`：zstd 压缩，优先�
 
 内核必须提供 `CONFIG_ZRAM=m`、`CONFIG_ZRAM_BACKEND_ZSTD=y` 与 `CONFIG_ZRAM_DEF_COMP_ZSTD=y`（后者也会选上 zsmalloc）。
 不带 zram 的旧 erhai 内核必须先升级才能启用生成器，否则启动时可能一直等待不存在的 zram 设备。
-设备支持包依赖 `erhai-kernel-zram`，只有通过了 swap、zram 与 zstd 支持检查的内核载荷才会提供它。
-安装该载荷不会激活内核选择器，因此可以先 RAM 启动验证，再持久激活。
+设备支持包依赖本版的内核镜像包 `erhai-kernel-image-<release>`；打包时会检查这个内核的配置有 swap、zram 与 zstd 支持，不满足就不出包。
+安装镜像包不会激活内核选择器，因此可以先 RAM 启动验证，再持久激活。
 这一依赖不检查当前运行的内核：做运行时检查前，请先启动对应的内核。
 
 可用 `zramctl`、`swapon --show`、`/proc/meminfo` 与 `/sys/block/zram0/comp_algorithm` 查看大小、优先级与压缩算法。

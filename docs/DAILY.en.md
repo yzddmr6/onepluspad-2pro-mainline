@@ -86,10 +86,11 @@ There is no custom zram service and no backing-device writeback.
 The kernel must provide `CONFIG_ZRAM=m`, `CONFIG_ZRAM_BACKEND_ZSTD=y` and
 `CONFIG_ZRAM_DEF_COMP_ZSTD=y` (which also selects zsmalloc). Older erhai
 kernels without zram must be upgraded before enabling the generator;
-otherwise boot can wait for an absent zram device. Device support depends on
-`erhai-kernel-zram`, provided by a kernel payload only after the package builder
-checks swap, zram and zstd support. Installing that payload does not activate
-the kernel selector, allowing a RAM boot before persistent activation. This
+otherwise boot can wait for an absent zram device. Device support depends on this
+release's kernel image package, `erhai-kernel-image-<release>`; the package
+builder checks that the kernel configuration provides swap, zram and zstd, and
+refuses to build otherwise. Installing the image package does not activate the
+kernel selector, allowing a RAM boot before persistent activation. This
 dependency does not verify the currently booted kernel: boot the matching
 kernel before runtime checks.
 
