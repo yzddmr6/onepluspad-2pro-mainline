@@ -7,6 +7,14 @@
 
 ✅ 可用 / Working · 🟡 部分支持 / Partial · ❌ 尚不支持 / Unsupported
 
+### v0.12.0
+
+项目更新通过签名 APT 源分发，新安装的系统预装签名密钥。
+
+Fresh installations include the archive keyring for project updates through APT.
+
+⟦DRAFT:内核与 GunyahVM 最终候选验收⟧
+
 ### v0.11.0
 
 可从通知整组升级系统，从充电菜单暂停充电，并根据屏幕方向切换立体声声道。按本机环境光曲线调节亮度，登录界面保留重启前的亮度，USB 光驱可读取 ISO 9660、Joliet 与 UDF。键盘盖支持 Esc，蓝牙触控板支持按住拖动，笔充电固件随系统提供，前摄支持同进程重开。

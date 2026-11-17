@@ -119,6 +119,7 @@ Features under development are not included in the supported feature set.
 
 | Feature | Component / Implementation | Status | Scope and limitations |
 |---|---|---|---|
+| System updates | Signed APT repository | ✅ | Install project updates with Software Updater or APT. |
 | Boot and storage | SM8750P / UFS | ✅ | Ubuntu boot and storage access work. Dual-boot switching is limited to the partition layout described above. |
 | Internal display | Dual DSI / DSC | ✅ | 3392 × 2400 at 120 Hz by default, with an optional 90 Hz mode. |
 | Touch | Novatek NT36536 | ✅ | Finger input, desktop interaction and login work. Pen support is listed separately. |
