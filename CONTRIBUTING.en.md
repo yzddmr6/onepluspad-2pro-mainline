@@ -5,7 +5,7 @@
 ## Where to send changes
 
 - Device packages, userspace integration, build and installer tools and documentation: this repository, [onepluspad-2pro-mainline](https://github.com/yzddmr6/onepluspad-2pro-mainline), targeting `main`.
-- Kernel drivers, device trees and kernel configuration: [linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai), targeting `erhai/v0.7` (the current release line). The kernel revision this repository builds is recorded in [kernel/source.json](kernel/source.json).
+- Kernel drivers, device trees and kernel configuration: [linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai), targeting `sm8750/v7.4-dev` (the current development line). The kernel revision this repository builds is recorded in [kernel/source.json](kernel/source.json).
 - When both need changes, open one PR in each, link them to each other and state the merge order.
 - Open an issue first before changing release-related files or project policy. The README lists the discussion channels.
 

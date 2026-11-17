@@ -5,7 +5,7 @@
 ## 改动发到哪里
 
 - 设备包、用户态集成、构建与安装工具和文档：本仓 [onepluspad-2pro-mainline](https://github.com/yzddmr6/onepluspad-2pro-mainline)，目标分支 `main`。
-- 内核驱动、设备树和内核配置：[linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai)，目标分支 `erhai/v0.7`（当前发布线）。本仓选用的内核版本记在 [kernel/source.json](kernel/source.json)。
+- 内核驱动、设备树和内核配置：[linux-sm8750-erhai](https://github.com/yzddmr6/linux-sm8750-erhai)，目标分支 `sm8750/v7.4-dev`（当前开发线）。本仓选用的内核版本记在 [kernel/source.json](kernel/source.json)。
 - 两边都要改时分别提 PR，互相链接并写明合入顺序。
 - 发布相关文件或项目规则要改，先开 issue 讨论。交流渠道见 README。
 
