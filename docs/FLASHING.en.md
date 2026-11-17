@@ -58,7 +58,6 @@ One root filesystem serves both first-time preparation and installation.
 |---|---|
 | `ubuntu-pad2pro-VERSION-rootfs.squashfs.part*` and `…-rootfs.manifest.json` | Root filesystem to install, without USB diagnostics; first-time preparation also runs it as the temporary RAM desktop |
 | `ubuntu-pad2pro-VERSION-setup-boot.img` and `…-setup-boot.manifest.json` | Boot image of that temporary RAM desktop; it loads the root filesystem from the host and adds the USB diagnostic channel to that session only |
-| `erhai-device-packages-VERSION.tar` | New and previous complete package repositories for upgrades and rollback, including device, shared graphics and desktop packages, without USB diagnostics |
 | `erhai-switch-VERSION.zip` | Android switch module |
 | `SHA256SUMS` | Checksums of every asset and of the joined image |
 
@@ -75,9 +74,7 @@ the joined image as `out/desktop-root/rootfs.squashfs` and its manifest as
 `out/desktop-root/manifest.json`. First-time preparation serves that file to the
 tablet and boots `ubuntu-pad2pro-VERSION-setup-boot.img` instead of
 `out/ram-desktop/boot-mainline.img`; installation passes the same file to
-`--rootfs`. For an upgrade, unpack `erhai-device-packages-VERSION.tar` and install
-its packages as described in
-[Upgrading an existing installation](#upgrading-an-existing-installation).
+`--rootfs`. For upgrades, see [UPGRADE](UPGRADE.en.md).
 
 ## Preparing Linux partitions for the first time
 
@@ -251,45 +248,14 @@ the newly installed contents.
 
 The personalised RAM setup image authorizes the host key for that boot. For an installed development system, provision the host public key in `/root/.ssh/erhai/authorized_keys` (root-owned directory mode 0700, file mode 0600) locally or during an existing trusted session **before upgrading or rebooting**. Install the optional `erhai-debug` package and enable the development boot profile. The SSH login is `root@192.168.77.2`; transfer files through SSH.
 
-Installing regular device packages over such an installation, built without
-`--debug` into a new empty output directory or taken from a release's
-`erhai-device-packages-VERSION.tar` as described in
-[Upgrading an existing installation](#upgrading-an-existing-installation),
+Installing regular device packages over such an installation, built without `--debug`,
 replaces the diagnostic boot images. After reboot, the USB SSH service
 and diagnostic DHCP stay disabled. Stopping only the desktop services does not
 disable the early-boot channels in a diagnostic image.
 
 ## Upgrading an existing installation
 
-A newer release installs over an existing installation with APT. It does not
-repartition the tablet, reinstall Ubuntu or touch Android. Build the release's
-device packages and sensor package (`tools/build-debs.py` and `tools/build-sensors.py`,
-see the [build guide](BUILD.en.md#device-packages)), each into a new empty output
-directory, with the same choice of `--debug` as the installed packages. Transfer
-both directories to the tablet, then run in its terminal:
-
-```sh
-sudo apt install ./device-packages/*.deb ./sensor-debs/*.deb && sudo reboot
-```
-
-The release's `erhai-device-packages-VERSION.tar` contains new and previous complete batches under `repositories/`.
-After verifying and extracting it, run the complete upgrade tool as described in the matching [upgrade guide](UPGRADE.en.md) section.
-Do not mix debs from every repository in a wildcard installation. The tool saves the previous packages and boot set before changing packages, for complete rollback.
-
-The kernel package writes the new boot images to the active slot during the
-installation, and the previous kernel package stays installed. The sensor
-registry imported at installation time is kept. If the new kernel does not start,
-follow the recovery steps below.
-
-The `erhai-firefox` package moves Firefox from the Ubuntu snap to Mozilla's deb.
-After the upgrade, run `sudo apt update && sudo apt install firefox` and accept
-the replacement of Ubuntu's transitional `firefox` package, which APT lists as a
-downgrade because of that package's version epoch. The snap keeps each user's
-profile in `~/snap/firefox/common/.mozilla/firefox`; to keep it, copy it before
-the first start of the new Firefox with
-`mkdir -p ~/.mozilla && cp -a ~/snap/firefox/common/.mozilla/firefox ~/.mozilla/`,
-then remove the snap with `sudo snap remove firefox`. The snap is removed
-automatically at boot only when no user has a `~/snap/firefox` directory.
+[Upgrade with APT](UPGRADE.en.md).
 
 ## Failure and full stock recovery
 

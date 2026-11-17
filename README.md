@@ -163,9 +163,18 @@
 
 ## 使用与维护
 
-**系统升级。** 打开发布通知，点“更新”，下载完成后检查清理预览，再点“安装”。按提示重启。需要回退时，打开“系统更新”，点“回退到上一版”，完成后重启。 旧版通知只有“查看更新说明”时，首次升级请使用下方手工步骤。 [手工升级说明](docs/UPGRADE.md)。
+打开 Ubuntu「软件更新器」，或运行 `sudo apt update && sudo apt full-upgrade`。内核更新后重启。
 
-每天匿名检查一次 GitHub 上的最新版本，有新版时提示；可在通知设置中关闭。
+旧版用户首次接入时，在平板上运行下面三行，然后重启。
+
+```sh
+curl -fLO https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1_all.deb
+sudo apt install ./erhai-archive-keyring_1_all.deb
+sudo apt update && sudo apt full-upgrade
+```
+
+如果系统无法启动，按 [安装指南](docs/FLASHING.md)重装。
+
 
 基础系统来自官方 Ubuntu Desktop，设备适配通过独立的 `erhai-*` 软件包交付，Ubuntu
 软件包继续由 APT 管理。Firefox 从 Mozilla 官方 APT 源安装（`erhai-firefox`），不使用 Snap，

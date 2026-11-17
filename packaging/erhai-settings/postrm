@@ -3,23 +3,6 @@
 set -e
 file=/usr/bin/gnome-control-center
 case "$1" in
-upgrade)
-    # Older releases do not know this conffile. Do not leave the new package
-    # pins active after a downgrade; retain any administrator edit as a backup.
-    if dpkg --compare-versions "$2" lt 0.8.1~; then
-        pin=/etc/apt/preferences.d/erhai-shared-gnome
-        if [ -f "$pin" ]; then
-            expected=$(dpkg-query -W -f='${Conffiles}' erhai-settings | \
-                awk -v path="$pin" '$1 == path {print $2}')
-            actual=$(md5sum "$pin" | cut -d ' ' -f 1)
-            if [ -n "$expected" ] && [ "$actual" = "$expected" ]; then
-                rm -f "$pin"
-            else
-                mv "$pin" "$pin.dpkg-bak"
-            fi
-        fi
-    fi
-    ;;
 abort-upgrade | abort-install)
     if [ -f "$file.erhai-settings-old" ]; then
         owner=$(dpkg-divert --listpackage "$file")

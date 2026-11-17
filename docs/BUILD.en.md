@@ -198,7 +198,7 @@ with Kbuild's `modules_install`; the target's kmod generates dependency indices.
 Build/source symlinks into a developer workspace are excluded.
 
 Versioned payload packages coexist. The selector protects the running kernel
-and the switcher's current/previous selections from automatic package removal;
+and depends on the selected kernel payload;
 unreferenced kernels can be removed normally. Immutable kernel identity is kept
 in the store's `kernel.json`, separate from deployment information in `meta.json`.
 Module autoload, SCMI CPU frequency, installed upgrade and booting the previous
@@ -314,10 +314,9 @@ assembly container. The following example uses Bash.
 # packaging/mesa/shared/mesa/README.md
 python3 tools/build-sensors.py --output out/sensor-debs
 python3 tools/package-mesa.py --shared-package <piano-mesa.deb> \
-  --shared-repository <complete-common-batch> --release-id erhai-<release> \
-  --release-packages out/device-packages --release-packages out/sensor-debs \
-  --release-packages out/shared-apps --output out/mesa-debs
+  --output out/mesa-debs
 
+./tools/build-archive-debs.sh out/archive-debs
 args=()
 for deb in out/device-packages/*.deb out/mesa-debs/*.deb out/sensor-debs/*.deb out/shared-apps/*.deb; do
   args+=(--device-deb "$deb")
@@ -327,8 +326,10 @@ for deb in out/app-dependencies/*.deb; do
   args+=(--dependency-deb "$deb")
 done
 python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper" \
-  --release-repository out/mesa-debs/erhai-<release> --output out/desktop-root "${args[@]}"
+  --device-deb out/archive-debs/erhai-archive-keyring_1_all.deb --output out/desktop-root "${args[@]}"
 ```
+
+Record the selected project package versions in `packaging/desktop-packages.json` before building the desktop metapackage. Build the other components first.
 
 Select one version of each desired device component, including the matching
 kernel selector and payload. The container has no network and uses kernel
@@ -396,20 +397,10 @@ The Snap provider retains its separate runtime.
 
 ```sh
 python3 tools/package-mesa.py --shared-package <piano-mesa.deb> \
-  --shared-repository <verified-common-batch> --release-id erhai-<release> \
-  --release-packages <other-release-packages> --output out/host-mesa-release
+  --output out/host-mesa-release
 ```
 
-`build-desktop-rootfs.py --release-repository BATCH` retains the complete batch
-and exposes packages not explicitly selected as dependencies to APT. Use
-`--device-deb` for transition and device packages; only needed dependencies are
-installed. Other archives can still use `--dependency-deb`. Explicit package
-hashes must match the batch. Ship the complete current and previous repositories
-with the release attachments.
-
-`install.py upgrade` retains exact preceding userspace versions and the boot set.
-`install.py rollback --product erhai` restores packages before calling the existing
-`erhai-switch-install-ubuntu-images`. See [UPGRADE](UPGRADE.en.md) for the order.
+Build the archive bootstrap with `./tools/build-archive-debs.sh out/archive-debs`. Pass `out/archive-debs/erhai-archive-keyring_1_all.deb` to the root image builder with `--device-deb` along with the selected project runtime packages.
 
 ## NPU runtime and offline demonstration
 
@@ -437,5 +428,5 @@ A kernel baseline change rebuilds matching kernel, modules and boot images;
 Piano also rebuilds its camera loopback module for that ABI. Always assemble
 and verify root images, complete APT batches and attachments from the final
 components. The GunyahVM 1.3.0 lock covers one application package, two Casilda packages
-and ten system dependencies. Include all of them in the release repository. Updating the lock requires whole-release upgrade/rollback and application checks, but
+and ten distribution dependencies. Include project builds in the signed archive and obtain distribution packages from Ubuntu. Updating the lock requires upgrade and application checks, but
 no Mesa compilation. Keep host Mesa and Snap build outputs separate.

@@ -1,6 +1,0 @@
-#!/bin/sh
-# SPDX-License-Identifier: MIT
-set -e
-if [ "$1" = remove ]; then
-    deb-systemd-helper --user disable mainline-release-notifier.timer >/dev/null
-fi

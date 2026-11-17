@@ -175,9 +175,18 @@ Features under development are not included in the supported feature set.
 
 ## Use and Maintenance
 
-**System updates.** Open the release notification and select Update. After the download, review the cleanup preview and select Install. Restart when prompted. To restore the previous release, open System Update, select Roll back to previous release, then restart. If the existing notification only offers release notes, use the manual procedure below for this first upgrade. [Manual upgrade procedure](docs/UPGRADE.en.md).
+Open Software Updater, or run `sudo apt update && sudo apt full-upgrade`. Restart after a kernel update.
 
-Checks GitHub anonymously once a day for the latest release and notifies you when a newer version is available; this can be disabled in notification settings.
+On an existing installation, run these commands once on the tablet, then restart.
+
+```sh
+curl -fLO https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1_all.deb
+sudo apt install ./erhai-archive-keyring_1_all.deb
+sudo apt update && sudo apt full-upgrade
+```
+
+If the system fails to boot, reinstall using the [installation guide](docs/FLASHING.en.md).
+
 
 The base system comes from the official Ubuntu Desktop image. Device support is
 delivered as separate `erhai-*` packages; Ubuntu packages remain managed by APT.

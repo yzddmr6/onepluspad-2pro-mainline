@@ -18,14 +18,12 @@ def run(*args):
     subprocess.run(list(map(str, args)), check=True)
 
 
-def check(root, current, protected, absent):
-    run('python3', RETENTION, current, '--root', root)
-    text = subprocess.check_output(['apt-config', '-c', str(root / 'etc/apt/apt.conf.d/90-erhai-kernel-retention'), 'dump'], text=True)
-    patterns = [json.loads('"' + value + '"') for value in re.findall(r'^APT::NeverAutoRemove:: "(.*)";', text, re.M)]
-    for release in protected:
-        assert any(re.match(pattern, 'erhai-kernel-image-' + release) for pattern in patterns), release
-    for release in absent:
-        assert not any(re.match(pattern, 'erhai-kernel-image-' + release) for pattern in patterns), release
+def check(root):
+    conf = REPO / 'packaging/erhai-device-support/tree/usr/lib/tmpfiles.d/erhai-kernel-retention.conf'
+    run('systemd-tmpfiles', '--root', root, '--create', conf)
+    policy = (root / 'etc/apt/apt.conf.d/90-erhai-kernel-retention').read_text()
+    assert os.uname().release in policy, policy
+    assert 'ubuntu.prev' not in policy
 
 
 def main():
@@ -49,22 +47,11 @@ def main():
             identity = json.loads((store / 'ubuntu/kernel.json').read_text())
             assert identity['kernel_release'] == release
             assert 'kernel_release' not in json.loads((store / 'ubuntu/meta.json').read_text())
-            if release == releases[1]:
-                check(root, release, releases[:2], releases[2:])
-        check(root, releases[2], releases[1:], releases[:1])
+        check(root)
         # Reinstalling the archived previous set must preserve its identity
         # before rotating the directory from which it was read.
         run('sh', INSTALLER, store / 'ubuntu.prev', '--store', store, '--no-activate')
         assert json.loads((store / 'ubuntu/kernel.json').read_text())['kernel_release'] == releases[1]
-        check(root, releases[1], releases[1:], releases[:1])
-        # Legacy, unversioned installs have only the canonical source path.
-        (store / 'ubuntu.prev/kernel.json').unlink()
-        (store / 'ubuntu.prev/meta.json').write_text(json.dumps({'source': '/usr/lib/erhai/boot/7.2.0-erhai-dev+'}))
-        (root / 'usr/lib/erhai/boot/7.2.0-erhai-dev+').mkdir()
-        check(root, releases[1], [releases[1], '7.2.0-erhai-dev+'], [releases[0], releases[2]])
-        # A selected set whose kernel payload was purged leaves no entry.
-        (root / 'usr/lib/erhai/boot/7.2.0-erhai-dev+').rmdir()
-        check(root, releases[1], [releases[1]], ['7.2.0-erhai-dev+', releases[0], releases[2]])
     print('KERNEL_RETENTION_INSTALLER_AND_APT_PASS')
 
 

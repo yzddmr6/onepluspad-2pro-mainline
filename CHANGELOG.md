@@ -1,5 +1,50 @@
 # Changelog
 
+## v0.12.0
+
+主题：签名 APT 源
+
+Ubuntu 软件更新器可以更新设备软件包。
+
+### 更新
+
+- **系统更新**：APT 使用项目公钥校验索引。
+
+### 升级须知
+
+旧版用户首次接入时，在平板上运行下面三行，然后重启。
+
+1. `curl -fLO https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1_all.deb`
+2. `sudo apt install ./erhai-archive-keyring_1_all.deb`
+3. `sudo apt update && sudo apt full-upgrade`
+
+### 已知限制
+
+升级后如果无法启动，按安装指南重装。
+
+---
+
+Theme: Signed APT updates
+
+Ubuntu Software Updater now includes device packages.
+
+### Changes
+
+- **System updates**: APT verifies the signed project index.
+
+### Upgrade notes
+
+On an existing installation, run these commands once on the tablet, then restart.
+
+1. `curl -fLO https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1_all.deb`
+2. `sudo apt install ./erhai-archive-keyring_1_all.deb`
+3. `sudo apt update && sudo apt full-upgrade`
+
+### Known limitations
+
+Reinstall using the installation guide if an upgrade fails to boot.
+
+
 ## v0.7.0
 
 Device packages are numbered 0.7.0 and install over v0.6.x with APT; see

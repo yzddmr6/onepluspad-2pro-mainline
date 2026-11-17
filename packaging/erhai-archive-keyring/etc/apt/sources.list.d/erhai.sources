@@ -1,0 +1,4 @@
+Types: deb
+URIs: https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/
+Suites: ./
+Signed-By: /usr/share/keyrings/erhai-archive-keyring.gpg

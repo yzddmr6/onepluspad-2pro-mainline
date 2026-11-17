@@ -24,6 +24,7 @@ fi
 
 case "$1" in
 configure)
+	/usr/libexec/erhai-kernel-retention
 	# Retire the exclusive evdev grab; shared GSD now owns this input.
 	if [ -d /run/systemd/system ]; then
 		systemctl stop 'erhai-power-key@*.service' || true

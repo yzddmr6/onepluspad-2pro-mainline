@@ -21,9 +21,6 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--shared-package', type=Path, required=True,
                         help='piano-mesa deb built from packaging/mesa/shared')
-    parser.add_argument('--shared-repository', type=Path, required=True, help='Complete standard Mesa release batch')
-    parser.add_argument('--release-id', required=True, help='Whole OnePlus release batch identifier')
-    parser.add_argument('--release-packages', type=Path, action='append', default=[])
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     # The import record ships in erhai-mesa as its source statement.
@@ -80,42 +77,9 @@ def main():
     subprocess.run(['dpkg-deb', '--root-owner-group', '-Zxz', '--build', str(stage), str(transition)],
                    check=True, env=dict(os.environ, SOURCE_DATE_EPOCH='1794355200', DPKG_DEB_THREADS_MAX=str(os.cpu_count() or 1)))
     shutil.copy2(package, output / package.name)
-    import importlib.util
-    tool = REPO / 'packaging/mesa/shared/tools/release-repository.py'
-    spec = importlib.util.spec_from_file_location('release_repository', tool)
-    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-    common = module.verify(args.shared_repository)
-    if not any(x['package'] == 'piano-mesa' and x['sha256'] == sha(package) for x in common['packages']):
-        parser.error('shared repository does not contain this transition package')
-    repository = output / args.release_id
-    (repository / 'pool').mkdir(parents=True)
-    for row in common['packages']:
-        if row['source'] in ('mesa','libdrm') or row['package'] == 'piano-mesa':
-            shutil.copyfile(args.shared_repository / row['file'], repository / row['file'])
-    shutil.copyfile(transition, repository / 'pool' / transition.name)
-    defaults = {'erhai-mesa', 'piano-mesa'}
-    for directory in args.release_packages:
-        for src in directory.rglob('*.deb'):
-            dest = repository / 'pool' / src.name
-            if dest.exists() and sha(dest) != sha(src):
-                parser.error('conflicting release package')
-            shutil.copyfile(src, dest)
-            defaults.add(module.metadata(src)['Package'])
-    module.inventory(repository, args.release_id, 'erhai', defaults)
-    # The verification tool advances independently of immutable driver packages.
-    checker = REPO / 'tools/check-host-mesa.py'
-    checker_source = json.loads((REPO / 'packaging/mesa/checker-provenance.json').read_text())
-    if sha(checker) != checker_source['sha256']:
-        parser.error('host Mesa checker differs from its pinned source')
-    shutil.copyfile(checker, repository / checker.name)
-    (repository / checker.name).chmod(0o755)
-    (repository / 'SHA256SUMS').write_text(''.join(
-        f'{sha(p)}  {p.relative_to(repository)}\n' for p in sorted(repository.rglob('*'))
-        if p.is_file() and p.name != 'SHA256SUMS'))
-    module.verify(repository)
     manifest = {'version': version, 'package': {'file': transition.name, 'sha256': sha(transition)},
                 'shared_package': {'file': package.name, 'sha256': sha(package)},
-                'depends': 'piano-mesa (>= ' + metadata['Version'] + ')', 'repository': repository.name}
+                'depends': 'piano-mesa (>= ' + metadata['Version'] + ')'}
     (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     print(json.dumps(manifest))
 

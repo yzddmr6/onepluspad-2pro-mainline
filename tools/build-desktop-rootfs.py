@@ -33,7 +33,6 @@ def main():
                         help='Explicit erhai package from a matching component build; repeat as needed')
     parser.add_argument('--dependency-deb', type=Path, action='append', default=[],
                         help='Explicit arm64/all dependency archive; made available to APT without forcing installation')
-    parser.add_argument('--release-repository', type=Path, help='Complete verified release batch retained in the image')
     parser.add_argument('--output', type=Path, required=True, help='New output directory')
     parser.add_argument('--cache', type=Path, default=WS / 'cache/desktop-rootfs')
     parser.add_argument('--layer-cache', type=Path,
@@ -70,7 +69,7 @@ def main():
         info = metadata(path)
         name = info['Package']
         if not (name.startswith('erhai-') or name in shared_gnome or name in gunyahvm_pins or name in (
-                'mainline-update', 'libcamera0.7', 'libcamera-ipa', 'gstreamer1.0-libcamera',
+                'libcamera0.7', 'libcamera-ipa', 'gstreamer1.0-libcamera',
                 'qcom-npu-runtime', 'qcom-npu-demo-model', 'piano-mesa', 'piano-snap-graphics', 'resources')) or info['Architecture'] not in ('arm64', 'all'):
             parser.error(f'{path}: expected an arm64/all device or shared application package')
         if name in selected:
@@ -91,7 +90,7 @@ def main():
                 parser.error('Resources differs from the pinned shared binary input')
         selected[name] = {'file': path.name, 'sha256': digest, **info}
     if {'erhai-settings', 'erhai-device'} & selected.keys():
-        missing = shared_gnome.keys() - selected.keys()
+        missing = (shared_gnome.keys() | {'erhai-archive-keyring'}) - selected.keys()
         if missing:
             parser.error('The product image requires all shared GNOME packages: ' + ', '.join(sorted(missing)))
     if {'erhai-apps', 'erhai-device'} & selected.keys():
@@ -111,27 +110,6 @@ def main():
         if info['Package'] in selected or info['Package'] in dependencies:
             parser.error(f'duplicate package input: {info["Package"]}')
         dependencies[info['Package']] = {'file': path.name, 'sha256': sha256(path), **info}
-    batch = None
-    if args.release_repository:
-        import importlib.util
-        spec = importlib.util.spec_from_file_location('release_repository', REPO / 'packaging/mesa/shared/tools/release-repository.py')
-        module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-        batch = module.verify(args.release_repository)
-        if batch['product'] != 'erhai':
-            parser.error('release batch belongs to another product')
-        missing = selected.keys() - {row['package'] for row in batch['packages']}
-        if missing:
-            parser.error('explicit release packages absent from batch: ' + ', '.join(sorted(missing)))
-        for row in batch['packages']:
-            name = row['package']; path = args.release_repository / row['file']
-            existing = selected.get(name) or dependencies.get(name)
-            if existing:
-                if existing['sha256'] != row['sha256']:
-                    parser.error('release batch differs from explicit package: ' + name)
-                continue
-            info = metadata(path)
-            dependencies[name] = {'file': path.name, 'sha256': row['sha256'], **info}
-            args.dependency_deb.append(path)
     if {'erhai-apps', 'erhai-device'} & selected.keys():
         for pin in gunyahvm['dependencies']:
             info = dependencies.get(pin['package'])
@@ -142,9 +120,6 @@ def main():
     out.mkdir(parents=True, exist_ok=False)
     (out / 'repo').mkdir()
     (out / 'native').mkdir()
-    if batch:
-        shutil.copytree(args.release_repository, out / 'release-repository')
-        (out / 'release-repository-id').write_text(batch['id'] + '\n')
     assembly_script = out / 'assemble.local.sh'
     assembly_script.write_bytes((REPO / 'tools/lib/desktop-rootfs.sh').read_bytes())
     shutil.copyfile(REPO / 'packaging/erhai-device-support/tree/usr/sbin/erhai-remove-generic-kernels',
