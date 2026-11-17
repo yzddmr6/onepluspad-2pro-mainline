@@ -329,7 +329,7 @@ python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/u
   --device-deb out/archive-debs/erhai-archive-keyring_1.1_all.deb --output out/desktop-root "${args[@]}"
 ```
 
-Record the selected project package versions in `packaging/desktop-packages.json` before building the desktop metapackage. Build the other components first.
+Record the selected project package versions in `packaging/desktop-packages.json` before building the desktop metapackage. Build the other components first. Use a minimum version (`>=`) for GunyahVM and its two Casilda packages so they can update independently. Other project packages use exact versions.
 
 Select one version of each desired device component, including the matching
 kernel selector and payload. The container has no network and uses kernel

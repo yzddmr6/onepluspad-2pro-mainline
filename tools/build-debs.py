@@ -1185,8 +1185,13 @@ def main():
         if 'erhai-device-support' in roots:
             controls['erhai-device-support']['@SELECTED_IMAGE@'] = image_package or locked_image
         if 'erhai-device' in roots:
-            controls['erhai-device']['@DESKTOP_DEPENDS@'] = ', '.join(
-                f"{name} (= {'@VERSION@' if name in roots else pinned})" for name, pinned in sorted(cohort.items()))
+            depends = []
+            for name, version in sorted(cohort.items()):
+                if name in roots:
+                    version = '@VERSION@'
+                relation = version if version.startswith('>= ') else '= ' + version
+                depends.append(f'{name} ({relation})')
+            controls['erhai-device']['@DESKTOP_DEPENDS@'] = ', '.join(depends)
 
         # One build id for the set, derived from everything the set contains:
         # the staged payloads and the DEBIAN templates behind them. Two builds

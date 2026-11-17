@@ -180,7 +180,7 @@ python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/u
   --device-deb out/archive-debs/erhai-archive-keyring_1.1_all.deb --output out/desktop-root "${args[@]}"
 ```
 
-先构建组件，将本版默认安装的项目包版本写入 `packaging/desktop-packages.json`，最后构建桌面元包。
+先构建组件，将本版默认安装的项目包版本写入 `packaging/desktop-packages.json`，最后构建桌面元包。 GunyahVM 和两个 Casilda 包填写最低版本（`>=`），支持单独更新。其余项目包填写精确版本。
 
 上述命令使用 Bash。输出包括 `rootfs.squashfs`、软件包列表、构建输入与日志。
 装配通过官方 APT 包加入运行依赖和设备组件，保留 Ubuntu 正常的软件源。
