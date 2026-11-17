@@ -80,6 +80,7 @@ target apt-get "${apt_options[@]}" --no-install-recommends --assume-yes \
 cp /work/remove-generic-kernels "$root/.erhai-build/remove-generic-kernels"
 target sh /.erhai-build/remove-generic-kernels --image
 target sh -c 'for image in $(dpkg-query -W -f="\${binary:Package}\n" "erhai-kernel-image-*" 2>/dev/null); do apt-mark auto "$image"; done'
+target apt-get "${apt_options[@]}" --yes autoremove --purge
 cleanup_policy
 rm -rf "$build"
 # The ISO lists its own medium as a package source. An installed system has no

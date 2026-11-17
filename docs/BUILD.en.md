@@ -326,7 +326,7 @@ for deb in out/app-dependencies/*.deb; do
   args+=(--dependency-deb "$deb")
 done
 python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper" \
-  --device-deb out/archive-debs/erhai-archive-keyring_1_all.deb --output out/desktop-root "${args[@]}"
+  --device-deb out/archive-debs/erhai-archive-keyring_1.1_all.deb --output out/desktop-root "${args[@]}"
 ```
 
 Record the selected project package versions in `packaging/desktop-packages.json` before building the desktop metapackage. Build the other components first.
@@ -400,7 +400,7 @@ python3 tools/package-mesa.py --shared-package <piano-mesa.deb> \
   --output out/host-mesa-release
 ```
 
-Build the archive bootstrap with `./tools/build-archive-debs.sh out/archive-debs`. Pass `out/archive-debs/erhai-archive-keyring_1_all.deb` to the root image builder with `--device-deb` along with the selected project runtime packages.
+Build the archive bootstrap with `./tools/build-archive-debs.sh out/archive-debs`. Pass `out/archive-debs/erhai-archive-keyring_1.1_all.deb` to the root image builder with `--device-deb` along with the selected project runtime packages.
 
 ## NPU runtime and offline demonstration
 

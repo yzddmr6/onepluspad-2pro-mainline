@@ -180,8 +180,8 @@ Open Software Updater, or run `sudo apt update && sudo apt full-upgrade`. Restar
 On an existing installation, run these commands once on the tablet, then restart.
 
 ```sh
-curl -fLO https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1_all.deb
-sudo apt install ./erhai-archive-keyring_1_all.deb
+wget -O erhai-archive-keyring_1.1_all.deb https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1.1_all.deb
+sudo apt install ./erhai-archive-keyring_1.1_all.deb
 sudo apt update && sudo apt full-upgrade
 ```
 

@@ -14,13 +14,13 @@ Ubuntu 软件更新器可以更新设备软件包。
 
 旧版用户首次接入时，在平板上运行下面三行，然后重启。
 
-1. `curl -fLO https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1_all.deb`
-2. `sudo apt install ./erhai-archive-keyring_1_all.deb`
+1. `wget -O erhai-archive-keyring_1.1_all.deb https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1.1_all.deb`
+2. `sudo apt install ./erhai-archive-keyring_1.1_all.deb`
 3. `sudo apt update && sudo apt full-upgrade`
 
 ### 已知限制
 
-升级后如果无法启动，按安装指南重装。
+v0.11.0 的「系统更新」会在下载前报错 `release is missing required update attachments`。请用上面的命令首次接入。升级后如果无法启动，按安装指南重装。
 
 ---
 
@@ -36,13 +36,13 @@ Ubuntu Software Updater now includes device packages.
 
 On an existing installation, run these commands once on the tablet, then restart.
 
-1. `curl -fLO https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1_all.deb`
-2. `sudo apt install ./erhai-archive-keyring_1_all.deb`
+1. `wget -O erhai-archive-keyring_1.1_all.deb https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1.1_all.deb`
+2. `sudo apt install ./erhai-archive-keyring_1.1_all.deb`
 3. `sudo apt update && sudo apt full-upgrade`
 
 ### Known limitations
 
-Reinstall using the installation guide if an upgrade fails to boot.
+The v0.11.0 updater stops before downloading and reports `release is missing required update attachments`. Use the commands above to enable APT updates. If an upgrade fails to boot, reinstall using the installation guide.
 
 
 ## v0.7.0

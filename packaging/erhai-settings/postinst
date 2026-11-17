@@ -1,6 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-only
 set -e
+dpkg-maintscript-helper rm_conffile /etc/apt/preferences.d/erhai-shared-gnome 0.12.0~ erhai-settings -- "$@"
 case "$1" in
 configure)
     file=/usr/bin/gnome-control-center

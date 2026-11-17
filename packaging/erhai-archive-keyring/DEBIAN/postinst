@@ -1,9 +1,8 @@
 #!/bin/sh
 set -eu
 [ "$1" = configure ] && [ -z "${2:-}" ] || exit 0
-for path in /etc/apt/preferences.d/piano-host-mesa /etc/apt/preferences.d/erhai-resources /etc/apt/preferences.d/erhai-shared-gnome /etc/apt/sources.list.d/erhai-release.list; do
-    if [ -f "$path" ]; then mv --backup=numbered "$path" "$path.disabled"; fi
-done
+rm -f /etc/apt/sources.list.d/erhai-release.list
+rm -rf /var/lib/erhai/releases
 # Older images installed the versioned payloads explicitly.
 for pattern in 'erhai-kernel-image-*'; do
     packages=$(dpkg-query -W -f='${db:Status-Status} ${Package}\n' "$pattern" 2>/dev/null | awk '$1 == "installed" {print $2}')

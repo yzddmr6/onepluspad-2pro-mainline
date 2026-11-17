@@ -9,8 +9,8 @@
 旧版用户首次接入时，在平板上运行下面三行，然后重启。
 
 ```sh
-curl -fLO https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1_all.deb
-sudo apt install ./erhai-archive-keyring_1_all.deb
+wget -O erhai-archive-keyring_1.1_all.deb https://github.com/yzddmr6/onepluspad-2pro-mainline/releases/download/apt/erhai-archive-keyring_1.1_all.deb
+sudo apt install ./erhai-archive-keyring_1.1_all.deb
 sudo apt update && sudo apt full-upgrade
 ```
 

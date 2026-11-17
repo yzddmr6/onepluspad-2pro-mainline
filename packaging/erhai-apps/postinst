@@ -1,6 +1,7 @@
 #!/bin/sh
 # SPDX-License-Identifier: MIT
 set -e
+dpkg-maintscript-helper rm_conffile /etc/apt/preferences.d/erhai-resources 0.12.0~ erhai-apps -- "$@"
 if [ "$1" = configure ]; then
     deb-systemd-helper enable tablet-app-center-install.service >/dev/null
 fi

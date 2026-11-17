@@ -177,7 +177,7 @@ for deb in out/app-dependencies/*.deb; do
   args+=(--dependency-deb "$deb")
 done
 python3 tools/build-desktop-rootfs.py --layers "${ERHAI_WORKSPACE:-$PWD}/cache/ubuntu-desktop/casper" \
-  --device-deb out/archive-debs/erhai-archive-keyring_1_all.deb --output out/desktop-root "${args[@]}"
+  --device-deb out/archive-debs/erhai-archive-keyring_1.1_all.deb --output out/desktop-root "${args[@]}"
 ```
 
 先构建组件，将本版默认安装的项目包版本写入 `packaging/desktop-packages.json`，最后构建桌面元包。
@@ -223,7 +223,7 @@ python3 tools/package-mesa.py --shared-package <piano-mesa.deb> \
   --output out/host-mesa-release
 ```
 
-用 `./tools/build-archive-debs.sh out/archive-debs` 构建源配置包。构建根镜像时，通过 `--device-deb` 传入 `out/archive-debs/erhai-archive-keyring_1_all.deb` 和所需项目运行时包。
+用 `./tools/build-archive-debs.sh out/archive-debs` 构建源配置包。构建根镜像时，通过 `--device-deb` 传入 `out/archive-debs/erhai-archive-keyring_1.1_all.deb` 和所需项目运行时包。
 
 ## NPU 运行库和离线演示
 
