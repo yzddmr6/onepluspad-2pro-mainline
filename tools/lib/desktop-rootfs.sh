@@ -86,6 +86,10 @@ rm -rf "$build"
 # The ISO lists its own medium as a package source. An installed system has no
 # /cdrom, so apt update would fail on it; the Ubuntu archive sources stay.
 rm -f "$root/etc/apt/sources.list.d/cdrom.sources"
+# Package scripts expanded the kernel retention rule (tmpfiles.d erhai-kernel-retention.conf)
+# with this build machine's kernel release; systemd-tmpfiles-setup writes it at the first boot
+# from the kernel that actually runs.
+rm -f "$root/etc/apt/apt.conf.d/90-erhai-kernel-retention"
 
 target dpkg --audit > /work/audit.txt
 test ! -s /work/audit.txt
