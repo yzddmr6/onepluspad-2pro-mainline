@@ -162,7 +162,7 @@ def main():
               'shared_application_sources': {'gunyahvm': gunyahvm, 'gnome': shared_gnome},
               'device_packages': selected, 'dependency_packages': dependencies,
               'runtime_packages': lock['runtime_packages'],
-              'requested_packages': seeds, 'release_repository': batch}
+              'requested_packages': seeds}
     (out / 'inputs.json').write_text(json.dumps(inputs, indent=2) + '\n')
     name = 'erhai-desktop-build-' + uuid.uuid4().hex[:12]
     command = ['docker', 'run', '--rm', '--name', name, '--network', 'none',
