@@ -7,6 +7,12 @@
 
 ✅ 可用 / Working · 🟡 部分支持 / Partial · ❌ 尚不支持 / Unsupported
 
+### v0.12.2
+
+电源模式重做（与 8 Pro 同一套做法）：平衡模式下忙碌的处理器核心最低保持约 1.7 GHz，网页滑动和动画更跟手；性能模式优先响应；省电模式下带处理器下限的任务不再挤到两个大核上；实时线程不再被默认拉到最高频率。GunyahVM 给虚拟机线程设的处理器下限从这一版起生效，新装系统预装 GunyahVM 1.5.0。自动亮度改用 ColorOS 在这台平板上实际使用的曲线。未连接时的 Wi-Fi 扫描能收到 36–64 信道，只保存了这一段 5 GHz 网络时开机也能自动连上。内核与 8 Pro 对齐：可用 WireGuard、LUKS 加密盘、SMB 共享和 binfmt_misc，能加载 Ubuntu 的 .zst 固件，`CPUQuota=` 生效，默认网络队列为 fq_codel，Yama 和 Landlock 编进内核，perf、bpftrace 这类跟踪工具可用。
+
+Power modes reworked (the same approach as on the 8 Pro): in Balanced, busy CPU cores stay at about 1.7 GHz or above, so web scrolling and animations keep up; Performance puts responsiveness first; in Power Saver, tasks with a CPU floor are no longer crowded onto the two prime cores; real-time threads are no longer pushed to the highest frequency by default. The CPU floor GunyahVM sets for virtual-machine threads takes effect from this release, and fresh installations include GunyahVM 1.5.0. Automatic brightness follows the curve ColorOS actually uses on this tablet. Wi-Fi scans while not connected now receive channels 36–64, so a tablet with only such a 5 GHz network saved connects at boot. The kernel is aligned with the 8 Pro: WireGuard, LUKS-encrypted disks, SMB shares and binfmt_misc work, Ubuntu's .zst firmware loads, `CPUQuota=` takes effect, the default network queue is fq_codel, Yama and Landlock are built in, and tracing tools such as perf and bpftrace work.
+
 ### v0.12.1
 
 内存紧张、GPU 又在忙时，GPU 完成的通知不再等后台清理，回收内存时桌面和应用的线程也不再等 GPU，桌面和虚拟机不再卡住。GunyahVM 升到 1.4.0：虚拟机默认用足 CPU、内存和 GPU，显示跟随面板刷新率，开虚拟机前不用再先加载驱动。
