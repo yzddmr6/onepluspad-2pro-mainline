@@ -4,7 +4,7 @@
     "upstream": "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
     "baseline_tag": "v7.4-rc2",
     "branch": "sm8750/v7.4-dev",
-    "commit": "da4b783e34bd05d7451a6f904fbf567af1215f99",
+    "commit": "658c139dd9f3f51acd019545febb65f7a7956be2",
     "board_dts": "arch/arm64/boot/dts/qcom/sm8750-erhai.dts",
     "toolchain": "aarch64-linux-gnu-gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1)",
     "repository": "https://github.com/yzddmr6/linux-sm8750-erhai",
@@ -14,6 +14,7 @@
       "arch/arm64/configs/sm8750-waydroid.config",
       "arch/arm64/configs/sm8750-snap.config",
       "arch/arm64/configs/sm8750-virt.config",
+      "arch/arm64/configs/sm8750-desktop.config",
       "arch/arm64/configs/erhai-firstboot.config"
     ]
   },

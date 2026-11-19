@@ -21,6 +21,7 @@ fragments=(
 	"$src/arch/arm64/configs/sm8750-waydroid.config"
 	"$src/arch/arm64/configs/sm8750-snap.config"
 	"$src/arch/arm64/configs/sm8750-virt.config"
+	"$src/arch/arm64/configs/sm8750-desktop.config"
 	"$src/arch/arm64/configs/erhai-firstboot.config"
 )
 
