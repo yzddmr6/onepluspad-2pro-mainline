@@ -32,15 +32,18 @@ Amp0–3 没有。原厂 DSP 的振幅/音圈温度保护与逐路滤波都没�
 Ubuntu 的 `tuned-ppd` 提供 GNOME 使用的 `net.hadess.PowerProfiles` 接口，并替换与之冲突的
 `power-profiles-daemon` 软件包。在 GNOME 设置或快捷设置中选择模式；插电与用电池使用同一套板级配置，默认为均衡。
 
-| GNOME 模式 | TuneD 配置 | CPU0–5 上限（kHz） | CPU6–7 上限（kHz） | GPU 上限（Hz） | Boost |
+| GNOME 模式 | TuneD 配置 | CPU0–5 下限 / 上限（kHz） | CPU6–7 下限 / 上限（kHz） | GPU 下限 / 上限（Hz） | Boost |
 |---|---|---:|---:|---:|---:|
-| 省电 | erhai-power-saver | 1785600 | 1958400 | 342000000 | 0 |
-| 均衡 | erhai-balanced | 3532800 | 4089600 | 1100000000 | 0 |
-| 性能 | erhai-performance | 3532800 | 4320000 | 1100000000 | 1 |
+| 省电 | erhai-power-saver | 384000 / 1785600 | 1017600 / 1958400 | 160000000 / 342000000 | 0 |
+| 均衡 | erhai-balanced | 1785600 / 3532800 | 1689600 / 4320000 | 160000000 / 1100000000 | 1 |
+| 性能 | erhai-performance | 2918400 / 3532800 | 2841600 / 4320000 | 160000000 / 1100000000 | 1 |
 
-各档都保留 `schedutil`，CPU 下限 384000/1017600 kHz，GPU 下限 160000000 Hz。
-均衡允许最高的非 boost CPU/GPU 档位并关闭 boost。性能模式先开启 boost，再把 policy6 上限提到 4320000 kHz；
-本机另有 4204800 kHz 这一 boost 频点。省电模式保持较低上限并关闭 boost。
+- 各档都用 `schedutil`。
+- **均衡**允许整段硬件范围，包括大核的 4204800、4320000 kHz 两个 boost 频点。忙碌的核心不低于约 1.7 GHz，滚动和动画不用等调频从最低档爬上来；空闲的核心照样休眠。
+- **性能**范围与均衡相同，但把忙碌核心的最低频率抬到约 2.9 GHz：打开应用、滚动、给 GPU 送数据这类短时负载一开始就是高频，不用等调频爬上来。空闲的核心照样休眠。
+- **省电**压低 CPU 与 GPU 上限，并把利用率下限封顶在 320（`kernel.sched_util_clamp_min`），也就是六个小核在受限频率下能提供的能力。更大的下限（例如虚拟机申请的）会被当成哪个受限核心都放不下，全部挤到两个大核上。
+- 各档中，实时线程（音频、合成器）默认都不设利用率下限（`/usr/lib/sysctl.d/50-erhai-uclamp.conf`）。
+
 CPUCP 固件与温控限制仍然有效，没有改动任何温控触发点。
 
 配置位于 `/usr/lib/tuned/profiles/erhai-*`。单独归属的 `/etc/tuned/erhai-ppd.conf` 是配置文件（conffile）；
