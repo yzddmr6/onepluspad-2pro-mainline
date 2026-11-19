@@ -1,10 +1,35 @@
-# Stock product/overlay/FrameworksResCommon_Sys.apk
-# config_autoBrightnessLevels, config_autoBrightnessLcdBacklightValues / 255 * 100
-0 3.92156863
-10 7.84313725
-30 15.68627451
-60 27.45098039
-100 43.13725490
-150 62.74509804
-210 78.43137255
-255 100.00000000
+# Effective stock auto-brightness curve of the OPD2413 panel, extracted from
+# the stock ROM over adb:
+#   /mnt/vendor/my_product/vendor/etc/display_brightness_config_P_D.xml
+#     (version 20241224) selects <lux_table_mode>43</lux_table_mode> and
+#     <hbm_lux_table_mode>43</hbm_lux_table_mode>; its <brightness_table> maps the
+#     2048 backlight codes to nits (max 930 nit at 2047).
+#   /system_ext/etc/display_brightness_config_common.xml (version 20240808)
+#     carries <lux_table id="43"> and <hbm_lux_table id="43">.
+# Each nit target is converted to the backlight code with the nearest nit in the
+# P_D brightness_table, then normalized to percent of 2047. GSD interpolates
+# linearly between these points.
+0 0.83048363
+2 1.41670738
+4 3.07767465
+6 6.49731314
+8 9.42843185
+10 13.62970200
+15 19.58964338
+35 32.73082560
+60 33.12164143
+100 35.95505618
+260 40.98680997
+500 41.91499756
+1100 53.78602833
+2000 65.70591109
+3500 72.10552027
+5000 78.35857352
+7000 81.58280410
+10000 84.46507084
+20000 87.93356131
+30000 90.81582804
+40000 93.79579873
+50000 96.14069370
+60000 98.77870054
+70000 100.00000000
