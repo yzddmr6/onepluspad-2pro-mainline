@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/yzddmr6/xiaomipad-8pro-mainline",
-  "commit": "85a8a0eb9eba0d051bf73b194824782ac33a943b",
+  "commit": "6976cf39c170c0454c79d67a5de45da43b4eb25b",
   "authority": "Sources, patches and build recipes are maintained only in the source repository. Import these files unchanged; device branding is supplied by erhai-settings.",
   "files_sha256": {
     "ubuntu/gnome-control-center/COPYING": "640d90f6ee401241ff62834d0d1b33f83049e99b8bfdfa04ed1b0a1635dde3e7",
@@ -27,12 +27,13 @@
     "ubuntu/mutter/COPYING": "2ec957306fef70d33c518e9d7a42bec23219c21cfa02212e275b8194ea7f2650",
     "ubuntu/gnome-settings-daemon/ambient-absolute-curve.patch": "7d6500da2a79a3501db918a742e83985389e565fdd1a62ad2eaf06c60b3ca4c9",
     "ubuntu/gnome-shell/COPYING": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
-    "ubuntu/gnome-shell/README.zh-CN.md": "c4340c42d1cf1687d46bf2aae199197229a00f7235a3015c2a8a246efe0e2683",
-    "ubuntu/gnome-shell/SHA256SUMS": "2bc3075ecbef9bf969bd38184519e172081f3be9953f50e757107a6b2be28c2c",
+    "ubuntu/gnome-shell/README.zh-CN.md": "ca84d6debfeaa32b6b092278ac4ec419f3770c74b39c92d409d81159e4839a60",
+    "ubuntu/gnome-shell/SHA256SUMS": "150a22b833d2e09cdacb3185709b002bbbf067d169d957017800732482123481",
     "ubuntu/gnome-shell/brightness-auto-first-run.patch": "937407f7b2167b9f2b1794233a7ffeaa2dfef72753a707ec195fe8c6208dcf52",
+    "ubuntu/gnome-shell/brightness-no-edid.patch": "420d8e23d28971a7f6bd71682a6add22bf065366edd3cc2fb97e905fb4417a0a",
     "ubuntu/gnome-shell/brightness-persist.patch": "f01dca47f34e9f43334a415f3c9150efd9a936c79934d2767c3a2eeb6c408145",
     "ubuntu/gnome-shell/build-root.json": "763d8e5bb33db9ef4e4d72b508d620f10c43ef7ed8ac839400f8328af3b349ec",
-    "ubuntu/gnome-shell/changelog-entry": "2eeb0dc0f1e29011a3dd0aed96d56a5e0da05428ea3510441e689092387184c1",
-    "ubuntu/gnome-shell/source.json": "1484dd6359fcef256dd4bd445a24b1bf4071e56fb8760d69ee6b146ed5fe973e"
+    "ubuntu/gnome-shell/changelog-entry": "9050a97b8790302f4065bf5629acc0174ce70f32c030cc84a96296b2a2431b6f",
+    "ubuntu/gnome-shell/source.json": "e0d9325e63f133c9a45a13f143a6ed4f28f17d01809fdc271bab95a172638454"
   }
 }
