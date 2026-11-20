@@ -153,7 +153,7 @@ Features under development are not included in the supported feature set.
 | Front and rear cameras | SC820CS / SC1300CS | 🟡 | The default Camera app (Snapshot) supports preview and photos with both cameras. Automatic white balance uses a simple grey-world algorithm, so scenes dominated by one colour can look tinted. Lens-shading correction is absent, leaving darker corners. The dedicated rear-camera app supports centre and tap focus. Dim scenes are noisy. An app can repeatedly open the front camera in the same process. |
 | Torch | Dual LEDs | ✅ | Switch and adjust brightness in Quick Settings. |
 | Automatic rotation | SSC / iio-sensor-proxy | ✅ | With the keyboard detached, the screen follows the orientation in all four directions, each the right way up. With the keyboard attached it stays fixed, as on a laptop. |
-| Automatic brightness | SSC ambient light / GNOME | ✅ | The ambient-light sensor is integrated with GNOME. Enable Automatic Brightness in Settings → Power to adjust the backlight to ambient light; idle dimming and blanking follow Ubuntu defaults. Brightness follows the tablet’s own curve and is retained across restarts. |
+| Automatic brightness | SSC ambient light / GNOME | ✅ | The ambient-light sensor is integrated with GNOME. Enable Automatic Brightness in Settings → Power to adjust the backlight to ambient light; idle dimming and blanking follow Ubuntu defaults. Brightness follows the stock curve, and the brightness you set is kept across logout and restart. |
 | Compass and gyroscope | SSC / iio-sensor-proxy | ✅ | Heading and angular velocity are available over D-Bus and keep updating after suspend. |
 | Proximity | SSC | ❌ | The DSP does not publish the proximity sensor on this unit, and `libssc` has no SAR implementation. |
 
