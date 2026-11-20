@@ -18,7 +18,7 @@ def load():
     if (binaries['source_repository'], binaries['source_commit']) != (provenance['repository'], provenance['commit']):
         raise ValueError('Shared GNOME binary provenance differs from the source import')
     canonical = {}
-    manifests = ('power-button-lock.SHA256SUMS', 'mutter/SHA256SUMS')
+    manifests = ('power-button-lock.SHA256SUMS', 'mutter/SHA256SUMS', 'gnome-shell/SHA256SUMS')
     for manifest in manifests:
         for line in (ROOT / 'shared/ubuntu' / manifest).read_text().splitlines():
             digest, name = line.split()
