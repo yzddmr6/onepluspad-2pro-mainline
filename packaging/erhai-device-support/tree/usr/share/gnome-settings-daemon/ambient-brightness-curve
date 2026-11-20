@@ -1,35 +1,37 @@
-# Effective stock auto-brightness curve of the OPD2413 panel, extracted from
-# the stock ROM over adb:
+# Effective stock auto-brightness curve of the OPD2413 panel, in KTZ8868 register
+# percent (register/2047), the unit Linux writes. Extracted from the stock ROM over adb:
 #   /mnt/vendor/my_product/vendor/etc/display_brightness_config_P_D.xml
 #     (version 20241224) selects <lux_table_mode>43</lux_table_mode> and
 #     <hbm_lux_table_mode>43</hbm_lux_table_mode>; its <brightness_table> maps the
-#     2048 backlight codes to nits (max 930 nit at 2047).
+#     2048 backlight levels to nits (max 930 nit at 2047).
 #   /system_ext/etc/display_brightness_config_common.xml (version 20240808)
 #     carries <lux_table id="43"> and <hbm_lux_table id="43">.
-# Each nit target is converted to the backlight code with the nearest nit in the
-# P_D brightness_table, then normalized to percent of 2047. GSD interpolates
-# linearly between these points.
-0 0.83048363
-2 1.41670738
-4 3.07767465
-6 6.49731314
-8 9.42843185
-10 13.62970200
-15 19.58964338
-35 32.73082560
-60 33.12164143
-100 35.95505618
-260 40.98680997
-500 41.91499756
-1100 53.78602833
-2000 65.70591109
-3500 72.10552027
-5000 78.35857352
-7000 81.58280410
-10000 84.46507084
-20000 87.93356131
-30000 90.81582804
-40000 93.79579873
-50000 96.14069370
-60000 98.77870054
+# Each nit target is converted to the backlight level with the nearest nit in the
+# P_D brightness_table. ColorOS then writes backlight_map[level] to both KTZ8868
+# (oplus_bl_ic_ktz8868.h; the same 2048 entries are in the stock msm_drm.ko), while
+# Linux writes the register directly, so each level is mapped through that table
+# and normalized to percent of 2047. GSD interpolates linearly between these points.
+0 13.19003420
+2 19.68734734
+4 33.17049340
+6 38.34880313
+8 42.11040547
+10 46.80019541
+15 52.36932096
+35 62.33512457
+60 62.62823644
+100 64.53346361
+260 67.75769419
+500 68.39276991
+1100 75.42745481
+2000 82.12017587
+3500 85.53981436
+5000 88.86174890
+7000 90.57156815
+10000 92.03712750
+20000 93.79579873
+30000 95.26135809
+40000 96.77576942
+50000 98.04592086
+60000 99.31607230
 70000 100.00000000
