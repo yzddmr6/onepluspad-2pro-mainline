@@ -63,6 +63,12 @@ export KBUILD_BUILD_TIMESTAMP
 KBUILD_BUILD_TIMESTAMP=$(git -C "$src" show -s --format=%cI HEAD)
 export KCFLAGS="-ffile-prefix-map=$src=/linux -ffile-prefix-map=$out=/kbuild"
 export KAFLAGS="-Wa,--debug-prefix-map=$src=/linux -Wa,--debug-prefix-map=$out=/kbuild"
+# rustc has no -ffile-prefix-map, and the top Makefile's Rust remap needs --remap-path-scope, which
+# the pinned rustc 1.85 lacks, so Rust panic locations would carry this host's absolute paths. Map
+# the source tree as the C flags above do, and the Rust library source that core is built from
+# (RUST_LIB_SRC) to where rustc's own standard library points.
+rust_commit=$("${RUSTC:?set RUSTC from kernel/rust-toolchain.json}" -vV | sed -n 's/^commit-hash: //p')
+export KRUSTFLAGS="--remap-path-prefix=$src=/linux --remap-path-prefix=${RUST_LIB_SRC:?set RUST_LIB_SRC from kernel/rust-toolchain.json}=/rustc/$rust_commit/library"
 cc="${cross}gcc"
 if command -v ccache >/dev/null; then
 	cc="ccache $cc"
@@ -72,7 +78,7 @@ recipe=$(cat "$src/arch/arm64/configs/defconfig" "${fragments[@]}" | sha256sum |
 rust_identity=$(python3 "$repo/tools/kernel-rust-identity.py")
 printf '%s\n' "$rust_identity" >"$out/rust-toolchain.json"
 toolchain=$("${cross}gcc" --version | head -1)
-identity=$(printf '%s\n' "$src" "$base" "$toolchain" "$cross" "$KCFLAGS" "$KAFLAGS" "$rust_identity" | sha256sum | cut -d' ' -f1)
+identity=$(printf '%s\n' "$src" "$base" "$toolchain" "$cross" "$KCFLAGS" "$KAFLAGS" "$KRUSTFLAGS" "$rust_identity" | sha256sum | cut -d' ' -f1)
 if [[ -f $out/.build-input && $(cat "$out/.build-input") != "$identity" ]]; then
 	echo 'Toolchain/source location changed; select a new OUT_DIR.' >&2
 	exit 1
@@ -102,7 +108,7 @@ printf 'Building %s with %s (%s jobs)\n' "$head" "$toolchain" "$jobs"
 # with a different build that happens to use the same local version string.
 compiler_sha=$(sha256sum "$(command -v "${cross}gcc")" | cut -d' ' -f1)
 config_sha=$(sha256sum "$out/.config" | cut -d' ' -f1)
-abi=$(printf '%s\n' "$head" "$config_sha" "$toolchain" "$compiler_sha" "$rust_identity" | sha256sum | cut -d' ' -f1)
+abi=$(printf '%s\n' "$head" "$config_sha" "$toolchain" "$compiler_sha" "$rust_identity" "$KRUSTFLAGS" | sha256sum | cut -d' ' -f1)
 localversion="-g${head:0:12}-a${abi:0:8}"
 args+=("LOCALVERSION=$localversion")
 make "${args[@]}" -j"$jobs" Image qcom/sm8750-erhai.dtb modules 2>&1 | tee "$out/build.log"
