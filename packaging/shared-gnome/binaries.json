@@ -1,6 +1,6 @@
 {
   "source_repository": "https://github.com/yzddmr6/xiaomipad-8pro-mainline",
-  "source_commit": "7f9c5578d46ad4c7bd8181ddbf7c3e8c5edf9705",
+  "source_commit": "85a8a0eb9eba0d051bf73b194824782ac33a943b",
   "packages": {
     "gnome-control-center-data": {
       "file": "gnome-control-center-data_50.3-0ubuntu0.2+piano2_all.deb",
@@ -51,16 +51,16 @@
       "sha256": "df9edbc6da362c2f6cb300e179367785e718454c898548ea217b33043dafd9b2"
     },
     "gnome-shell": {
-      "file": "gnome-shell_50.1-0ubuntu1+piano1_arm64.deb",
-      "version": "50.1-0ubuntu1+piano1",
+      "file": "gnome-shell_50.1-0ubuntu1.5+piano1_arm64.deb",
+      "version": "50.1-0ubuntu1.5+piano1",
       "architecture": "arm64",
-      "sha256": "dc8724a1bea2acaca4ac244cc1a0572e30bff20342eeb2e47cc1067f75892d79"
+      "sha256": "1a12d9abadfad24e0c2f6bea5343e011366255112514263617fa58b0d35e67df"
     },
     "gnome-shell-common": {
-      "file": "gnome-shell-common_50.1-0ubuntu1+piano1_all.deb",
-      "version": "50.1-0ubuntu1+piano1",
+      "file": "gnome-shell-common_50.1-0ubuntu1.5+piano1_all.deb",
+      "version": "50.1-0ubuntu1.5+piano1",
       "architecture": "all",
-      "sha256": "5c3fc1e6192a615828c2f4c4d734c7c4b48119307aa5549470c1d69f3555b2be"
+      "sha256": "cc9b0725cfd263c7d9e9e5dd7eac9a9d087e109cb1d559431798c125f8240c7c"
     }
   }
 }
